@@ -1,0 +1,10 @@
+redis
+django>=1.8
+cerberus
+requests
+celery
+django-celery
+django-kombu
+uwsgi
+MySQL-python
+ConcurrentLogHandler

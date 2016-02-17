@@ -14,7 +14,9 @@
 {% verbatim %}
 <script type="text/ng-template" id="entry_renderer">
     <td ng-bind="$index+1"></td>
-    <td ng-bind="entry.endpoint.unique_name"></td>
+    <td>
+        <a href="/dashboard/config/endpoint/?go_to=endpoint-row-{{ entry.endpoint.id }}" ng-bind="entry.endpoint.unique_name"></a>
+    </td>
     <td ng-bind="entry.endpoint.name"></td>
     <td ng-bind="entry.endpoint.version"></td>
     <td class="break-word" ng-bind="entry.endpoint.url"></td>

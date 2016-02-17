@@ -194,7 +194,19 @@ LOGGING = {
             'level': LOGGING_LEVEL,
             'propagate': False,
         },
-        '*': {
+        'accounts': {
+            'handlers': LOGGING_HANDLERS,
+            'level': LOGGING_LEVEL,
+        },
+        'dashboard': {
+            'handlers': LOGGING_HANDLERS,
+            'level': LOGGING_LEVEL,
+        },
+        'common': {
+            'handlers': LOGGING_HANDLERS,
+            'level': LOGGING_LEVEL,
+        },
+        'api_dashboard': {
             'handlers': LOGGING_HANDLERS,
             'level': LOGGING_LEVEL,
         },

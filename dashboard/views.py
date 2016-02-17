@@ -87,7 +87,9 @@ def config(request, data_type='client'):
 
     config_info = {
         'data_type': data_type,
-        'display_breadcrumb': display_breadcrumb
+        'display_breadcrumb': display_breadcrumb,
+        'client_id': None,
+        'client_name': None
     }
 
     client_id = request.GET.get('client_id')

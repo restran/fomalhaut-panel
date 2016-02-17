@@ -450,3 +450,42 @@ def get_export_config_json(skip_id=False):
     }
 
     return json_data
+
+
+def get_config_redis_json():
+    """
+    获取将要存储在redis中的配置json数据
+    :return:
+    """
+    clients = Client.objects.all()
+    endpoints = Endpoint.objects.all()
+    acl_rules = ACLRule.objects.all()
+    client_endpoints = ClientEndpoint.objects.all()
+
+    acl_rules_dict = {}
+    for t in acl_rules:
+        if t.endpoint_id in acl_rules_dict:
+            acl_rules_dict[t.endpoint_id].append(t)
+        else:
+            acl_rules_dict[t.endpoint_id] = [t]
+
+    endpoint_dict = {}
+    for t in endpoints:
+        t.acl_rules = acl_rules_dict.get(t.id, [])
+        endpoint_dict[t.id] = t
+
+    client_endpoint_dict = {}
+    for t in client_endpoints:
+        endpoint = endpoint_dict[t.endpoint_id]
+        endpoint.enable = t.enable
+        if t.client_id in client_endpoint_dict:
+            client_endpoint_dict[t.client_id].append(endpoint)
+        else:
+            client_endpoint_dict[t.client_id] = [endpoint]
+
+    for t in clients:
+        t.endpoints = client_endpoint_dict.get(t.id, [])
+
+    json_data = [t.to_json_dict() for t in clients]
+    return json_data
+

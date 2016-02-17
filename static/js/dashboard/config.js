@@ -91,6 +91,28 @@
 
                         if ($scope.data_type == 'endpoint') {
                             $scope.config.aclRules = [];
+                            $timeout(function () {
+                                // 如果是从 client_endpoint 那边跳转过来, 会带上需要滚动到的 id
+                                var go_to = getUrlParam('go_to', null);
+                                if (go_to != null) {
+                                    var ele = $('#' + go_to);
+                                    // 得到pos这个div层的offset，包含两个值，top和left
+                                    var scroll_offset = ele.offset();
+                                    console.log(scroll_offset);
+                                    var scrollTop = scroll_offset.top - 60;
+                                    if (scrollTop < 0) {
+                                        scrollTop = 0;
+                                    }
+                                    $("body,html").animate({
+                                        // 让body的scrollTop等于pos的top，就实现了滚动
+                                        scrollTop: scrollTop
+                                    }, 1000);
+
+                                    setTimeout(function () {
+                                        ele.addClass('fadeIn animated');
+                                    }, 1500);
+                                }
+                            });
                         }
                     } else {
                         var msg = data['msg'] ? data['msg'] : '获取数据失败';

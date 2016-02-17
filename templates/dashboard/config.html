@@ -33,7 +33,14 @@
                     <input type="text" placeholder="搜索过滤" class="form-control" ng-model="query">
                     <label class="glyphicon glyphicon-search"></label>
                 </div>
-
+                <button type="button" class="btn btn-default"
+                        data-loading-text=" 同步中..." autocomplete="off"
+                        data-container="body" data-toggle="popover"
+                        data-trigger="hover" data-placement="left"
+                        data-content="配置修改后，需要同步到 Redis 中才能生效"
+                        ng-click="transferToRedis($event)">
+                    <span class="glyphicon glyphicon-refresh"></span> 同步到 Redis
+                </button>
                 <button type="button" class="btn btn-default"
                         ng-click="config.showEditDialog('create', null)">
                     <span class="glyphicon glyphicon-plus"></span> 添加

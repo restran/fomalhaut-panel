@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import calendar
 import json
 import traceback
-
+from copy import copy, deepcopy
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 from django.db import transaction
@@ -554,7 +554,7 @@ def api_transfer_to_redis(request):
     """
     success, msg = False, ''
     try:
-        config_data = get_export_config_json(skip_id=False)
+        config_data = get_config_redis_json()
         logger.debug(config_data)
         r = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT,
                               db=settings.REDIS_DB, password=settings.REDIS_PASSWORD)
@@ -572,13 +572,16 @@ def api_transfer_to_redis(request):
         pattern_delete(keys=[''], args=['%s:*' % settings.PROXY_CONFIG_REDIS_PREFIX], client=pipe)
 
         for t in config_data:
-            v = {'enable': t['enable'], 'name': t['name'], 'id': t['id'],
-                 'access_key': t['access_key'],
-                 'secret_key': t['secret_key'], 'memo': t['memo']}
-            pipe.set('%s:%s' % (settings.PROXY_CONFIG_REDIS_PREFIX, t['access_key']), json_dumps(v))
+            logger.debug(t)
 
-            for s in t['backend_sites']:
-                pipe.set('%s:%s:%s' % (settings.PROXY_CONFIG_REDIS_PREFIX, t['access_key'], s['name']),
+            client = {}
+            for k, v in t.iteritems():
+                if k != 'endpoints':
+                    client[k] = v
+            pipe.set('%s:%s' % (settings.PROXY_CONFIG_REDIS_PREFIX, t['access_key']), json_dumps(client))
+
+            for s in t['endpoints']:
+                pipe.set('%s:%s:%s:%s' % (settings.PROXY_CONFIG_REDIS_PREFIX, t['access_key'], s['name'], s['version']),
                          json_dumps(s))
         # pipe.delete('config:*')
 
@@ -587,7 +590,7 @@ def api_transfer_to_redis(request):
         pipe.execute()
         success = True
     except Exception as e:
-        msg = u'同步数据到 Redis 出现异常'
+        msg = u'同步配置数据到 Redis 出现异常'
         logger.error(e.message)
         logger.error(traceback.format_exc())
 

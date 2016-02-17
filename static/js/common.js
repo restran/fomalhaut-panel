@@ -44,6 +44,32 @@ $.ajaxSettings = $.extend($.ajaxSettings, {
     }
 });
 
+var getUrlParam = function (name, default_value) {
+    //构造一个含有目标参数的正则表达式对象
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+    // decodeURI，处理中文问题
+    var url = decodeURI(window.location.search.substr(1));
+    var r = url.match(reg);  //匹配目标参数
+    if (r != null) return unescape(r[2]);
+    return default_value; //返回参数值
+};
+
+var getCookie = function (name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = $.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+};
+
 (function () {
     // ie8 不支持 console
     if (!window.console) {
@@ -157,6 +183,7 @@ $(document).ready(function () {
 });
 
 (function () {
+    // 使用 vue 来做导入导出
     var app = new Vue({
         el: '#nav-bar-app',
         data: {
@@ -198,22 +225,6 @@ $(document).ready(function () {
     });
 
     app.init();
-
-    var getCookie = function (name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie != '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = $.trim(cookies[i]);
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    };
 
     var uploader = new plupload.Uploader({
         runtimes: 'html5,flash,silverlight,html4',

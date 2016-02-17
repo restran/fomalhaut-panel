@@ -92,8 +92,6 @@ class Endpoint(models.Model):
             message='仅使用字母数字和下划线')])
 
     version = models.CharField(
-        default='',
-        blank=True,
         max_length=128,
         validators=[RegexValidator(
             regex=r'^[\-_0-9a-zA-Z]+$',
@@ -457,10 +455,10 @@ def get_config_redis_json():
     获取将要存储在redis中的配置json数据
     :return:
     """
-    clients = Client.objects.all()
+    clients = Client.objects.filter(enable=True)
     endpoints = Endpoint.objects.all()
     acl_rules = ACLRule.objects.all()
-    client_endpoints = ClientEndpoint.objects.all()
+    client_endpoints = ClientEndpoint.objects.filter(enable=True)
 
     acl_rules_dict = {}
     for t in acl_rules:
@@ -483,9 +481,15 @@ def get_config_redis_json():
         else:
             client_endpoint_dict[t.client_id] = [endpoint]
 
-    for t in clients:
-        t.endpoints = client_endpoint_dict.get(t.id, [])
-
     json_data = [t.to_json_dict() for t in clients]
+    for t in json_data:
+        e_dict = {}
+        endpoints = client_endpoint_dict.get(t['id'], [])
+        endpoints = [x.to_json_dict() for x in endpoints]
+        for x in endpoints:
+            k = '%s:%s' % (x['name'], x['version'])
+            e_dict[k] = x
+        t['endpoints'] = e_dict
+
     return json_data
 

@@ -109,8 +109,11 @@
                                     }, 1000);
 
                                     setTimeout(function () {
-                                        ele.addClass('fadeIn animated');
-                                    }, 1500);
+                                        ele.addClass('go-to-table-row focus');
+                                    }, 1000);
+                                    setTimeout(function () {
+                                        ele.removeClass('focus');
+                                    }, 5000);
                                 }
                             });
                         }

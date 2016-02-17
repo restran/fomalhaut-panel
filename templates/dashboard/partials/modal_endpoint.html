@@ -30,11 +30,11 @@
             </div>
 
             <div class="form-group {{ config.formData.version.has_error ? 'has-error' : '' }}">
-                <label class="control-label" for="modal-form-version">API 版本号</label>
+                <label class="control-label input-required" for="modal-form-version">API 版本号</label>
                 <label ng-show="config.formData.version.has_error" class="control-label"
                        ng-bind="config.formData.version.errors"></label>
                 <input id="modal-form-version" type="text" class="form-control"
-                       placeholder="API 版本号，可以为空"
+                       placeholder="API 版本号"
                        ng-model="config.formData.version.data">
             </div>
 

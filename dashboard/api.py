@@ -418,8 +418,7 @@ def do_import_config(upload_file):
         }
     }
 
-    validator = Validator(json_data_schema)
-    validator.allow_unknown = True
+    validator = Validator(json_data_schema, allow_unknown=True)
     if not validator.validate(json_data):
         errors = []
         for (k, v) in validator.errors.items():
@@ -573,16 +572,16 @@ def api_transfer_to_redis(request):
 
         for t in config_data:
             logger.debug(t)
+            #
+            # client = {}
+            # for k, v in t.iteritems():
+            #     if k != 'endpoints':
+            #         client[k] = v
+            pipe.set('%s:%s' % (settings.PROXY_CONFIG_REDIS_PREFIX, t['access_key']), json_dumps(t))
 
-            client = {}
-            for k, v in t.iteritems():
-                if k != 'endpoints':
-                    client[k] = v
-            pipe.set('%s:%s' % (settings.PROXY_CONFIG_REDIS_PREFIX, t['access_key']), json_dumps(client))
-
-            for s in t['endpoints']:
-                pipe.set('%s:%s:%s:%s' % (settings.PROXY_CONFIG_REDIS_PREFIX, t['access_key'], s['name'], s['version']),
-                         json_dumps(s))
+            # for s in t['endpoints']:
+            #     pipe.set('%s:%s:%s:%s' % (settings.PROXY_CONFIG_REDIS_PREFIX, t['access_key'], s['name'], s['version']),
+            #              json_dumps(s))
         # pipe.delete('config:*')
 
         # the EXECUTE call sends all buffered commands to the server, returning

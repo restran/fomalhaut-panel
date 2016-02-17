@@ -1,0 +1,56 @@
+{% verbatim %}
+<div class="modal fade" id="upload-config-modal" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" v-on:click="closeImportModal()">
+                    <span aria-hidden="true">&times;</span>
+                    <span class="sr-only">Close</span></button>
+                <h4 class="modal-title">
+                    <span><span class="glyphicon glyphicon-open"></span> 导入配置</span>
+                </h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="alert alert-warning" role="alert">
+                    <p>注意：导入配置文件将会删除所有旧的配置数据。</p>
+                </div>
+
+                <div id="upload-file-container">
+                    <div id="pickfiles">
+                        <div class="upload-section" style="position: relative; z-index: 1;">
+                            <label id="upload-label">
+                                <span class="glyphicon glyphicon-file"></span>
+                                选择 JSON 配置文件
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress hidden"
+                     id="upload-progress-bar" style="margin-top: 20px">
+                    <div class="progress-bar progress-bar-success progress-bar-striped active"
+                         role="progressbar"
+                         aria-valuenow="{{ processPercentage }}" aria-valuemin="0"
+                         aria-valuemax="100" v-bind:style="{'width': processPercentage + '%'}"
+                         v-text="processMsg + processPercentage + '%'">
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <div class="alert {{ response.success ? 'alert-success' : 'alert-danger'}}"
+                         role="alert" v-if="has_response" style="margin-bottom: 0;">
+                        <p><strong v-text="response.msg"></strong></p>
+
+                        <p v-for="err in response.errors" track-by="$index" v-text="err"></p>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" v-on:click="closeImportModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endverbatim %}

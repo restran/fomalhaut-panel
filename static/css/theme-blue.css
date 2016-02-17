@@ -1,0 +1,198 @@
+@charset "UTF-8";
+
+body {
+    font-family: Helvetica, Arial, Microsoft Yahei, Hiragino Sans GB, WenQuanYi Micro Hei, sans-serif;
+    font-size: 14px;
+    padding-top: 70px;
+    line-height: 1.5em;
+}
+
+h1, .h1 {
+    font-size: 26px
+}
+
+h2, .h2 {
+    font-size: 24px
+}
+
+h3, .h3 {
+    font-size: 22px
+}
+
+h4, .h4 {
+    font-size: 18px
+}
+
+h5, .h5 {
+    font-size: 16px
+}
+
+h6, .h6 {
+    font-size: 14px
+}
+
+/*------覆盖Bootstrap的CSS-----------*/
+.panel-group .panel {
+    overflow: visible;
+}
+
+/*--------------------------*/
+/*点击链接时，不显示边界虚线框*/
+a:focus, a:link, a:visited, a:hover, a:active {
+    outline: none;
+}
+
+/*---------------------------------*/
+.wrapper {
+    /*选择内容时，才会只包括内容*/
+    overflow: auto;
+}
+
+footer {
+    padding-top: 30px;
+    margin-top: 30px;
+    margin-bottom: 12px;
+    text-align: center;
+    font-size: 14px;
+}
+
+/*---------------------------------*/
+/*覆盖，添加Bootstrap的CSS*/
+code, .popover {
+    font-family: Helvetica, Arial, Microsoft Yahei, Hiragino Sans GB, WenQuanYi Micro Hei, sans-serif;
+}
+
+.navbar-default .navbar-header a:hover {
+    color: #ddd;
+}
+
+/*分辨率较小时，右侧的功能按钮*/
+.navbar-default .navbar-toggle:hover, .navbar-default .navbar-toggle:focus {
+    border: 0;
+}
+
+.navbar-default .navbar-toggle {
+    border: 0;
+}
+
+.navbar-default .navbar-toggle .icon-bar {
+    background-color: #fff;
+}
+
+/*-----------------------------------------*/
+.navbar-default .navbar-brand {
+    color: #fff;
+}
+
+/*导航条的样式*/
+.navbar-default {
+    border: 0;
+}
+
+.navbar-default .navbar-nav > li > a {
+    color: #fff;
+
+}
+
+/*当前页面时的状态*/
+/*.navbar-default .navbar-nav > li .active {*/
+    /*color: #fff;*/
+    /*background-color: rgba(0, 0, 0, 0.05);*/
+/*}*/
+
+.navbar-default .navbar-toggle:hover, .navbar-default .navbar-toggle:focus {
+    background-color: rgba(45, 54, 66, .8);
+}
+
+.navbar-default .navbar-nav > li > a:focus, .navbar-default .navbar-nav > li > a:hover {
+    background-color: rgba(255, 255, 255, .15);
+    color: #fff;
+}
+
+/*当前页面时的状态*/
+.navbar-default .navbar-nav > .active > a {
+    color: #fff;
+    /*background: rgba(0, 0, 0, 0.1);*/
+    background-color: rgba(255, 255, 255, .15);
+}
+
+.navbar-default .navbar-nav > .active > a:hover, .navbar-default .navbar-nav > .active > a:focus {
+    color: #fff;
+    /*background-color: #425691;*/
+    background-color: rgba(255, 255, 255, .15);
+}
+
+@media (max-width: 767px) {
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a {
+        color: #ddd;
+    }
+
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover, .navbar-default .navbar-nav .open .dropdown-menu > li > a:focus {
+        color: #fff;
+        background-color: rgba(255, 255, 255, .1);
+    }
+}
+
+.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:hover, .navbar-default .navbar-nav > .open > a:focus {
+    background-color: rgba(255, 255, 255, .1);
+    color: #fff;
+}
+
+.navbar-toggle {
+    margin-right: 5px;
+}
+
+/*---------------------------------*/
+.nav-header-bar {
+    background-size: auto;
+    /*background-color: rgba(45, 61, 77, .85);*/
+    /*background-color: #fff;*/
+    border-radius: 0;
+    color: #fff;
+    /*background: #2089cf;*/
+    /*background: #298eea;*/
+    background: rgba(41, 142, 234, .9);
+    /*background: #2b84f4;*/
+    /*opacity: 0.9;*/
+}
+
+@media (max-width: 767px) {
+    /*小屏幕时，卷动的菜单*/
+    .navbar-collapse ul li a {
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+}
+
+/*-------覆盖bootstrap------*/
+.btn-primary {
+    color: #fff;
+    background-color: #15CD72;
+    border-color: #15CD72;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary.focus,
+.btn-primary:active,
+.btn-primary.active,
+.open > .dropdown-toggle.btn-primary {
+    color: #fff;
+    background-color: #0CB863;
+    border-color: #0CB863;
+}
+
+.btn-primary.disabled, .btn-primary.disabled.active,
+.btn-primary.disabled.focus, .btn-primary.disabled:active,
+.btn-primary.disabled:focus, .btn-primary.disabled:hover,
+.btn-primary[disabled], .btn-primary[disabled].active,
+.btn-primary[disabled].focus, .btn-primary[disabled]:active,
+.btn-primary[disabled]:focus, .btn-primary[disabled]:hover,
+fieldset[disabled] .btn-primary, fieldset[disabled] .btn-primary.active,
+fieldset[disabled] .btn-primary.focus, fieldset[disabled] .btn-primary:active,
+fieldset[disabled] .btn-primary:focus, fieldset[disabled] .btn-primary:hover {
+    background-color: #15CD72;
+    border-color: #15CD72;
+}
+
+/*------------------------*/

@@ -1,0 +1,217 @@
+/* 重载bootstrap部分 */
+em {
+    font-style: normal;
+}
+
+input[type="radio"], input[type="checkbox"] {
+    margin: 0;
+}
+
+input[type="radio"]:focus, input[type="checkbox"]:focus {
+    outline: none;
+}
+
+label {
+    margin: 0;
+    font-weight: normal;
+}
+
+form {
+    margin: 0;
+}
+
+select, input[type="file"] {
+    line-height: 28px;
+}
+
+select {
+    width: auto;
+}
+
+.tooltip {
+    z-index: 9999;
+}
+
+.alert {
+    margin-bottom: 0px;
+    padding: 5px 14px;
+    background: #fcfddb;
+    border: 1px solid #f9f2a7;
+}
+
+.alert-danger, .alert-error {
+    position: relative;
+    margin-bottom: 10px;
+    background: #f2dede;
+    border: 1px solid #eed3d7;
+}
+
+.tab-content {
+    padding-bottom: 20px;
+}
+
+.form-horizontal .control-label, .form-horizontal .controls {
+    height: 30px;
+    line-height: 30px;
+    padding-top: 0;
+}
+
+.badge {
+    padding: 2px 6px;
+    margin-left: 5px;
+    background: #ccc;
+}
+
+.badge.badge-info {
+    background: #499ef3;
+}
+
+.badge.badge-important {
+    background: #ff3333;
+}
+
+.table-bordered > thead > tr > th, .table-bordered > thead > tr > td {
+    border-bottom-width: 1px;
+}
+
+/* modal */
+.modal-backdrop, .modal-backdrop.fade.in {
+    filter: alpha(opacity=20);
+    opacity: 0.2;
+}
+
+/* 重载bootstrap按钮 */
+.btn:active, .btn.active {
+    box-shadow: none;
+}
+
+.btn-mini {
+    min-width: 64px;
+    min-width: 44px \0;
+    height: 24px;
+    padding: 0 10px;
+    line-height: 24px;
+    font-weight: normal;
+    font-size: 12px;
+}
+
+.btn-normal {
+    min-width: 76px;
+    min-width: 56px \0;
+    height: 34px;
+    padding: 0 10px;
+    line-height: 34px;
+    font-size: 14px;
+}
+
+.btn-large {
+    min-width: 120px;
+    min-width: 100px \0;
+    height: 38px;
+    padding: 0 10px;
+    line-height: 38px;
+    font-size: 14px;
+}
+
+.close {
+    font-size: 18px;
+}
+
+.btn-success, .btn-gray.active {
+    border: none !important;
+    background-color: #5bbf5a;
+    color: #fff;
+}
+
+.btn-success:hover, .btn-gray.active:hover {
+    background-color: #38b836 !important;
+    color: #fff !important;
+}
+
+.btn-success:active, .btn-success:focus {
+    background-color: #32a831 !important;
+}
+
+.btn-success.active {
+    background-color: #eee;
+    color: #999;
+    box-shadow: none;
+}
+
+.btn-success.active:hover {
+    background-color: #e6e6e6 !important;
+    color: #999 !important;
+}
+
+.btn-success.active:active, .btn-success.active:focus {
+    background-color: #d9d9d9 !important;
+    color: #999;
+}
+
+.btn-primary {
+    border: none !important;
+    background-color: #59b0ff;
+}
+
+.btn-primary:hover {
+    background-color: #4daaff;
+}
+
+.btn-primary:active, .btn-primary:focus {
+    background-color: #1a90ff;
+}
+
+.btn-gray {
+    border: none !important;
+    background-color: #eee;
+    color: #999;
+}
+
+.btn-gray:hover {
+    background-color: #e6e6e6;
+    color: #999;
+}
+
+.btn-gray:active, .btn-gray:focus {
+    background-color: #d9d9d9;
+}
+
+.btn.follow b {
+    position: relative;
+    top: -1px;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.btn.follow em {
+    position: relative;
+    top: -1px;
+    margin: 0 3px;
+    font-size: 12px;
+}
+
+.btn.follow.btn-gray em, .btn.follow.btn-gray.active em, .btn.follow.btn-success.active em {
+    color: #e0e0e0;
+}
+
+.btn.follow.btn-success em {
+    color: #78c779;
+}
+
+.form-control {
+    padding: 6px;
+    resize: none;
+    box-shadow: none;
+    border-color: #ccc;
+}
+
+.form-control:focus {
+    border-color: #499ef3 !important;
+    box-shadow: none;
+}
+
+.btn-group.open .aw-dropdown, .aw-feed-list .more-operate.open .aw-dropdown, .aw-question-detail .more-operate.open .aw-dropdown, .aw-article-list .aw-item .mod-footer .more-operate.open .aw-dropdown {
+    display: block;
+}
+
+/*------------------------------------*/

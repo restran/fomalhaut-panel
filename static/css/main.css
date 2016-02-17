@@ -1,0 +1,486 @@
+@charset "UTF-8";
+
+/*------------------------*/
+/*footer 心跳*/
+@keyframes pound {
+    from, to {
+        transform: none;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+.heart {
+    color: #FA597A;
+    animation: pound 1s infinite;
+    transform-origin: center;
+    margin-right: 2px;
+}
+
+/*----------------------------*/
+
+/*回到顶部*/
+#back-to-top {
+    cursor: pointer;
+    position: fixed;
+    right: 40px;
+    bottom: 50px;
+    background-image: url(/static/img/back-top.png);
+    width: 55px;
+    height: 55px;
+}
+
+#back-to-top:hover {
+    background: url(/static/img/back-top.png) 0 -55px;
+
+}
+
+/*----------------------------*/
+/*页面标题*/
+.page-header h1 {
+    font-size: 24px;
+    font-weight: normal;
+}
+
+/*------------------*/
+.right-search-box {
+    display: inline-block !important;
+    vertical-align: middle;
+    width: 220px;
+    margin-right: 5px;
+}
+
+/*带图标的输入框*/
+.icon-addon {
+    position: relative;
+    color: #555;
+    display: block;
+}
+
+.icon-addon.addon-md .glyphicon, .icon-addon .glyphicon, .icon-addon.addon-md .fa, .icon-addon .fa {
+    position: absolute;
+    z-index: 2;
+    left: 10px;
+    font-size: 14px;
+    width: 20px;
+    margin-left: -2.5px;
+    text-align: center;
+    padding: 10px 0;
+    top: 0;
+}
+
+.icon-addon.addon-md .form-control, .icon-addon .form-control {
+    padding-left: 30px;
+    float: left;
+    font-weight: normal;
+}
+
+/*------------------*/
+
+.pointer {
+    cursor: pointer;
+}
+
+.break-word {
+    word-break: break-all;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
+/*----------旋转动画 ---------*/
+
+.rotate {
+    -webkit-animation: spin 2s linear infinite;
+    -moz-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+}
+
+@-moz-keyframes spin {
+    100% {
+        -moz-transform: rotate(360deg);
+    }
+}
+
+@-webkit-keyframes spin {
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes spin {
+    100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+
+/*-------------------------*/
+
+.main-content {
+    min-height: 420px;
+}
+
+.form-input-error {
+
+}
+
+.form-input-error > ul {
+    list-style-type: none;
+    margin-left: 0;
+    padding-left: 0;
+    /*margin-top: 10px;*/
+    margin-bottom: 0;
+    color: #d9534f;
+}
+
+.main-content .page-header {
+    margin-top: 0;
+}
+
+.main-content .page-header h1 {
+    margin-top: 5px;
+}
+
+@media (min-width: 768px) {
+    .form-horizontal.form-control-static {
+        padding-bottom: 0;
+    }
+}
+
+.form-horizontal .form-group {
+    margin-bottom: 15px;
+}
+
+.form-horizontal .form-group:last-child {
+    margin-bottom: 0;
+}
+
+/*------------登录----------*/
+
+.login-wrapper {
+    width: 380px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: -200px 0 0 -190px;
+}
+
+.login-head {
+    text-align: center;
+    font-size: 24px;
+    margin: 20px 0 20px 0;
+}
+
+.login-area {
+    padding: 20px 25px;
+    border: 1px solid #d8d8d8;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    background-color: #fff;
+}
+
+.login-area .login-left {
+    padding-left: 0;
+    padding-right: 0;
+    display: inline-block;
+    margin-top: 0;
+    float: left;
+}
+
+.login-area .login-right {
+    text-align: right;
+    float: right;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.login-footer {
+    margin-top: 25px;
+}
+
+@media (max-width: 480px) {
+    .login-wrapper {
+        width: 90%;
+        position: absolute;
+        top: 25%;
+        left: 50%;
+        margin: -10% 0 0 -45%;
+    }
+}
+
+/*---------------------------*/
+
+/*------------------------------------*/
+
+.inline-block {
+    display: inline-block;
+}
+
+.float-left {
+    float: left;
+}
+
+.float-right {
+    float: right;
+}
+
+/*创建管理员页面，的错误显示*/
+.has-error .control-label-left {
+    color: #a94442;
+}
+
+.has-error .control-label ul, .has-error .control-label-left ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+/*---------------------*/
+
+/*------覆盖Bootstrap的CSS-----------*/
+.panel-group .panel {
+    overflow: visible;
+}
+
+/*.panel-heading {*/
+/*font-weight: bold;*/
+/*}*/
+
+.width-50 {
+    width: 50px;
+}
+
+/*确保表格的标题文字不会换行*/
+table thead th {
+    white-space: nowrap;
+}
+
+.center-form-block {
+    max-width: 400px;
+    margin: 0 auto
+}
+
+/*----------segment ui------------*/
+
+/*覆盖bootstrap，避免semantic-ui 的 Switch Checkbox 出现上下边距*/
+.ui.toggle.checkbox {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+/*编辑后端站点信息*/
+.form-group .ui.toggle.checkbox {
+    margin-right: 15px;
+}
+
+.form-group .ui.toggle.checkbox > label {
+    font-size: 140%;
+}
+
+.form-horizontal .form-group > .ui.toggle.checkbox {
+    /*margin-bottom: 0;*/
+}
+
+/*--------------------------------------------*/
+
+.input-required:after {
+    content: ' *';
+    color: #d9534f;
+}
+
+/*modal对话框的最大高度，超过自动显示滚动条*/
+.modal .modal-body {
+    max-height: 550px;
+    overflow-y: auto;
+}
+
+.nav-tabs > li > a.has-error {
+    color: #a94442;
+}
+
+.page-footer {
+    margin: 0 auto;
+}
+
+/*----------------*/
+/*使用bootstrap validator 显示错误时，去掉外边距*/
+.form-group .help-block.with-errors {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.help-block.with-errors ul {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.form-horizontal .help-block.with-errors {
+    padding-top: 7px;
+}
+
+/*----------------------*/
+/*angular auto validate 错误显示*/
+/*.help-block.has-error.error-msg {*/
+/*margin-bottom: 0;*/
+/*/!*margin-top: 0;*!/*/
+/*}*/
+
+/*------------------*/
+.table > tbody > tr > td {
+    vertical-align: middle !important;
+}
+
+/*.fade-in-out {*/
+/*transition: 1s linear all;*/
+/*opacity: 1;*/
+/*}*/
+
+/*.fade-in-out.ng-hide {*/
+/*opacity: 0;*/
+/*}*/
+
+/*导入配置，文件上传*/
+.upload-section {
+    border-radius: 3px;
+    /*width: 100%;*/
+    height: 100px;
+    border: 3px dashed #eee;
+    text-align: center;
+    color: #ccc;
+    background: #fafafa;
+}
+
+.upload-section label {
+    width: 100%;
+    text-align: center;
+    line-height: 100px;
+    height: 100px;
+    font-size: 16px;
+    font-weight: normal;
+    color: #999;
+}
+
+/*---------------------*/
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu > .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -6px;
+    margin-left: -1px;
+    -webkit-border-radius: 0 6px 6px 6px;
+    -moz-border-radius: 0 6px 6px;
+    border-radius: 0 6px 6px 6px;
+}
+
+.dropdown-submenu:hover > .dropdown-menu {
+    display: block;
+}
+
+.dropdown-submenu > a:after {
+    display: block;
+    content: " ";
+    float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    border-left-color: #ccc;
+    margin-top: 5px;
+    margin-right: -10px;
+}
+
+.dropdown-submenu:hover > a:after {
+    border-left-color: #fff;
+}
+
+.dropdown-submenu.pull-left {
+    float: none;
+}
+
+.dropdown-submenu.pull-left > .dropdown-menu {
+    left: -100%;
+    margin-left: 10px;
+    -webkit-border-radius: 6px 0 6px 6px;
+    -moz-border-radius: 6px 0 6px 6px;
+    border-radius: 6px 0 6px 6px;
+}
+
+/*------------------------------*/
+/*angularjs animations*/
+
+/* when hiding the picture */
+.ng-hide-add {
+    animation: 0.5s fadeOut ease;
+}
+
+/* when showing the picture */
+.ng-hide-remove {
+    animation: 0.5s fadeIn ease;
+}
+
+/* ANIMATIONS (FROM ANIMATE.CSS) ======================== */
+/* fade in */
+@-webkit-keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.fadeIn {
+    -webkit-animation-name: fadeIn;
+    animation-name: fadeIn;
+}
+
+@-webkit-keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.fadeOut {
+    -webkit-animation-name: fadeOut;
+    animation-name: fadeOut;
+}
+
+/*------client_endpoint添加对话框----*/
+.search-box {
+    vertical-align: middle;
+    width: 100%;
+}
+/*--------*/

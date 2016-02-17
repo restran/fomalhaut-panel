@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-Hans" {% block ng_app_config %}{% endblock %}>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+    <title>{% block title %}{% endblock %} | {{ request.site_name }}</title>
+    <link href="/static/vendors/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="/static/css/theme-blue.css" rel="stylesheet"/>
+    <link href="/static/css/main.css" rel="stylesheet"/>
+    <script src="/static/vendors/pace/pace.min.js"></script>
+    <link href="/static/vendors/pace/themes/green/pace-theme-flash.css" rel='stylesheet'/>
+    <link href="/static/vendors/toastr/toastr.css" rel="stylesheet">
+    <!--[if lt IE 9]>
+      <script src="/static/vendors/html5shiv.min.js"></script>
+      <script src="/static/vendors/respond.min.js"></script>
+    <![endif]-->
+
+    {% block style_block %}{# page-specific CSS #}{% endblock %}
+    {% block head_script %}{# defer-incapable JS block #}{% endblock %}
+
+</head>
+<body {% block ng_app_body_scope %}{% endblock %}>
+<div id="nav-bar-app">
+<div class="navbar navbar-default navbar-fixed-top nav-header-bar" role="banner">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/"><span class="glyphicon glyphicon-random" aria-hidden="true"></span> &nbsp;APIGateway</a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav navbar-right">
+                {% if request.site_user.is_authenticated %}
+                    <li {% if request.current_page == 'dashboard' %}class="active"{% endif %}>
+                        <a href="/dashboard/">
+                            <span class="glyphicon glyphicon-dashboard"></span> 仪表盘
+                        </a>
+                    </li>
+                    <li {% if request.current_page == 'access_log' %}class="active"{% endif %}>
+                        <a href="/dashboard/access_log/">
+                            <span class="glyphicon glyphicon-list" aria-hidden="true"></span> 访问日志
+                        </a>
+                    </li>
+                    <li class="dropdown {% if request.current_page == 'config' %}active{% endif %}">
+                        <a href="javascript:void 0;" class="dropdown-toggle" data-toggle="dropdown">
+                            <span class="fa fa-cogs" aria-hidden="true"></span> 配置<b
+                                class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="/dashboard/config/client/">
+                                    <span class="fa fa-paper-plane" aria-hidden="true"></span> 应用
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/dashboard/config/endpoint/">
+                                    <span class="fa fa-share-alt" aria-hidden="true"></span> API Endpoint
+                                </a>
+                            </li>
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <a href="#" v-on:click="uploadConfig()">
+                                    <span class="glyphicon glyphicon-open" aria-hidden="true"></span> 导入配置
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/dashboard/config/action/export/">
+                                    <span class="glyphicon glyphicon-save" aria-hidden="true"></span> 导出配置
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="dropdown {% if request.current_page == 'accounts' %}active{% endif %}">
+                        <a href="javascript:void 0;" class="dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-user"></span> {{ request.site_user.name }}<b
+                                class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            {% if request.site_user.is_admin %}
+                                <li>
+                                    <a href="/accounts/manage/"><span class="glyphicon glyphicon-lock"
+                                                                      aria-hidden="true"></span> 用户管理</a>
+                                </li>
+                            {% endif %}
+                            <li>
+                                <a href="/accounts/profile/"><span class="glyphicon glyphicon-user"
+                                                                   aria-hidden="true"></span> 个人信息</a>
+                            </li>
+                            <li>
+                                <a href="/accounts/logout/"><span class="glyphicon glyphicon-log-out"
+                                                                  aria-hidden="true"></span> 退出登录</a>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li><a href="/accounts/login/">
+                        <span class="glyphicon glyphicon-log-in"></span> 登录</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% include 'dashboard/partials/modal_import_config.html' %}
+</div>
+
+<div class="container">
+    {% block main_content %}{% endblock %}
+</div>
+
+<div id="back-to-top" class="hidden"></div>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2016 <i class="fa fa-code"></i> with <span class="glyphicon glyphicon-heart heart"></span> by restran
+        </p>
+    </div>
+</footer>
+
+<script src="/static/vendors/jquery-1.11.2.min.js"></script>
+<script src="/static/vendors/bootstrap/js/bootstrap.min.js"></script>
+<script src="/static/vendors/vuejs/vue.min.js"></script>
+<script src="/static/vendors/angularjs/angular.min.js"></script>
+<script src="/static/vendors/toastr/toastr.min.js"></script>
+<script src="/static/vendors/plupload/plupload.full.min.js"></script>
+<script src="/static/js/common.js"></script>
+
+{% block tail_script %}{# defer-capable JS block #}{% endblock %}
+</body>
+</html>

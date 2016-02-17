@@ -140,7 +140,7 @@ def export_config(request):
     """
     try:
         file_name = 'export_config_%s.json' % datetime.today().strftime('%Y%m%d')
-        json_data = get_export_config_json(True)
+        json_data = get_export_config_json()
         config_data = json_dumps(json_data, indent=4, sort_keys=True)
 
         agent = request.META.get('HTTP_USER_AGENT')

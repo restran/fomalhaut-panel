@@ -111,9 +111,12 @@ class Endpoint(models.Model):
     # Timeout for entire request in seconds
     async_http_request_timeout = models.IntegerField(
         default=DEFAULT_ASYNC_HTTP_REQUEST_TIMEOUT)
+    # TODO
     # 是否需要验证登陆
-    require_app_login = models.BooleanField(default=True)
-    login_verify_url = models.URLField(max_length=512)
+    # require_app_login = models.BooleanField(default=True)
+    # 去哪里验证登陆信息
+    # login_verify_url = models.URLField(max_length=512)
+
     # 备注
     memo = models.CharField(blank=True, max_length=512)
     date_updated = models.DateTimeField(auto_now=True)
@@ -441,7 +444,7 @@ def get_export_config_json(skip_id=False):
         client_endpoint_list.append(d)
 
     json_data = {
-        'client': [t.to_json_dict(skip_id) for t in clients],
+        'clients': [t.to_json_dict(skip_id) for t in clients],
         'endpoints': [t.to_json_dict(skip_id) for t in endpoints],
         'client_endpoints': client_endpoint_list
     }

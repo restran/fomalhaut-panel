@@ -81,8 +81,8 @@ def do_create_or_update_model_data(request, model_name, is_update, post_data, fo
             ce = ClientEndpoint(client=client, endpoint_id=t['id'], enable=t['enable'])
             endpoint_list.append(ce)
 
-        # insert_many 不会返回 id
-        insert_many(endpoint_list)
+        # bulk_create 不会返回 id
+        ClientEndpoint.objects.bulk_create(endpoint_list)
         return_data['success'] = True
         return_data['data'] = ClientEndpoint.get_all_in_json(client_id)
         return return_data
@@ -290,7 +290,7 @@ def do_import_config(upload_file):
     """
     file_contents = upload_file.read()
     try:
-        json_data = {'list_data': json.loads(file_contents)}
+        json_data = json.loads(file_contents)
     except Exception as e:
         logger.error(e.message)
         return False, u'上传的文件不是JSON或者格式有误', []
@@ -302,6 +302,10 @@ def do_import_config(upload_file):
             'schema': {
                 'type': 'dict',
                 'schema': {
+                    'id': {
+                        'type': 'integer',
+                        'required': True,
+                    },
                     'name': {
                         'type': 'string',
                         'required': True,
@@ -323,7 +327,32 @@ def do_import_config(upload_file):
                         'required': True,
                     }
                 }
-            },
+            }
+        },
+        'client_endpoints': {
+            'type': 'list',
+            'required': True,
+            'schema': {
+                'type': 'dict',
+                'schema': {
+                    'id': {
+                        'type': 'integer',
+                        'required': True,
+                    },
+                    'client_id': {
+                        'type': 'integer',
+                        'required': True,
+                    },
+                    'endpoint_id': {
+                        'type': 'integer',
+                        'required': True,
+                    },
+                    'enable': {
+                        'type': 'boolean',
+                        'required': True,
+                    }
+                }
+            }
         },
         'endpoints': {
             'type': 'list',
@@ -331,15 +360,23 @@ def do_import_config(upload_file):
             'schema': {
                 'type': 'dict',
                 'schema': {
+                    'id': {
+                        'type': 'integer',
+                        'required': True,
+                    },
+                    'unique_name': {
+                        'type': 'string',
+                        'required': True,
+                    },
                     'name': {
                         'type': 'string',
                         'required': True,
                     },
-                    'url': {
+                    'version': {
                         'type': 'string',
                         'required': True,
                     },
-                    'netloc': {
+                    'url': {
                         'type': 'string',
                         'required': True,
                     },
@@ -356,10 +393,6 @@ def do_import_config(upload_file):
                         'required': True,
                     },
                     'enable_acl': {
-                        'type': 'boolean',
-                        'required': True,
-                    },
-                    'require_app_login': {
                         'type': 'boolean',
                         'required': True,
                     },
@@ -386,31 +419,38 @@ def do_import_config(upload_file):
     }
 
     validator = Validator(json_data_schema)
+    validator.allow_unknown = True
     if not validator.validate(json_data):
         errors = []
         for (k, v) in validator.errors.items():
             errors.append('%s: %s' % (k, v))
         return False, u'上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', errors
     else:
-        json_data = json_data['list_data']
         success, msg, errors = False, '', []
         try:
             # 出现异常的时候，会自动回滚
             with transaction.atomic():
-                # 清除旧的数据，不包含AccessAgent
-                Endpoint.objects.all().delete()
+                # 清除旧的数据，不包含 Client 和 Endpoint
+                ClientEndpoint.objects.all().delete()
                 ACLRule.objects.all().delete()
-                old_agent_list = Client.objects.all()
-                old_agents_dict = {}
-                for t in old_agent_list:
-                    old_agents_dict[t.access_key] = t
+                old_client_list = Client.objects.all()
+                old_client_dict = {}
+                for t in old_client_list:
+                    old_client_dict[t.access_key] = t
 
-                for t in json_data:
-                    old_agent = old_agents_dict.get(t.get('access_key'))
+                old_endpoint_list = Endpoint.objects.all()
+                old_endpoint_dict = {}
+                for t in old_endpoint_list:
+                    old_endpoint_dict[t.unique_name] = t
+
+                new_client_dict = {}
+                for t in json_data['clients']:
+                    # del t['id']
+                    old_client = old_client_dict.get(t['access_key'])
                     # 如果已存在相同的，则更新
-                    if old_agent is not None:
-                        form = ClientForm(t, instance=old_agent)
-                        del old_agents_dict[t.get('access_key')]
+                    if old_client is not None:
+                        form = ClientForm(t, instance=old_client)
+                        del old_client_dict[t['access_key']]
                     else:
                         form = ClientForm(t)
                     if not form.is_valid():
@@ -422,41 +462,62 @@ def do_import_config(upload_file):
                         msg, errors = u'上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', errors
                         raise Exception('error')
 
-                    agent = form.save()
+                    client = form.save()
+                    new_client_dict[t['id']] = client
 
-                    for x in t['backend_sites']:
-                        form = EndpointForm(agent.id, x)
-                        if not form.is_valid():
-                            errors = []
-                            form_errors = form.get_form_json()
-                            for (k, v) in form_errors.items():
-                                if v['has_error']:
-                                    errors.append('%s: %s' % (k, v['errors']))
-                            msg, errors = u'上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', errors
+                new_endpoint_dict = {}
+                for t in json_data['endpoints']:
+                    # del t['id']
+                    old_endpoint = old_endpoint_dict.get(t['unique_name'])
+                    # 如果已存在相同的，则更新
+                    if old_endpoint is not None:
+                        form = EndpointForm(t, instance=old_endpoint)
+                        del old_endpoint_dict[t['unique_name']]
+                    else:
+                        form = EndpointForm(t)
+                    if not form.is_valid():
+                        errors = []
+                        form_errors = form.get_form_json()
+                        for (k, v) in form_errors.items():
+                            if v['has_error']:
+                                errors.append('%s: %s' % (k, v['errors']))
+                        msg, errors = u'上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', errors
+                        raise Exception('error')
+
+                    endpoint = form.save(commit=False)
+                    endpoint.save()
+                    new_endpoint_dict[t['id']] = endpoint
+
+                    acl_rules = t['acl_rules']
+                    for y in acl_rules:
+                        # del t['id']
+                        tf = ACLRuleForm(y)
+                        if not tf.is_valid():
+                            msg, errors = u'上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', \
+                                          [u'访问控制列表数据为空或不正确']
                             raise Exception('error')
 
-                        site = form.save(commit=False)
-                        site.access_agent_id = agent.id
-                        site.save()
+                    acl_rules = [ACLRule(endpoint_id=endpoint.id,
+                                         re_uri=t['re_uri'], is_permit=t['is_permit'])
+                                 for t in acl_rules]
+                    # 创建 ACLRule
+                    ACLRule.objects.bulk_create(acl_rules)
 
-                        acl_rules = x['acl_rules']
-                        subs_filter_rules = x['subs_filter_rules']
-                        for y in acl_rules:
-                            tf = ACLRuleForm(y)
-                            if not tf.is_valid():
-                                msg, errors = u'上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', \
-                                              [u'访问控制列表数据为空或不正确']
-                                raise Exception('error')
+                # 根据新的 id 匹配正确的 client_endpoint
+                client_endpoint_list = []
+                for t in json_data['client_endpoints']:
+                    client = new_client_dict.get(t['client_id'])
+                    endpoint = new_endpoint_dict.get(t['endpoint_id'])
+                    enable = t['enable']
+                    ce = ClientEndpoint(client=client, endpoint=endpoint, enable=enable)
+                    client_endpoint_list.append(ce)
+                ClientEndpoint.objects.bulk_create(client_endpoint_list)
 
-                        acl_rules = [ACLRule(backend_site_id=site.id,
-                                             re_uri=t['re_uri'], is_permit=t['is_permit'])
-                                     for t in acl_rules]
-                        # 创建 ACLRule
-                        ACLRule.objects.bulk_create(acl_rules)
+                # 删除导入的配置中，不存在的 Client
+                Client.objects.filter(id__in=[t.id for t in old_client_dict.values()]).delete()
+                # 删除导入的配置中，不存在的 Endpoint
+                Endpoint.objects.filter(id__in=[t.id for t in old_endpoint_dict.values()]).delete()
 
-                delete_agent_id = [t.id for t in old_agents_dict.values()]
-                # 删除导入的配置中，不存在的 AccessAgent
-                Client.objects.filter(id__in=delete_agent_id).delete()
                 success, msg = True, u'导入配置成功'
         except Exception as e:
             logger.error(e.message)

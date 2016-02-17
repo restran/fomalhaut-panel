@@ -1,0 +1,109 @@
+{% extends "base_basic.html" %}
+{% load staticfiles %}
+{% block title %}{{ request.page_title }}{% endblock %}
+{% block ng_app_config %}ng-app="app"{% endblock %}
+{% block ng_app_body_scope %}ng-controller="appCtrl"{% endblock %}
+{% block style_block %}
+
+{% endblock %}
+
+{% block head_script %}
+{% endblock %}
+
+{% block main_content %}
+    <div class="main-content">
+        <div class="page-header">
+            <h1>{{ request.page_title }}</h1>
+        </div>
+        {% verbatim %}
+        <div class="col-sm-12 col-md-12">
+            <div class="alert alert-warning col-sm-offset-1 col-sm-10 col-md-offset-2 col-md-8" role="alert">当前系统正在初始化，需要创建一名管理员。</div>
+
+            <form class="form-horizontal" role="form" method="post"
+                  data-toggle="validator">
+                <div class="form-group">
+                    <label class="col-sm-offset-1 col-sm-2 col-md-offset-2 col-md-2 control-label">邮箱</label>
+
+                    <div class="col-sm-6 col-md-4">
+                        <input name="email" type="email" class="form-control"
+                               data-error="请输入正确的邮箱" required
+                               placeholder="请输入有效的邮箱"
+                               ng-model="model.email">
+                    </div>
+                    <span class="col-sm-3 col-md-4 help-block with-errors"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-offset-1 col-sm-2 col-md-offset-2 col-md-2 control-label">用户名</label>
+
+                    <div class="col-sm-6 col-md-4">
+                        <input name="name" type="text"
+                               maxlength="14"
+                               data-minlength="3"
+                               data-maxlength="14"
+                               data-error="请输入3~14个字符"
+                               class="form-control" placeholder="请输入3~14个字符"
+                               required
+                               ng-model="model.name">
+                    </div>
+
+                    <span class="col-sm-3 col-md-4 help-block with-errors"></span>
+                </div>
+
+                <div class="form-group" ng-if="!createSuccess">
+                    <label class="col-sm-offset-1 col-sm-2 col-md-offset-2 col-md-2 control-label">密码</label>
+
+                    <div class="col-sm-6 col-md-4">
+                        <input name="password1" type="password"
+                               id="password1"
+                               maxlength="18"
+                               data-minlength="6"
+                               data-maxlength="18"
+                               required
+                               data-error="请输入6~18位密码"
+                               ng-model="model.password"
+                               class="form-control" placeholder="请输入6~18位密码">
+                    </div>
+                    <span class="col-sm-3 col-md-4 help-block with-errors"></span>
+                </div>
+
+                <div class="form-group" ng-if="!createSuccess">
+                    <label class="col-sm-offset-1 col-sm-2 col-md-offset-2 col-sm-2 control-label">确认密码</label>
+
+                    <div class="col-sm-6 col-md-4">
+                        <input name="password2" type="password"
+                               required
+                               data-match="#password1"
+                               data-match-error="密码不匹配"
+                               class="form-control" placeholder="">
+                    </div>
+
+                    <span class="col-sm-3 col-md-4 help-block with-errors"></span>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-sm-offset-3 col-sm-6 col-md-offset-4 col-md-4">
+                        <script type="text/ng-template" id="create_success_tip.html">
+                            <div ng-show="createSuccess" class="alert alert-success" role="alert">
+                                <p>管理员创建成功，请牢记密码，并<a href="/accounts/login/">重新登录</a></p>
+                            </div>
+                        </script>
+                        <div ng-include="'create_success_tip.html'"></div>
+
+                        <button ng-if="!createSuccess" type="submit" id="btn-submit" data-loading-text="创建中..."
+                                class="btn btn-block btn-primary">创建
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        {% endverbatim %}
+    </div>
+{% endblock %}
+
+{% block tail_script %}
+    <script src="/static/vendors/validator.min.js"></script>
+    <script src="/static/vendors/sha1.min.js"></script>
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/accounts/create_admin.js"></script>
+{% endblock %}

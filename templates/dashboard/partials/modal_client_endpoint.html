@@ -1,0 +1,101 @@
+{% verbatim %}
+<div class="modal-content">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span>
+            <span class="sr-only">Close</span></button>
+        <h4 class="modal-title">
+            <span ng-if="config.editDialogMode=='create'"><span
+                    class="glyphicon glyphicon-plus"></span> 添加 Endpoint</span>
+            <span ng-if="config.editDialogMode=='update'"><span
+                    class="glyphicon glyphicon-edit"></span> 编辑 Endpoint</span>
+        </h4>
+    </div>
+    <div class="modal-body">
+        <div class="icon-addon addon-md search-box clearfix" style="margin-bottom: 20px">
+            <input type="text" placeholder="搜索过滤" class="form-control" ng-model="endpoint_query">
+            <label class="glyphicon glyphicon-search"></label>
+        </div>
+
+        <div class="form-group">
+            <label>选择的 API Endpoints</label>
+
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>名称</th>
+                    <th>API 访问名称</th>
+                    <th>API 版本号</th>
+                    <th>URL</th>
+                    <th>启用</th>
+                </tr>
+                </thead>
+                <tbody id="tbody-data">
+                <script type="text/ng-template" id="entry_selected_renderer">
+                    <td>
+                        <div class="checkbox">
+                            <label>
+                                <input ng-model="entry.selected" type="checkbox"> {{ entry.unique_name }}
+                            </label>
+                        </div>
+                    </td>
+                    <td ng-bind="entry.name"></td>
+                    <td ng-bind="entry.version"></td>
+                    <td class="break-word" ng-bind="entry.url"></td>
+                    <td>
+                        <div class="ui toggle checkbox">
+                            <input type="checkbox" id="enable-{{$index}}"
+                                   ng-model="entry.enable">
+                            <label for="enable-{{$index}}"></label>
+                        </div>
+                    </td>
+                </script>
+
+                <tr ng-repeat="entry in config.endpoints" ng-show="entry.selected"
+                    ng-include="'entry_selected_renderer'"></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <hr>
+        <div class="form-group">
+            <label>API Endpoints</label>
+
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>名称</th>
+                    <th>API 访问名称</th>
+                    <th>API 版本号</th>
+                    <th>URL</th>
+                </tr>
+                </thead>
+                <tbody id="tbody-data">
+                <script type="text/ng-template" id="entry_unselected_renderer">
+                    <td>
+                        <div class="checkbox">
+                            <label>
+                                <input ng-click="config.selectEndpoint($event, entry)" ng-model="entry.selected"
+                                       type="checkbox"> {{ entry.unique_name }}
+                            </label>
+                        </div>
+                    </td>
+                    <td ng-bind="entry.name"></td>
+                    <td ng-bind="entry.version"></td>
+                    <td class="break-word" ng-bind="entry.url"></td>
+                </script>
+
+                <tr ng-repeat="entry in config.endpoints | filter:endpoint_query" ng-include="'entry_unselected_renderer'"></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-primary"
+                ng-click="config.save($event)"
+                data-loading-text="保存中..." autocomplete="off">保存
+        </button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+    </div>
+</div>
+{% endverbatim %}

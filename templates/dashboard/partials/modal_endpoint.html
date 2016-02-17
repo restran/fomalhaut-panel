@@ -1,0 +1,184 @@
+{% verbatim %}
+<div class="modal-content">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span>
+            <span class="sr-only">Close</span></button>
+        <h4 class="modal-title">
+            <span ng-if="config.editDialogMode=='create'"><span
+                    class="glyphicon glyphicon-plus"></span> 添加 Endpoint</span>
+            <span ng-if="config.editDialogMode=='update'"><span
+                    class="glyphicon glyphicon-edit"></span> 编辑 Endpoint</span></h4>
+    </div>
+    <div class="modal-body">
+        <form role="form" method="post" id="edit-form">
+            <div class="form-group {{ config.formData.unique_name.has_error ? 'has-error' : '' }}">
+                <label class="control-label input-required" for="modal-form-unique-name">名称</label>
+                <label ng-show="config.formData.unique_name.has_error" class="control-label"
+                       ng-bind="config.formData.unique_name.errors"></label>
+                <input id="modal-form-unique-name" type="text" class="form-control"
+                       placeholder="Endpoint 的唯一名称，可以使用中文"
+                       ng-model="config.formData.unique_name.data">
+            </div>
+
+            <div class="form-group {{ config.formData.name.has_error ? 'has-error' : '' }}">
+                <label class="control-label input-required" for="modal-form-name">API 访问名称</label>
+                <label ng-show="config.formData.name.has_error" class="control-label"
+                       ng-bind="config.formData.name.errors"></label>
+                <input id="modal-form-name" type="text" class="form-control"
+                       placeholder="API 名称"
+                       ng-model="config.formData.name.data">
+            </div>
+
+            <div class="form-group {{ config.formData.version.has_error ? 'has-error' : '' }}">
+                <label class="control-label" for="modal-form-version">API 版本号</label>
+                <label ng-show="config.formData.version.has_error" class="control-label"
+                       ng-bind="config.formData.version.errors"></label>
+                <input id="modal-form-version" type="text" class="form-control"
+                       placeholder="API 版本号，可以为空"
+                       ng-model="config.formData.version.data">
+            </div>
+
+            <!--
+            <div class="form-group {{ (config.formData.name.has_error
+                || config.formData.uri_prefix.has_error) ? 'has-error' : '' }}">
+                <label class="control-label input-required" for="modal-form-netloc">API 资源访问名称</label>
+                <label ng-show="config.formData.name.has_error
+                || config.formData.uri_prefix.has_error" class="control-label"
+                       ng-bind="config.formData.name.errors + '  ' +
+                       config.formData.uri_prefix.errors"></label>
+
+                <div class="row">
+                    <div class="col-sm-12 col-md-12">
+                        <div class="input-group">
+                            <span class="input-group-addon">http://example.com/</span>
+                            <input type="text" class="form-control"
+                                   required
+                                   ng-model="config.formData.name.data"
+                                   placeholder="API 名称">
+                            <span class="input-group-addon" style="border-left: 0; border-right: 0"> / </span>
+                            <input data-toggle="popover" data-trigger="hover"
+                                   data-container="body"
+                                   data-placement="top"
+                                   data-content="URI 前缀，例如 resource/v1 或者 v1，也可以为空"
+                                   type="text" class="form-control"
+                                   ng-model="config.formData.uri_prefix.data"
+                                   placeholder="URI 前缀，例如用作版本号">
+                        </div>
+                    </div>
+                </div>
+            </div>
+-->
+            <div class="form-group {{ config.formData.url.has_error ? 'has-error' : '' }}">
+                <label class="control-label input-required" for="modal-form-url">Endpoint URL</label>
+                <label ng-show="config.formData.url.has_error" class="control-label"
+                       ng-bind="config.formData.url.errors"></label>
+                <input id="modal-form-url" type="text" class="form-control"
+                       required
+                       placeholder="例如：http://192.168.1.1:8080"
+                       ng-model="config.formData.url.data">
+            </div>
+
+            <div class="form-group {{ (config.formData.async_http_connect_timeout.has_error
+                || config.formData.async_http_request_timeout.has_error) ? 'has-error' : '' }}">
+                <label class="control-label input-required" for="modal-form-netloc">HTTP 连接超时秒数</label>
+                <label ng-show="config.formData.async_http_connect_timeout.has_error
+                || config.formData.async_http_request_timeout.has_error" class="control-label"
+                       ng-bind="config.formData.async_http_connect_timeout.errors + '  ' +
+                       config.formData.async_http_request_timeout.errors"></label>
+
+                <div class="row">
+                    <div class="col-xs-6 col-sm-6 col-md-6"
+                         data-toggle="popover" data-trigger="hover"
+                         data-container="body"
+                         data-placement="top"
+                         data-content="初始连接超时秒数">
+                        <input type="number" class="form-control" aria-label="..."
+                               required
+                               ng-model="config.formData.async_http_connect_timeout.data"
+                               placeholder="初始连接超时秒数">
+                    </div>
+                    <div class="col-xs-6 col-sm-6 col-md-6"
+                         data-toggle="popover" data-trigger="hover"
+                         data-container="body"
+                         data-placement="top"
+                         data-content="完整连接超时秒数">
+                        <input type="number" class="form-control" aria-label="..."
+                               required
+                               ng-model="config.formData.async_http_request_timeout.data"
+                               placeholder="完整连接超时秒数">
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-sm-4 col-md-4 col-lg-4">
+                        <div class="ui toggle checkbox"
+                             data-toggle="popover" data-trigger="hover"
+                             data-container="body"
+                             data-placement="top"
+                             data-content="对请求的 URL 根据正则表达式匹配规则，进行访问控制">
+                            <input type="checkbox" id="modal-form-enable-acl"
+                                   ng-model="config.formData.enable_acl.data">
+                            <label for="modal-form-enable-acl">访问控制列表</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="backend-site-tabs" ng-show="config.formData.enable_acl.data" role="tabpanel">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active"
+                        ng-click="tabChange($event, '#tab_acl_rules')"
+                        data-toggle="popover" data-trigger="hover"
+                        data-container="body"
+                        data-placement="top"
+                        data-content="设置需要匹配的 URI（正则表达式）和访问控制（允许或禁止访问），反向代理会从上到下寻找匹配项，如果没有找到匹配项则允许访问">
+                        <a href="#tab_acl_rules"
+                           aria-controls="tab_acl"
+                           role="tab" data-toggle="tab"
+                           class="{{ config.formData.acl_rules.has_error ? 'has-error' : '' }}"
+                                >访问控制列表</a></li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content" style="margin-top: 10px">
+                    <div role="tabpanel" id="tab_acl_rules"
+                         class="tab-pane fade in active form-group {{ config.formData.acl_rules.has_error ? 'has-error' : '' }}">
+                        <label ng-show="config.formData.acl_rules.has_error" class="control-label">{{
+                            config.formData.acl_rules.errors }}</label>
+                        {% endverbatim %}
+                        {% include 'dashboard/partials/template_acl_rules.html' %}
+                        {% verbatim %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group {{ config.formData.memo.has_error ? 'has-error' : '' }}">
+                <label>备注</label>
+                <label ng-show="config.formData.memo.has_error" class="control-label"
+                       ng-bind="config.formData.memo.errors"></label>
+            <textarea class="form-control"
+                      placeholder="备注信息，可以为空"
+                      ng-model="config.formData.memo.data"
+                      rows="3"></textarea>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-primary"
+                ng-if="config.editDialogMode == 'create'"
+                ng-click="config.saveContinue($event)"
+                data-loading-text="保存中..." autocomplete="off">保存并继续
+        </button>
+        <button type="button" class="btn btn-primary"
+                ng-click="config.save($event)"
+                data-loading-text="保存中..." autocomplete="off">保存
+        </button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+    </div>
+</div>
+
+
+{% endverbatim %}

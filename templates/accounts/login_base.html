@@ -1,0 +1,40 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="zh-Hans" {% block ng_app_config %}{% endblock %}>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+    <title>{% block title %}{% endblock %} | {{ request.site_name }}</title>
+    <link href="/static/vendors/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/theme-blue.css" rel="stylesheet"/>
+    <link href="/static/css/main.css" rel="stylesheet"/>
+    <script src="/static/vendors/nprogress/nprogress.min.js"></script>
+    <link href="/static/vendors/nprogress/nprogress.css" rel='stylesheet'/>
+    <link href="/static/vendors/toastr/toastr.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+      <script src="/static/vendors/html5shiv.min.js"></script>
+      <script src="/static/vendors/respond.min.js"></script>
+    <![endif]-->
+
+    {% block style_block %}{# page-specific CSS #}{% endblock %}
+    {% block head_script %}{# defer-incapable JS block #}{% endblock %}
+
+</head>
+<body {% block ng_app_body_scope %}{% endblock %}>
+
+<div class="container">
+    {% block main_content %}{% endblock %}
+</div>
+
+<script src="/static/vendors/jquery-1.11.2.min.js"></script>
+<script src="/static/vendors/bootstrap/js/bootstrap.min.js"></script>
+<script src="/static/vendors/angularjs/angular.min.js"></script>
+<script src="/static/vendors/toastr/toastr.min.js"></script>
+
+{% block tail_script %}{# defer-capable JS block #}{% endblock %}
+</body>
+</html>

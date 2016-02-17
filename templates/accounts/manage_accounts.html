@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block title %}{{ request.page_title }}{% endblock %}
+{% block ng_app_config %}ng-app="app"{% endblock %}
+{% block ng_app_body_scope %}ng-controller="appCtrl"{% endblock %}
+{% block style_block %}{% endblock %}
+{% block head_script %}{% endblock %}
+
+{% block main_content %}
+    <div class="main-content">
+        <div class="page-header clearfix">
+            <div class="float-left">
+                <h1>{{ request.page_title }}</h1>
+            </div>
+
+            <div class="float-right">
+                <div class="icon-addon addon-md right-search-box">
+                    <input type="text" placeholder="搜索过滤" class="form-control" ng-model="query">
+                    <label class="glyphicon glyphicon-search"></label>
+                </div>
+
+                <span class="btn btn-default" id="btn-upload" ng-click="showEditDialog('create', null)">
+                    <span class="glyphicon glyphicon-plus"></span> 添加用户
+                </span>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>邮箱</th>
+                    <th>用户名</th>
+                    <th>创建时间</th>
+                    <th>上次登录</th>
+                    <th>激活</th>
+                    <th>&nbsp</th>
+                    <th>&nbsp</th>
+                </tr>
+                </thead>
+                <tbody id="tbody-data">
+
+                {% verbatim %}
+                <script type="text/ng-template" id="entry_renderer.html">
+                    <td ng-bind="$index+1"></td>
+                    <td ng-bind="entry.email"></td>
+                    <td ng-bind="entry.name"></td>
+                    <td ng-bind="entry.date_joined"></td>
+                    <td ng-bind="entry.last_login"></td>
+                    <td ng-bind="entry.is_active ? '是': '否'"></td>
+                    <td><span class="label label-info" ng-bind="entry.is_admin ? '超级管理员': ''"></span></td>
+                    <td class="nowrap"><a href="javascript: void 0;" ng-click="showEditDialog('update', $index)">编辑</a>&nbsp;&nbsp;
+                        <a href="javascript: void 0;" style="color: #d9534f" ng-click="deleteEntry($index)">删除</a>
+                    </td>
+                </script>
+
+                <tr ng-repeat="entry in entries | filter:query" ng-include="'entry_renderer.html'"></tr>
+                {% endverbatim %}
+                </tbody>
+            </table>
+        </div>
+        {% verbatim %}
+        <div class="modal fade" id="edit-modal" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form role="form" method="post" data-toggle="validator" id="edit-form">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"><span
+                                    aria-hidden="true">&times;</span><span
+                                    class="sr-only">Close</span></button>
+                            <h4 id="edit-modal-title" class="modal-title">
+                                {{ editDialogMode == 'create' ? '添加用户': '编辑用户' }}</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="control-label">邮箱</label>
+                                <span class="help-block with-errors inline-block"></span>
+                                <input id="modal-form-email" name="email"
+                                       type="email"
+                                       ng-model="formData.email"
+                                       data-error="请输入正确的邮箱" required
+                                       placeholder="请输入有效的邮箱"
+                                       class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="control-label">用户名</label>
+                                <span class="help-block with-errors inline-block"></span>
+                                <input id="modal-form-name" name="name"
+                                       type="text"
+                                       required
+                                       ng-model="formData.name"
+                                       maxlength="14"
+                                       data-minlength="3"
+                                       data-maxlength="14"
+                                       data-error="请输入3~14个字符"
+                                       class="form-control" placeholder="请输入3~14个字符">
+                            </div>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit"
+                                    class="btn btn-primary"
+                                    id="btn-save"
+                                    data-loading-text="保存中...">保存
+                            </button>
+                            <button class="btn btn-default" data-dismiss="modal">取消</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+        {% endverbatim %}
+
+        <div class="modal fade" id="delete-modal" role="dialog">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <h4 class="modal-title">确定删除用户<strong> <code ng-bind="delEntry.name"></code> </strong>?</h4>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-danger"
+                                id="btn-delete"
+                                data-loading-text="删除中..."
+                                ng-click="doDeleteEntry()">删除
+                        </button>
+                        <button class="btn btn-default" data-dismiss="modal">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block tail_script %}
+    <script src="/static/vendors/validator.min.js"></script>
+    <script src="/static/js/accounts/manage_accounts.js"></script>
+{% endblock %}

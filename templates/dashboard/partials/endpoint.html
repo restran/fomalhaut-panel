@@ -1,0 +1,30 @@
+<thead>
+<tr>
+    <th class="col-md-1">#</th>
+    <th class="col-md-2">名称</th>
+    <th class="col-md-1">API 访问名称</th>
+    <th class="col-md-1">API 版本号</th>
+    <th class="col-md-4">Endpoint URL</th>
+    <th class="col-md-2">访问控制列表</th>
+    <th class="col-md-1">&nbsp</th>
+</tr>
+</thead>
+<tbody id="tbody-data">
+
+{% verbatim %}
+<script type="text/ng-template" id="entry_renderer">
+    <td ng-bind="$index+1"></td>
+    <td ng-bind="entry.unique_name"></td>
+    <td ng-bind="entry.name"></td>
+    <td ng-bind="entry.version"></td>
+    <td class="break-word" ng-bind="entry.url"></td>
+    <td ng-bind="entry.enable_acl ? '是' : '否'"></td>
+    <td class="nowrap">
+        <a href="javascript:void 0;" ng-click="config.showEditDialog('update', $index)">编辑</a>&nbsp;
+        <a href="javascript:void 0;" style="color: #d9534f" ng-click="config.deleteEntry($index)">删除</a>
+    </td>
+</script>
+
+<tr ng-repeat="entry in config.entries | filter:query" ng-include="'entry_renderer'"></tr>
+{% endverbatim %}
+</tbody>

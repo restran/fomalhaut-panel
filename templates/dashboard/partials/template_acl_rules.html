@@ -1,0 +1,25 @@
+<div class="table-responsive">
+    <table class="table table-hover">
+        <tbody>
+        <script type="text/ng-template" id="acl_rules_renderer.html">
+            <td>
+                <input type="text" class="form-control" ng-model="acl.re_uri"
+                       placeholder="需要匹配的URI（正则表达式）">
+            </td>
+            <td>
+                <select class="form-control" ng-model="acl.is_permit">
+                    <option value="true">允许</option>
+                    <option value="false">禁止</option>
+                </select>
+            </td>
+            <td class="nowrap">
+                <a href="javascript:void 0;" style="color: #d9534f" ng-click="config.removeACLRule($index)">删除</a>
+            </td>
+        </script>
+
+        <tr ng-repeat="acl in config.aclRules track by $index" ng-include="'acl_rules_renderer.html'">
+        </tr>
+        </tbody>
+    </table>
+    <button class="btn btn-default" ng-click="config.addACLRule()">添加</button>
+</div>

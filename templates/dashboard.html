@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block title %}{{ request.page_title }}{% endblock %}
+
+{% block style_block %}
+    <link href="/static/vendors/datetime-picker/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+    <link href="/static/vendors/bootstrap-select/css/bootstrap-select.css" rel="stylesheet">
+{% endblock %}
+
+{% block head_script %}
+    <style>
+
+        .db-details {
+            text-align: center;
+        }
+
+        .db-details .db-content-one {
+            float: left;
+            width: 50%;
+            height: 100%;
+            padding: 10px;
+        }
+
+        .db-details .db-content-two {
+            margin-left: 50%;
+            height: 100%;
+            padding: 10px;
+        }
+
+        .panel-default > .panel-heading {
+            background-color: #fcfcfc;
+        }
+
+    </style>
+{% endblock %}
+
+{% block main_content %}
+    <div class="main-content" id="dashboard-app">
+        {% verbatim %}
+        <div class="row">
+            <div class="col-sm-3 col-md-3">
+                <div class="panel panel-default">
+                    <div class="panel-heading clearfix">
+                        <div class="float-left">
+                            <h4 class="panel-title">累计访问</h4>
+                        </div>
+                    </div>
+                    <div class="panel-body" style="padding-bottom: 0">
+                        <div style="font-size: 35px; margin: 20px 0 5px 0; text-align: center;color: #51d466">
+                            <span id="count2-total-count" class="number-count" data-from="0"
+                                  ng-attr-data-to="{{ totalCount.totalCount }}" data-speed="1000"
+                                  data-refresh-interval="100">0</span>
+                        </div>
+
+                        <div class="db-details">
+                            <div class="db-content-one">
+                                <h3 style="color: #666;font-size:26px">
+                                   <span id="count2-yesterday-count" class="number-count" data-from="0"
+                                         ng-attr-data-to="{{ totalCount.yesterdayCount }}"
+                                         data-speed="1000"
+                                         data-refresh-interval="100">0</span>
+                                </h3>
+                                <span>昨天</span>
+                            </div>
+                            <div class="db-content-two">
+                                <h3 style="color: #666;font-size:26px">
+                                   <span id="count2-today-count" class="number-count" data-from="0"
+                                         ng-attr-data-to="{{ totalCount.todayCount }}"
+                                         data-speed="1000"
+                                         data-refresh-interval="100">0</span>
+                                </h3>
+                                <span>今天</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading clearfix" data-toggle="popover" data-trigger="hover"
+                         data-container="body"
+                         data-placement="top"
+                         data-content="只显示 Top 10">
+                        <div class="float-left">
+                            <h4 class="panel-title">访问 IP 统计</h4>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div ng-repeat="entry in ipCountList" style="font-size: 16px">
+                            <div class="row" style="line-height: 1.5em">
+                                <div class="col-xs-8 col-sm-8 col-md-8" ng-bind="entry.remote_ip"></div>
+                                <div class="col-xs-4 col-sm-4 col-md-4" ng-bind="entry.m_count"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading clearfix" data-toggle="popover" data-trigger="hover"
+                         data-container="body"
+                         data-placement="top"
+                         data-content="只显示 Top 5">
+                        <div class="float-left">
+                            <h4 class="panel-title">异常或非法访问</h4>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div ng-repeat="entry in abnormalIpCountList" style="font-size: 16px">
+                            <div class="row" style="line-height: 1.5em">
+                                <div class="col-xs-8 col-sm-8 col-md-8" ng-bind="entry.remote_ip"></div>
+                                <div class="col-xs-4 col-sm-4 col-md-4" ng-bind="entry.m_count"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-9 col-md-9">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">访问统计 /
+                            <span ng-bind="viewMode=='month' ? '月访问量' : '24小时访问量'">24小时访问量</span></h4>
+                    </div>
+                    <div class="panel-body">
+                        <div class="clearfix">
+                            <div class="float-left">
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label class="btn btn-default active" ng-click="viewModeChange('day')">
+                                        <input type="radio" name="options" id="mode-option1"
+                                               autocomplete="off" checked>
+                                        天
+                                    </label>
+                                    <label class="btn btn-default" ng-click="viewModeChange('month')">
+                                        <input type="radio" name="options" id="mode-option1"
+                                               autocomplete="off"> 月
+                                    </label>
+                                </div>
+
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label class="btn btn-default active" ng-click="requestTypeChange('all')">
+                                        <input type="radio" name="options" id="mode-option1"
+                                               autocomplete="off" checked>
+                                        所有访问
+                                    </label>
+                                    <label class="btn btn-default" ng-click="requestTypeChange('page_view')">
+                                        <input type="radio" name="options" id="mode-option1"
+                                               autocomplete="off"> 页面访问
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="float-right">
+                                <div style="display: inline-flex">
+                                    <select id="select-access-agent" class="selectpicker" multiple
+                                            data-selected-text-format="count>3"
+                                            ng-model="selectedAgents">
+                                        <option value="-1">所有应用</option>
+                                        <option data-divider="true"></option>
+                                        <option value="-100">Success</option>
+                                        <option value="-101">Forbidden</option>
+                                        <option value="-102">Proxy Failed</option>
+                                        <option value="-105">Expired Token</option>
+                                        <option value="-103">Login Validated Failed</option>
+                                        <option value="-104">Unknown</option>
+                                        <option data-divider="true"></option>
+                                        <option ng-repeat="u in accessAgentOptions" value="{{ $index }}">{{ u.name }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div style="width: 170px;display: inline-flex">
+                                    <div class="input-group date" id="date-time">
+                                        <input size="16" class="form-control" ng-model="selectedDate"
+                                               ng-change="selectedDateChange()"
+                                               type="text" value="" readonly>
+                                        <span class="input-group-addon"><i
+                                                class="glyphicon glyphicon-calendar"></i></span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                        <div id="main" style="height:500px;width: 100%;margin-top:20px"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endverbatim %}
+    </div>
+{% endblock %}
+
+{% block tail_script %}
+    <script src="/static/vendors/datetime-picker/bootstrap-datetimepicker.min.js"></script>
+    <script src="/static/vendors/datetime-picker/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script src="/static/vendors/bootstrap-select/js/bootstrap-select.min.js"></script>
+    <script src="/static/vendors/jquery.countTo.js"></script>
+    <script src="/static/vendors/echarts/dist/echarts.js"></script>
+    <script src="/static/js/dashboard/dashboard.js"></script>
+{% endblock %}

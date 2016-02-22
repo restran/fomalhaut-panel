@@ -4,7 +4,8 @@
     <th class="col-md-2">名称</th>
     <th class="col-md-1">API 访问名称</th>
     <th class="col-md-1">API 版本号</th>
-    <th class="col-md-5">Endpoint URL</th>
+    <th class="col-md-4">Endpoint URL</th>
+    <th class="col-md-1">需要登录</th>
     <th class="col-md-1">访问控制列表</th>
     <th class="col-md-1">&nbsp</th>
 </tr>
@@ -18,6 +19,7 @@
     <td ng-bind="entry.name"></td>
     <td ng-bind="entry.version"></td>
     <td class="break-word" ng-bind="entry.url"></td>
+    <td ng-bind="entry.require_login ? '是' : '否'"></td>
     <td ng-bind="entry.enable_acl ? '是' : '否'"></td>
     <td class="nowrap">
         <a href="javascript:void 0;" ng-click="config.showEditDialog('update', $index)">编辑</a>&nbsp;
@@ -25,6 +27,7 @@
     </td>
 </script>
 
-<tr ng-repeat="entry in config.entries | filter:query" id="endpoint-row-{{ entry.id }}" ng-include="'entry_renderer'"></tr>
+<tr ng-repeat="entry in config.entries | filter:query" id="endpoint-row-{{ entry.id }}"
+    ng-include="'entry_renderer'"></tr>
 {% endverbatim %}
 </tbody>

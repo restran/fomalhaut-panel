@@ -10,7 +10,9 @@ from django.db import models
 
 from django.core.validators import RegexValidator
 
-from api_dashboard.settings import DEFAULT_ASYNC_HTTP_CONNECT_TIMEOUT, DEFAULT_ASYNC_HTTP_REQUEST_TIMEOUT
+from api_dashboard.settings import DEFAULT_ASYNC_HTTP_CONNECT_TIMEOUT, \
+    DEFAULT_ASYNC_HTTP_REQUEST_TIMEOUT, DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS, \
+    DEFAULT_REFRESH_TOKEN_EXPIRE_SECONDS
 from common.utils import datetime_to_str
 from api_dashboard.settings import DEFAULT_ACCESS_LOG_PAGE_SIZE
 
@@ -32,6 +34,12 @@ class Client(models.Model):
                                                              message='仅使用字母数字和下划线')])
     # 是否启用
     enable = models.BooleanField(default=True)
+    # 去哪里验证登陆信息
+    login_auth_url = models.URLField(max_length=512, default='')
+    # access_token 在多少秒后过期
+    access_token_ex = models.IntegerField(default=DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS)
+    # refresh_token 在多少秒后过期
+    refresh_token_ex = models.IntegerField(default=DEFAULT_REFRESH_TOKEN_EXPIRE_SECONDS)
     # 备注
     memo = models.CharField(blank=True, max_length=512)
     date_updated = models.DateTimeField(auto_now=True)
@@ -45,6 +53,9 @@ class Client(models.Model):
             'name': self.name,
             'access_key': self.access_key,
             'secret_key': self.secret_key,
+            'login_auth_url': self.login_auth_url,
+            'access_token_ex': self.access_token_ex,
+            'refresh_token_ex': self.refresh_token_ex,
             'enable': self.enable,
             'memo': self.memo
         }
@@ -109,11 +120,8 @@ class Endpoint(models.Model):
     # Timeout for entire request in seconds
     async_http_request_timeout = models.IntegerField(
         default=DEFAULT_ASYNC_HTTP_REQUEST_TIMEOUT)
-    # TODO
     # 是否需要验证登陆
-    # require_app_login = models.BooleanField(default=True)
-    # 去哪里验证登陆信息
-    # login_verify_url = models.URLField(max_length=512)
+    require_login = models.BooleanField(default=True)
 
     # 备注
     memo = models.CharField(blank=True, max_length=512)
@@ -142,6 +150,7 @@ class Endpoint(models.Model):
             'netloc': netloc,
             'version': self.version,
             'enable_acl': self.enable_acl,
+            'require_login': self.require_login,
             'async_http_connect_timeout': self.async_http_connect_timeout,
             'async_http_request_timeout': self.async_http_request_timeout,
             'memo': self.memo,
@@ -492,4 +501,3 @@ def get_config_redis_json():
         t['endpoints'] = e_dict
 
     return json_data
-

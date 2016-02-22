@@ -118,6 +118,17 @@
                              data-toggle="popover" data-trigger="hover"
                              data-container="body"
                              data-placement="top"
+                             data-content="需要登录才能访问 API">
+                            <input type="checkbox" id="modal-form-require-login"
+                                   ng-model="config.formData.require_login.data">
+                            <label for="modal-form-require-login">需要登录</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-4 col-md-4 col-lg-4">
+                        <div class="ui toggle checkbox"
+                             data-toggle="popover" data-trigger="hover"
+                             data-container="body"
+                             data-placement="top"
                              data-content="对请求的 URL 根据正则表达式匹配规则，进行访问控制">
                             <input type="checkbox" id="modal-form-enable-acl"
                                    ng-model="config.formData.enable_acl.data">

@@ -32,7 +32,8 @@
 
                     <div class="input-group-btn">
                         <button type="button" class="btn btn-default"
-                                ng-click="config.randomKey(config.formData.access_key)">随机生成</button>
+                                ng-click="config.randomKey(config.formData.access_key)">随机生成
+                        </button>
                     </div>
                 </div>
             </div>
@@ -50,11 +51,46 @@
 
                     <div class="input-group-btn">
                         <button type="button" class="btn btn-default"
-                                ng-click="config.randomKey(config.formData.secret_key)">随机生成</button>
+                                ng-click="config.randomKey(config.formData.secret_key)">随机生成
+                        </button>
                     </div>
                 </div>
             </div>
 
+            <div class="form-group {{ config.formData.login_auth_url.has_error ? 'has-error' : '' }}">
+                <label class="control-label" for="modal-form-login-auth-url">登录验证 URL</label>
+                <label ng-show="config.formData.login_auth_url.has_error" class="control-label"
+                       ng-bind="config.formData.login_auth_url.errors"></label>
+                <input id="modal-form-login-auth-url" type="text" class="form-control"
+                       placeholder="使用该 URL 验证用户名和密码"
+                       ng-model="config.formData.login_auth_url.data">
+            </div>
+
+            <div class="form-group {{ config.formData.access_token_ex.has_error ? 'has-error' : '' }}">
+                <label class="control-label" for="modal-form-access-token-ex">Access Token 的过期时间</label>
+                <label ng-show="config.formData.access_token_ex.has_error" class="control-label"
+                       ng-bind="config.formData.access_token_ex.errors"></label>
+
+                <div class="input-group">
+                    <input id="modal-form-access-token-ex" type="text" class="form-control"
+                           placeholder="Access Token 的过期时间"
+                           ng-model="config.formData.access_token_ex.data">
+                    <span class="input-group-addon">秒</span>
+                </div>
+            </div>
+
+            <div class="form-group {{ config.formData.refresh_token_ex.has_error ? 'has-error' : '' }}">
+                <label class="control-label" for="modal-form-refresh-token-ex">Refresh Token 的过期时间</label>
+                <label ng-show="config.formData.refresh_token_ex.has_error" class="control-label"
+                       ng-bind="config.formData.refresh_token_ex.errors"></label>
+
+                <div class="input-group">
+                    <input id="modal-form-refresh-token-ex" type="text" class="form-control"
+                           placeholder="Refresh Token 的过期时间"
+                           ng-model="config.formData.refresh_token_ex.data">
+                    <span class="input-group-addon">秒</span>
+                </div>
+            </div>
             <div class="form-group">
                 <div class="ui toggle checkbox">
                     <input type="checkbox" id="modal-form-enable" name="enable"

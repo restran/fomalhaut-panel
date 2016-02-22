@@ -16,7 +16,23 @@ logger = logging.getLogger(__name__)
 class ClientForm(BaseModelForm):
     class Meta:
         model = Client
-        fields = ('name', 'memo', 'enable', 'access_key', 'secret_key')
+        fields = ('name', 'memo', 'enable', 'access_key', 'secret_key',
+                  'login_auth_url', 'access_token_ex', 'refresh_token_ex')
+
+    def clean_refresh_token_ex(self):
+        access_token_ex = self.cleaned_data['access_token_ex']
+        refresh_token_ex = self.cleaned_data['refresh_token_ex']
+        if access_token_ex >= refresh_token_ex:
+            raise forms.ValidationError(_('refresh_token 的过期时间不能小于 access_token'))
+
+        return refresh_token_ex
+
+
+ClientForm.base_fields.keyOrder = [
+    'name', 'memo', 'url', 'enable', 'access_key',
+    'secret_key', 'login_auth_url', 'access_token_ex',
+    'refresh_token_ex'
+]
 
 
 #
@@ -34,7 +50,7 @@ class EndpointForm(BaseModelForm):
         model = Endpoint
         fields = ('name', 'url', 'unique_name', 'enable_acl', 'version',
                   'async_http_connect_timeout', 'async_http_request_timeout',
-                  'memo')
+                  'memo', 'require_login')
 
     # def clean_uri_prefix(self):
     #     uri_prefix = self.cleaned_data['uri_prefix']
@@ -57,7 +73,7 @@ class EndpointForm(BaseModelForm):
 EndpointForm.base_fields.keyOrder = [
     'name', 'unique_name', 'url', 'prefix_uri', 'enable_acl',
     'async_http_connect_timeout', 'async_http_request_timeout',
-    'memo']
+    'memo', 'require_login']
 
 
 class ACLRuleForm(BaseModelForm):

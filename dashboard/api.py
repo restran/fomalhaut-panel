@@ -4,10 +4,11 @@
 
 from __future__ import unicode_literals
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import calendar
 import json
 import traceback
+import time
 from copy import copy, deepcopy
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
@@ -892,6 +893,60 @@ def api_get_access_agent_options(request):
 
 @login_required
 @csrf_protect
+@require_http_methods(["GET"])
+def api_get_client_options(request):
+    """
+    获取 Client select 选项
+    """
+    success, msg, data = False, '', []
+    data = Client.objects.all().values('id', 'name')
+    data = [t for t in data]
+    success = True
+    logger.debug(data)
+    return http_response_json({'success': success, 'msg': msg, 'data': data})
+
+
+@login_required
+@csrf_protect
+@require_http_methods(["POST"])
+def api_get_endpoint_options(request):
+    """
+    获取 Endpoint select 选项
+    """
+    success, msg, data = False, '', []
+    post_data = json.loads(request.body)
+    clients = post_data.get('clients', [])
+
+    if len(clients) == 0:
+        data = Endpoint.objects.all().values('id', 'unique_name', 'name', 'version')
+        data = [
+            {
+                'id': t['id'],
+                'unique_name': t['unique_name'],
+                'name': t['name'],
+                'version': t['version']
+            } for t in data
+            ]
+    else:
+        data = ClientEndpoint.objects.filter(
+            client_id__in=clients).select_related('endpoint')
+        data = [
+            {
+                'id': t.endpoint.id,
+                'unique_name': t.endpoint.unique_name,
+                'name': t.endpoint.name,
+                'version': t.endpoint.version
+            }
+            for t in data
+            ]
+
+    success = True
+    logger.debug(data)
+    return http_response_json({'success': success, 'msg': msg, 'data': data})
+
+
+@login_required
+@csrf_protect
 @require_http_methods(["POST"])
 def api_get_access_log(request):
     """
@@ -901,68 +956,19 @@ def api_get_access_log(request):
     """
     success, msg, data = False, '', []
     post_data = json.loads(request.body)
-    date = datetime.strptime(post_data['date'], '%Y-%m-%d').date()
-    page_id = post_data.get('page_id', 1)
-    agent_id_list = post_data['agent_id_list']
-    for t in agent_id_list:
-        if t == -1:
-            agent_id_list = None
-            break
+    if post_data['begin_time'] != '' and post_data['begin_time'] is not None:
+        post_data['begin_time'] = datetime.strptime(post_data['begin_time'], '%Y-%m-%d %H:%M')
 
-    result_code_list = post_data['result_code_list']
-    for t in result_code_list:
-        if t == '-1':
-            result_code_list = None
-            break
+    if post_data['end_time'] != '' and post_data['end_time'] is not None:
+        post_data['end_time'] = datetime.strptime(post_data['end_time'], '%Y-%m-%d %H:%M')
 
-    page_size = settings.DEFAULT_ACCESS_LOG_PAGE_SIZE
-    data, total_num, has_previous_page, has_next_page, offset \
-        = AccessLog.get_page_in_json(date, agent_id_list, result_code_list, page_id)
-    # 总页数
-    total_page = total_num / page_size
-
-    if total_num == page_size:
-        # 0 表示只有1页
-        total_page = 0
-
-    logger.debug("total_num: " + str(total_num))
-    if page_id > total_page + 1:
-        return error_404(request)
-
-    # display表示是否需要显示分页
-    page_info = {'display': True, 'previous_page': page_id - 1, 'next_page': page_id + 1,
-                 'has_previous_page': has_previous_page, 'has_next_page': has_next_page,
-                 'offset': offset, 'total_num': total_num, 'total_page': total_page + 1}
-
-    if len(data) > 0:
-        if total_page <= 0:  # 0 表示只有1页
-            # 不显示分页信息
-            page_info['display'] = False
-        elif total_page < 7:
-            page_info['page_list'] = range(1, total_page + 2)
-            # 这里的active采用与forloop.counter比较
-            # forloop.counter是从1开始的
-            page_info['active'] = page_id
-        else:
-            page_info['page_list'] = [1, 2, '...', '...', '...', total_page, total_page + 1]
-            if page_id < 3:
-                page_info['active'] = page_id
-            elif page_id == 3:
-                page_info['active'] = 3
-                page_info['page_list'][2] = page_id
-            elif page_id == total_page - 1:
-                page_info['active'] = 5
-                page_info['page_list'][4] = page_id
-            elif page_id > total_page - 1:
-                page_info['active'] = 7 - (total_page + 1 - page_id)
-            else:
-                page_info['active'] = 4
-                page_info['page_list'][3] = page_id
-    else:
-        page_info['display'] = False
-
-    return http_response_json({'success': True, 'msg': msg,
-                               'data': data, 'page_info': page_info})
+    entries, total_num = AccessLog.query(**post_data)
+    data = {
+        'entries': entries,
+        'total_num': total_num
+    }
+    # logger.debug(data)
+    return http_response_json({'success': True, 'msg': msg, 'data': data})
 
 
 @login_required

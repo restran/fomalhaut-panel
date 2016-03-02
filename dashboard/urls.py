@@ -36,9 +36,10 @@ urlpatterns.extend([
     url(r'^api/dashboard/get_total_by_day_access/$', api.api_get_total_by_day_access),
     url(r'^api/dashboard/get_total_by_month_access/$', api.api_get_total_by_month_access),
     url(r'^api/dashboard/get_total_count/$', api.api_get_total_count),
-    url(r'^api/dashboard/get_access_agent_options/$', api.api_get_access_agent_options),
+    url(r'^api/dashboard/get_client_options/$', api.api_get_client_options),
+    url(r'^api/dashboard/get_endpoint_options/$', api.api_get_endpoint_options),
     url(r'^api/dashboard/get_ip_count/$', api.api_get_ip_count),
     url(r'^api/dashboard/get_abnormal_ip_count/$', api.api_get_abnormal_ip_count),
-    url(r'^api/dashboard/access_log/$', api.api_get_access_log),
+    url(r'^api/dashboard/access_log/query/$', api.api_get_access_log),
     url(r'^api/dashboard/access_log/refresh/$', api.api_refresh_access_log),
 ])

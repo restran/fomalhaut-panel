@@ -2,225 +2,367 @@
  * Created by restran on 2015/7/21.
  */
 (function () {
-    var app = angular.module('app', []);
-
-    app.controller('appCtrl', ['$scope', '$http', '$timeout', '$filter', function ($scope, $http, $timeout, $filter) {
-
-        // 由于django的csrftoken保护
-        $http.defaults.xsrfCookieName = 'csrftoken';
-        $http.defaults.xsrfHeaderName = 'X-CSRFToken';
-
-        // JS获得当前时间 并格式化为:yyyy-MM-dd HH:MM:SS
-        function getNowFormatDate() {
-            var date = new Date();
-            var seperator1 = "-";
-            var seperator2 = ":";
-            var month = date.getMonth() + 1;
-            var strDate = date.getDate();
-            if (month >= 1 && month <= 9) {
-                month = "0" + month;
-            }
-            if (strDate >= 0 && strDate <= 9) {
-                strDate = "0" + strDate;
-            }
-            return date.getFullYear() + seperator1 + month + seperator1 + strDate
-                + " " + date.getHours() + seperator2 + date.getMinutes()
-                + seperator2 + date.getSeconds();
+    // JS获得当前时间 并格式化为:yyyy-MM-dd HH:mm:SS
+    var nowFormatDate = function () {
+        var date = new Date();
+        var seperator1 = "-";
+        var seperator2 = ":";
+        var month = date.getMonth() + 1;
+        var strDate = date.getDate();
+        if (month >= 1 && month <= 9) {
+            month = "0" + month;
         }
+        if (strDate >= 0 && strDate <= 9) {
+            strDate = "0" + strDate;
+        }
+        return date.getFullYear() + seperator1 + month + seperator1 + strDate
+            + " " + date.getHours() + seperator2 + date.getMinutes()
+            + seperator2 + date.getSeconds();
+    };
 
-        $scope.pageId = null;
-
-        $scope.refreshLog = function ($event) {
-            console.log('refreshLog');
-            var obj = $($event.currentTarget).find('span');
-            if (obj.hasClass('rotate')) {
-                return;
-            } else {
-                obj.addClass('rotate');
-            }
-
-            var post_url = '/api/dashboard/access_log/refresh/';
-
-            $http({
-                url: post_url,
-                method: 'POST',
-                async: true,
-                cache: false,
-                data: {},
-                headers: {'Content-Type': 'application/json; charset=utf-8'}
-            }).success(function (data) {
-                if (data['success']) {
-                    $scope.getData($scope.pageId);
+    var app = new Vue({
+        el: '#app',
+        data: {
+            query: null,
+            beginTime: null,
+            endTime: null,
+            ip: '',
+            status: '',
+            uri: '',
+            elapsedMin: null,
+            elapsedMax: null,
+            selectedClients: [],
+            selectedEndpoints: [],
+            selectedResults: [],
+            clientOptions: [],
+            endpointOptions: [],
+            entriesReady: false,
+            entries: [],
+            pageInfo: {
+                totalNum: 0,
+                currentPage: null,
+                pageSize: 200,
+                lastItem: null,
+                // 页面历史
+                pageHistory: [],
+                jumpPageId: null
+            },
+            cachedQuery: null
+        },
+        computed: {
+            totalPage: function () {
+                var totalPage;
+                if (this.pageInfo.totalNum == 0) {
+                    totalPage = 1;
                 } else {
-                    toastr["error"]('刷新日志失败');
+                    totalPage = Math.ceil(this.pageInfo.totalNum / this.pageInfo.pageSize);
                 }
-            }).error(function (data, status, headers, config) {
-                toastr["error"]('刷新日志失败');
-            }).finally(function () {
-                obj.removeClass('rotate')
-            });
-        };
-
-        $scope.getData = function (page_id) {
-            if (page_id == null || page_id < 0) {
-                return;
-            }
-
-            $scope.pageId = page_id;
-
-            NProgress.start();
-            var post_url = '/api/dashboard/access_log/';
-            var agent_id_list = [];
-            var i, index;
-            for (i = 0; i < $scope.selectedAgents.length; i++) {
-                index = parseInt($scope.selectedAgents[i]);
-                if (index == -1) {
-                    agent_id_list.push(-1);
+                console.log(totalPage);
+                return totalPage;
+            },
+            hasNextPage: function () {
+                if (this.pageInfo.currentPage == null) {
+                    return false;
                 } else {
-                    agent_id_list.push($scope.accessAgentOptions[index].id);
+                    return this.pageInfo.currentPage < this.totalPage;
                 }
-            }
-
-            var result_code_list = [];
-            for (i = 0; i < $scope.selectedResults.length; i++) {
-                var code = $scope.selectedResults[i];
-                if (code == '-1') {
-                    result_code_list.push('-1');
+            },
+            hasPreviousPage: function () {
+                if (this.pageInfo.currentPage == null) {
+                    return false;
                 } else {
-                    result_code_list.push(code);
+                    return this.pageInfo.currentPage > 1;
                 }
+            },
+            pageList: function () {
+                var pageList = [];
+                var i;
+                var currentPage = this.pageInfo.currentPage;
+                console.log(this.totalPage);
+                if (this.totalPage <= 1) {
+
+                } else if (this.totalPage < 7) {
+                    for (i = 0; i < this.totalPage; i++) {
+                        pageList.push(i + 1);
+                    }
+                } else {
+                    pageList = [1, 2, '...', '...', '...', this.totalPage - 1, this.totalPage];
+                    if (currentPage < 3) {
+                    }
+                    else if (currentPage == 3) {
+                        pageList[2] = currentPage;
+                    } else if (currentPage == this.totalPage - 2) {
+                        pageList[4] = currentPage;
+                    } else if (currentPage > this.totalPage - 2) {
+                    } else {
+                        pageList[3] = currentPage;
+                    }
+                }
+                console.log(pageList);
+                return pageList;
+            },
+            pageIndexOffset: function () {
+                return (this.pageInfo.currentPage - 1) * this.pageInfo.pageSize;
             }
-
-            var post_data = {
-                'date': $scope.selectedDate, 'agent_id_list': agent_id_list,
-                'page_id': page_id, 'result_code_list': result_code_list
-            };
-
-            $http({
-                url: post_url,
-                method: 'POST',
-                async: true,
-                cache: false,
-                data: post_data,
-                headers: {'Content-Type': 'application/json; charset=utf-8'}
-            }).success(function (data) {
-                if (data['success']) {
-                    $scope.entries = data['data'];
-                    $scope.page_info = data['page_info'];
-
-                    $timeout(function () {
-                        $('[data-toggle="tooltip"]').tooltip();
+        },
+        methods: {
+            loadClients: function () {
+                var apiUrl = '/api/dashboard/get_client_options/';
+                $request.get(apiUrl, null, function (data) {
+                    app.clientOptions = data['data'];
+                    console.log(app.clientOptions);
+                    app.loadEndpoints();
+                    Vue.nextTick(function () {
+                        // DOM 更新了
+                        $('#select-client').selectpicker('refresh');
                     });
-                } else {
-                    toastr["error"]('获取数据失败');
-                }
-            }).error(function (data, status, headers, config) {
-                toastr["error"]('获取数据失败');
-            }).finally(function () {
-                NProgress.done();
-            });
-        };
+                }, function (data, msg) {
+                    toastr["error"](msg);
+                })
 
-        // 获取AccessAgentOptions
-        $scope.getAccessAgentOptions = function () {
-            var api_url = '/api/dashboard/get_access_agent_options/';
-            $http.get(api_url).success(function (data, status, headers, config) {
-                console.log(data);
-                if (data['success'] == true) {
-                    $scope.accessAgentOptions = data['data'];
-                    console.log($scope.accessAgentOptions);
+            },
+            loadEndpoints: function () {
+                var apiUrl = '/api/dashboard/get_endpoint_options/';
+                var clients = [];
+                console.log(app.selectedClients);
 
-                    $timeout(function () {
-                        var ele_select_agents = $('#select-access-agent');
-                        ele_select_agents.selectpicker('refresh');
-                        ele_select_agents.selectpicker('val', '-1');
+                console.log(clients);
+                var postData = {
+                    'clients': this.selectedClients
+                };
+
+                $request.post(apiUrl, postData, function (data) {
+                    app.endpointOptions = data['data'];
+                    console.log(app.endpointOptions);
+
+                    Vue.nextTick(function () {
+                        // DOM 更新了
+                        $('#select-endpoint').selectpicker('refresh');
                     });
-
-                } else {
-                    toastr["error"]('获取数据失败');
-                }
-
-            }).error(function (data, status, headers, config) {
-                toastr["error"]('获取数据失败');
-            }).finally(function () {
-            });
-        };
-
-        // 选择的日期发生变化
-        $scope.selectedDateChange = function () {
-            $scope.getData(1);
-        };
-
-        // 访问日志，分页的页码跳转
-        $scope.jumpPage = {
-            jumpPageId: null,
-            doJumpPage: function () {
-                console.log($scope.jumpPage.jumpPageId);
-                var jumpPageId = parseInt($scope.jumpPage.jumpPageId);
-                if (isNaN(jumpPageId)) {
+                }, function (data, msg) {
+                    toastr["error"](msg);
+                })
+            },
+            search: function () {
+                console.log('search');
+                this.getPage(1, true);
+            },
+            getPage: function (pageId, isSearch) {
+                pageId = parseInt(pageId);
+                if (isNaN(pageId)) {
                     toastr['error']('请输入整数页码');
                     return;
                 }
-                console.log($scope.page_info['total_page']);
 
-                if (jumpPageId < 1 || jumpPageId > $scope.page_info['total_page']) {
+                if (pageId < 1 || pageId > this.totalPage) {
+                    console.log('error pageId ' + pageId);
                     toastr['error']('请输入正确的页码范围');
                     return;
                 }
 
-                $scope.getData(jumpPageId);
+                var pageInfo = this.pageInfo;
+                var skip, lastItem;
+                var i;
+
+                if (!isSearch && pageId == pageInfo.currentPage) {
+                    return;
+                }
+
+                if (pageId == 1) {
+                    pageInfo.currentPage = 1;
+                    pageInfo.lastItem = null;
+                    pageInfo.pageHistory = [];
+                    pageInfo.totalNum = 0;
+                } else {
+                    // 记录页面历史
+                    pageInfo.pageHistory.push({
+                        pageId: pageInfo.currentPage,
+                        lastItem: pageInfo.lastItem
+                    });
+
+                    if (pageInfo.pageHistory.length > 20) {
+                        // 删掉最后一个元素
+                        pageInfo.pageHistory.pop();
+                    }
+                }
+
+                var minOffset = null;
+                var page = null;
+                for (i = 0; i < pageInfo.pageHistory.length; i++) {
+                    var item = pageInfo.pageHistory[i];
+                    var offset = pageId - item.pageId;
+                    if (minOffset == null || (offset > 0 && offset < minOffset)) {
+                        page = item;
+                        minOffset = offset;
+                    }
+                }
+                console.log(page);
+                if (page != null) {
+                    skip = pageInfo.pageSize * (pageId - page.pageId - 1);
+                    lastItem = page.lastItem;
+                } else {
+                    skip = pageInfo.pageSize * (pageId - 1);
+                    lastItem = null;
+                }
+
+                pageInfo.currentPage = pageId;
+                var postData;
+                if (pageId != 1) {
+                    postData = $.extend(true, {}, this.cachedQuery);
+                } else {
+                    var statusList = this.status.replace('，', ',').split(',');
+                    var ipList = this.ip.replace('，', ',').split(',');
+                    var newIpList = [];
+                    for (i = 0; i < ipList.length; i++) {
+                        var ip = ipList[i].trim();
+                        if (ip != '') {
+                            newIpList.push(ip);
+                        }
+                    }
+                    ipList = newIpList;
+
+                    var newStatusList = [];
+                    for (i = 0; i < statusList.length; i++) {
+                        var status = statusList[i].trim();
+                        if (status != '' && !isNaN(status)) {
+                            newStatusList.push(parseInt(status))
+                        }
+                    }
+                    statusList = newStatusList;
+                    console.log(statusList);
+                    console.log(ipList);
+                    postData = {
+                        'begin_time': this.beginTime,
+                        'end_time': this.endTime,
+                        'uri': this.uri,
+                        'elapsed_min': parseInt(this.elapsedMin),
+                        'elapsed_max': parseInt(this.elapsedMax),
+                        'selected_clients': this.selectedClients,
+                        'selected_endpoints': this.selectedEndpoints,
+                        'selected_results': this.selectedResults
+                    };
+                    if (statusList.length == 1) {
+                        postData['status'] = statusList[0];
+                    } else {
+                        postData['status_list'] = statusList;
+                    }
+
+                    if (ipList.length == 1) {
+                        postData['ip'] = ipList[0];
+                    } else {
+                        postData['ip_list'] = ipList;
+                    }
+
+                    this.cachedQuery = $.extend(true, {}, postData);
+                }
+                postData['limit'] = pageInfo.pageSize;
+                postData['skip'] = skip;
+                postData['last_item'] = lastItem;
+
+                postData['require_total_num'] = pageId == 1;
+
+                this.getAccessLog(postData, pageId);
+            },
+            getAccessLog: function (postData) {
+                this.entriesReady = false;
+                var apiUrl = '/api/dashboard/access_log/query/';
+                console.log(postData);
+                $request.post(apiUrl, postData, function (data) {
+                    console.log(data);
+                    app.entries = data['data']['entries'];
+                    var totalNum = data['data']['total_num'];
+                    if (totalNum != null) {
+                        app.pageInfo.totalNum = totalNum;
+                        console.log(totalNum);
+                    }
+
+                    var lastItem;
+                    if (app.entries.length == 0) {
+                        lastItem = null;
+                    } else {
+                        lastItem = {
+                            'id': app.entries[app.entries.length - 1]['id'],
+                            'timestamp': app.entries[app.entries.length - 1]['timestamp']
+                        }
+                    }
+
+                    app.pageInfo.lastItem = lastItem;
+                    console.log(lastItem);
+
+                    //if (totalNum != null) {
+                    //    app.firstPageFirstItem = lastItem;
+                    //}
+                    Vue.nextTick(function () {
+                        app.entriesReady = true;
+                    });
+                }, function (data, msg) {
+                    toastr["error"](msg);
+                    Vue.nextTick(function () {
+                        app.entriesReady = true;
+                    });
+                })
+            },
+            dateTimeChange: function () {
+                console.log('kkk');
+                if (this.beginTime != null && this.beginTime != '' &&
+                    this.endTime != null && this.endTime != '') {
+                    if (this.beginTime > this.endTime) {
+                        toastr['error']('开始时间不能大于结束时间');
+                    }
+                }
             }
-        };
+        },
+        watch: {
+            beginTime: function () {
+                this.dateTimeChange();
+            },
+            endTime: function () {
+                this.dateTimeChange();
+            }
+        }
+    });
 
-        $scope.selectedDate = getNowFormatDate().slice(0, 10);
-        $scope.accessAgentOptions = [];
-        // 选择的AccessAgent
-        $scope.selectedAgents = [-1];
-        // 选择的访问结果
-        $scope.selectedResults = [-1];
+    app.loadClients();
+    app.getPage(1);
 
-        // 获取第一页
-        $scope.getData(1);
-        $scope.getAccessAgentOptions();
-
-        $(document).ready(function () {
-            $("#date-time").datetimepicker({
-                minView: 2,// 只显示到月
-                language: 'zh-CN',
-                autoclose: true,
-                todayHighlight: true,
-                format: "yyyy-mm-dd"
-            });
-
-            $('.selectpicker').selectpicker();
-            var ele_select_agents = $('#select-access-agent');
-            // 默认选择所有应用
-            ele_select_agents.selectpicker('val', '-1');
-            var $selectpicker_agents = ele_select_agents.data('selectpicker').$newElement;
-
-            // selectpicker 隐藏的时候，才更新数据
-            $selectpicker_agents.on('hide.bs.dropdown', function () {
-                console.log('hide');
-                $scope.getData(1);
-            });
-
-            // 访问结果
-            var ele_select_results = $('#select-access-results');
-            // 默认选择所有应用
-            ele_select_results.selectpicker('val', '-1');
-            var $selectpicker_results = ele_select_results.data('selectpicker').$newElement;
-
-            // selectpicker 隐藏的时候，才更新数据
-            $selectpicker_results.on('hide.bs.dropdown', function () {
-                console.log('hide');
-                $scope.getData(1);
-            });
-
-            $('[data-toggle="tooltip"]').tooltip();
-            $('[data-toggle="popover"]').popover();
+    $(document).ready(function () {
+        $(".date").datetimepicker({
+            minView: 0,
+            language: 'zh-CN',
+            autoclose: true,
+            todayHighlight: true,
+            format: "yyyy-mm-dd hh:ii"
         });
-    }]);
 
+        $('.selectpicker').selectpicker();
+        var eleSelectClient = $('#select-client');
+        // 默认选择所有应用
+        //ele_select_agents.selectpicker('val', '-1');
+        var $selectpickerClients = eleSelectClient.data('selectpicker').$newElement;
+
+        // selectpicker 隐藏的时候，才更新数据
+        $selectpickerClients.on('hide.bs.dropdown', function () {
+            console.log('hide');
+            //console.log(eleSelectClient.val());
+            //headerSearch.selectedClients = eleSelectClient.val();
+            app.loadEndpoints();
+        });
+
+        // 访问结果
+        //var ele_select_results = $('#select-access-results');
+        // 默认选择所有应用
+        //ele_select_results.selectpicker('val', '-1');
+        //var $selectpicker_results = ele_select_results.data('selectpicker').$newElement;
+
+        // selectpicker 隐藏的时候，才更新数据
+        //$selectpicker_results.on('hide.bs.dropdown', function () {
+        //    console.log('hide');
+        //    $scope.getData(1);
+        //});
+
+        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="popover"]').popover();
+    });
 })();
 
 

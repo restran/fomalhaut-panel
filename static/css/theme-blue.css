@@ -96,8 +96,8 @@ code, .popover {
 
 /*当前页面时的状态*/
 /*.navbar-default .navbar-nav > li .active {*/
-    /*color: #fff;*/
-    /*background-color: rgba(0, 0, 0, 0.05);*/
+/*color: #fff;*/
+/*background-color: rgba(0, 0, 0, 0.05);*/
 /*}*/
 
 .navbar-default .navbar-toggle:hover, .navbar-default .navbar-toggle:focus {
@@ -196,3 +196,9 @@ fieldset[disabled] .btn-primary:focus, fieldset[disabled] .btn-primary:hover {
 }
 
 /*------------------------*/
+
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+    }
+}

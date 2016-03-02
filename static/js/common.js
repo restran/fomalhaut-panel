@@ -70,6 +70,139 @@ var getCookie = function (name) {
     return cookieValue;
 };
 
+var $request = {
+    get: function (uri, data, successCallback, errorCallback) {
+        $.ajax({
+            type: 'GET',
+            url: uri,
+            // data to be added to query string:
+            data: data,
+            // type of data we are expecting in return:
+            dataType: 'json',
+            //timeout: 30000,
+            context: $('body'),
+            success: function (data) {
+                console.log(data);
+                try {
+                    if (data['success'] == true) {
+                        successCallback(data);
+                    } else {
+                        callErrorCallback(data, errorCallback);
+                    }
+                } catch (e) {
+                    console.log(e);
+                    callErrorCallback(data, errorCallback);
+                }
+            },
+            error: function (xhr, type) {
+                console.log('Ajax error!');
+                callErrorCallback(null, errorCallback);
+            }
+        })
+    },
+    post: function (uri, data, successCallback, errorCallback) {
+        $.ajax({
+            type: 'POST',
+            url: uri,
+            // data to be added to query string:
+            data: JSON.stringify(data),
+            // type of data we are expecting in return:
+            contentType: 'application/json; charset=utf-8',
+            //timeout: 30000,
+            context: $('body'),
+            success: function (data) {
+                console.log(data);
+                try {
+                    if (data['success'] == true) {
+                        successCallback(data);
+                    } else {
+                        console.log('callErrorCallback');
+                        callErrorCallback(data, errorCallback);
+                    }
+                } catch (e) {
+                    console.log(e);
+                    callErrorCallback(data, errorCallback);
+                }
+            },
+            error: function (xhr, type) {
+                console.log('Ajax error!');
+                callErrorCallback(null, errorCallback);
+            }
+        })
+    }
+};
+
+function callErrorCallback(data, callback) {
+    if (callback != null && callback != undefined) {
+        if (data != null && data['msg'] != '') {
+            callback(data, data['msg']);
+        } else {
+            callback(data, '获取数据失败');
+        }
+    }
+}
+
+function requestGet(uri, data, successCallback, errorCallback) {
+    $.ajax({
+        type: 'GET',
+        url: uri,
+        // data to be added to query string:
+        data: data,
+        // type of data we are expecting in return:
+        dataType: 'json',
+        //timeout: 30000,
+        context: $('body'),
+        success: function (data) {
+            console.log(data);
+            try {
+                if (data['success'] == true) {
+                    successCallback(data);
+                } else {
+                    callErrorCallback(data, errorCallback);
+                }
+            } catch (e) {
+                console.log(e);
+                callErrorCallback(data, errorCallback);
+            }
+        },
+        error: function (xhr, type) {
+            console.log('Ajax error!');
+            callErrorCallback(null, errorCallback);
+        }
+    })
+}
+
+function requestPost(uri, data, successCallback, errorCallback) {
+    $.ajax({
+        type: 'POST',
+        url: uri,
+        // data to be added to query string:
+        data: JSON.stringify(data),
+        // type of data we are expecting in return:
+        contentType: 'application/json; charset=utf-8',
+        //timeout: 30000,
+        context: $('body'),
+        success: function (data) {
+            console.log(data);
+            try {
+                if (data['success'] == true) {
+                    successCallback(data);
+                } else {
+                    console.log('callErrorCallback');
+                    callErrorCallback(data, errorCallback);
+                }
+            } catch (e) {
+                console.log(e);
+                callErrorCallback(data, errorCallback);
+            }
+        },
+        error: function (xhr, type) {
+            console.log('Ajax error!');
+            callErrorCallback(null, errorCallback);
+        }
+    })
+}
+
 (function () {
     // ie8 不支持 console
     if (!window.console) {

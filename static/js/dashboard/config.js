@@ -381,7 +381,7 @@
             removeACLRule: function (index) {
                 $scope.config.aclRules.splice(index, 1);
             },
-            randomKey: function (model) {
+            randomKey: function (model, type) {
                 function randomStr() {
                     var text = "";
                     var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -393,7 +393,17 @@
                 }
 
                 var shaObj = new jsSHA(randomStr(), "TEXT");
-                model.data = shaObj.getHash("SHA-1", "HEX");
+                var rawKey = shaObj.getHash("SHA-1", "HEX");
+                var key = [];
+                if (type == 'access_key') {
+                    for (var i = 0; i < rawKey.length; i+=2) {
+                        key.push(rawKey[i]);
+                    }
+                    model.data = key.join('');
+                } else {
+                    model.data = rawKey;
+                }
+
             },
             loadEndpoints: function () {
                 var api_url = '/api/dashboard/endpoint/';

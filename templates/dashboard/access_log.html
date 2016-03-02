@@ -1,11 +1,9 @@
 {% extends "base.html" %}
 {% load staticfiles %}
-{% block ng_app_config %}ng-app="app"{% endblock %}
 {% block title %}{{ request.page_title }}{% endblock %}
-{% block ng_app_body_scope %}ng-controller="appCtrl"{% endblock %}
 
 {% block style_block %}
-    <link href="/static/vendors/datetime-picker/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+    <link href="/static/vendors/datetime-picker/css/bootstrap-datetimepicker.css" rel="stylesheet">
     <link href="/static/vendors/bootstrap-select/css/bootstrap-select.css" rel="stylesheet">
 {% endblock %}
 
@@ -13,78 +11,200 @@
 {% endblock %}
 
 {% block main_content %}
-    <div class="main-content">
-
-        <div class="page-header clearfix">
-            <div class="float-left">
-                <h1 style="display: inline-block; margin-right: 10px">{{ request.page_title }}</h1>
-
+    <div class="main-content" id="app">
+        <div class="page-header">
+            <div class="clearfix">
+                <div class="float-left">
+                    <h1 style="display: inline-block; margin-right: 10px">{{ request.page_title }}</h1>
+                </div>
                 {% verbatim %}
-                <button class="btn btn-default" style="margin-top: -6px;" ng-click="refreshLog($event)"
-                        data-toggle="tooltip" data-placement="top" title="立即更新访问日志">
-                    <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
-                    刷新
-                </button>
+                <div class="float-right">
+                    <div style="display: inline">
+                        <button class="btn btn-default" role="button" data-toggle="collapse"
+                                data-target="#collapse-search"
+                                aria-expanded="false" aria-controls="collapse-search">
+                            <span class="glyphicon glyphicon-filter"></span> 高级搜索
+                        </button>
+                    </div>
+                    <div style="display: inline">
+                        <div class="icon-addon addon-md right-search-box">
+                            <input type="text" placeholder="搜索过滤" class="form-control" v-model="query">
+                            <label class="glyphicon glyphicon-search"></label>
+                        </div>
+                    </div>
+                </div>
                 {% endverbatim %}
             </div>
-            {% verbatim %}
-            <div class="float-right">
-                <div style="width: 150px;display: inline-flex">
-                    <select id="select-access-agent" class="selectpicker" multiple
-                            data-selected-text-format="count>3"
-                            ng-model="selectedAgents">
-                        <option value="-1">所有应用</option>
-                        <option data-divider="true"></option>
-                        <option ng-repeat="u in accessAgentOptions" value="{{ $index }}">{{ u.name }}
-                        </option>
-                    </select>
-                </div>
-                <div style="width: 150px;display: inline-flex"
-                     data-container="body" data-toggle="popover" data-trigger="hover" data-placement="left"
-                     data-content="访问结果：Success（成功），Forbidden（未通过令牌验证），Proxy Failed（后端网站未正确响应），Expired Token（鉴权令牌过期），Login Validated Failed（App 登录验证失败），Unknown（未知）">
-                    <select id="select-access-results" class="selectpicker" multiple
-                            data-selected-text-format="count>1"
-                            ng-model="selectedResults">
-                        <option value="-1">所有结果</option>
-                        <option data-divider="true"></option>
-                        <option value="0">Success</option>
-                        <option value="1">Forbidden</option>
-                        <option value="2">Proxy Failed</option>
-                        <option value="5">Expired Token</option>
-                        <option value="3">Login Validated Failed</option>
-                        <option value="4">Unknown</option>
-                    </select>
-                </div>
-                <div style="width: 150px;display: inline-flex">
-                    <div class="input-group date" id="date-time"
-                         data-toggle="tooltip" data-placement="top" title="选择指定日期的日志">
-                        <input size="16" class="form-control" ng-model="selectedDate"
-                               ng-change="selectedDateChange()"
-                               type="text" value="" readonly>
-                        <span class="input-group-addon">
-                            <i class="glyphicon glyphicon-calendar"></i></span>
+            <div class="collapse" id="collapse-search">
+                <div class="well" style="margin-top: 10px;margin-bottom: 10px;">
+                    {% verbatim %}
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label for="date-begin-time" class="col-xs-3 control-label">开始时间</label>
+
+                            <div class="col-xs-9">
+                                <div class="input-group date" id="date-begin-time"
+                                     data-toggle="tooltip" data-placement="top" title="选择开始时间">
+                                    <input size="16" class="form-control" v-model="beginTime"
+                                           type="text" value="" readonly>
+                                    <span class="input-group-addon" style="border-left: 0;">
+                                         <i class="glyphicon glyphicon-remove"></i>
+                                    </span>
+                                    <span class="input-group-addon">
+                                        <i class="glyphicon glyphicon-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="date-end-time" class="col-xs-3 control-label">结束时间</label>
+
+                            <div class="col-xs-9">
+                                <div class="input-group date" id="date-end-time"
+                                     data-toggle="tooltip" data-placement="top" title="选择结束时间">
+                                    <input size="16" class="form-control" v-model="endTime"
+                                           type="text" value="" readonly>
+
+                                    <div class="input-group-addon" style="border-left: 0;">
+                                        <i class="glyphicon glyphicon-remove"></i>
+                                    </div>
+                                    <div class="input-group-addon">
+                                        <i class="glyphicon glyphicon-calendar"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div style="display: inline-flex">
-                    <div class="icon-addon addon-md right-search-box">
-                        <input type="text" placeholder="搜索过滤" class="form-control" ng-model="query">
-                        <label class="glyphicon glyphicon-search"></label>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label for="select-client" class="col-xs-3 control-label">应用</label>
+
+                            <div class="col-xs-9">
+                                <select id="select-client" class="selectpicker" multiple
+                                        data-live-search="true"
+                                        data-selected-text-format="count>3" data-width="100%"
+                                        v-model="selectedClients">
+                                    <!--
+                                    <option value="-1">所有应用</option>
+                                    <option data-divider="true"></option>-->
+                                    <option v-for="u in clientOptions" track-by="$index"
+                                            :value="u.id" v-text="u.name"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <label for="select-endpoint" class="col-xs-3 control-label">Endpoint</label>
+
+                            <div class="col-xs-9">
+                                <select id="select-endpoint" class="selectpicker" multiple
+                                        data-selected-text-format="count>3" data-width="100%"
+                                        data-live-search="true"
+                                        v-model="selectedEndpoints">
+                                    <!--
+                                    <option value="-1">所有 Endpoint</option>
+                                    <option data-divider="true"></option>-->
+                                    <option v-for="u in endpointOptions"
+                                            track-by="$index" :value="u.id"
+                                            v-text="u.name + '/' + u.version"></option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label for="select-access-results" class="col-xs-3 control-label">结果</label>
+
+                            <div class="col-xs-9"
+                                 data-container="body" data-toggle="popover" data-trigger="hover" data-placement="left"
+                                 data-content="访问结果：Success（成功），Forbidden（未通过令牌验证），Proxy Failed（后端网站未正确响应），Expired Token（鉴权令牌过期），Login Validated Failed（App 登录验证失败），Unknown（未知）">
+                                <select id="select-access-results" class="selectpicker" multiple
+                                        data-live-search="true"
+                                        data-selected-text-format="count>2" data-width="100%"
+                                        v-model="selectedResults">
+                                    <option value="0">Success</option>
+                                    <option value="1">Forbidden</option>
+                                    <option value="2">Proxy Failed</option>
+                                    <option value="5">Expired Token</option>
+                                    <option value="3">Login Validated Failed</option>
+                                    <option value="4">Unknown</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="search-uri" class="col-xs-3 control-label">URI</label>
+
+                            <div class="col-xs-9">
+                                <input type="text" v-model="uri" class="form-control" id="search-uri"
+                                       placeholder="匹配请求的 URI 是否存在查找内容">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label for="search-status" class="col-xs-3 control-label">状态码</label>
+
+                            <div class="col-xs-9">
+                                <input type="text" v-model="status" class="form-control" id="search-status"
+                                       placeholder="多个状态码使用逗号隔开">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="search-ip" class="col-xs-3 control-label">IP</label>
+
+                            <div class="col-xs-9">
+                                <input type="text" v-model="ip" class="form-control" id="search-ip"
+                                       placeholder="多个 IP 使用逗号隔开">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label for="search-elapsed" class="col-xs-3 control-label">耗时</label>
+
+                            <div class="col-xs-9">
+                                <div class="input-group">
+                                    <input type="number" v-model="elapsedMin" class="form-control" placeholder="最小值">
+                                    <span class="input-group-addon" style="border-left: 0;border-right: 0;">~</span>
+                                    <input type="number" v-model="elapsedMax" class="form-control" placeholder="最大值">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div style="text-align: right;padding-right: 15px;">
+                                <button class="btn btn-primary" role="button"
+                                        @click="search()">
+                                    <span class="glyphicon glyphicon-search"></span> 搜索
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                    {% endverbatim %}
                 </div>
             </div>
-            {% endverbatim %}
         </div>
 
         {% verbatim %}
-        <div class="table-responsive">
+
+        <div class="loading-spinner" v-show="!entriesReady">
+            <div class="rect1"></div>
+            <div class="rect2"></div>
+            <div class="rect3"></div>
+            <div class="rect4"></div>
+            <div class="rect5"></div>
+        </div>
+
+        <div class="table-responsive" style="display: none" v-show="entriesReady">
             <table class="table table-hover table-striped" id="table-data">
                 <thead>
                 <tr>
                     <th class="">#</th>
-                    <th class="col-md-1">应用名</th>
-                    <th class="col-md-1">站点名</th>
-                    <th class="col-md-4">URL</th>
-                    <th class="col-md-1">Remote IP</th>
+                    <th class="col-md-1">应用</th>
+                    <th class="col-md-5">Request URI</th>
+                    <th class="col-md-1">IP</th>
                     <th class="col-md-2">时间</th>
                     <th class="col-md-1">耗时</th>
                     <th class="col-md-1">状态码</th>
@@ -92,80 +212,62 @@
                 </tr>
                 </thead>
                 <tbody id="tbody-data">
-
-                <script type="text/ng-template" id="entry_renderer.html">
-                    <td ng-bind="page_info.offset + $index+1"></td>
-                    <td class="break-word" ng-bind="entry.agent_name"></td>
-                    <td class="break-word" ng-bind="entry.site_name"></td>
-                    <td class="break-word" ng-bind="entry.method + ' ' + entry.url"></td>
-                    <td class="break-word" ng-bind="entry.remote_ip"></td>
-                    <td class="break-word" ng-bind="entry.time"></td>
-                    <td ng-bind="entry.elapsed + 'ms'"></td>
-                    <td ng-bind="entry.status_code"></td>
-                    <td style="display: inline-block" ng-if="entry.header_token">
-                        <span class="label"
-                              data-toggle="tooltip" data-placement="top" title="鉴权令牌位于 Header 中，属于一次 Page View"
-                              ng-class="{'label-success': entry.result_code == 0,
-                              'label-warning': entry.result_code == 2 || (entry.result_code == 0 && entry.status_code >= 400),
-                              'label-info':  entry.result_code == 3 || entry.result_code == 5,
-                              'label-danger': entry.result_code == 1 || entry.result_code == 4}">
-                            {{ entry.access_result }}
-                            &nbsp;<span class="glyphicon glyphicon-flag"></span>
-                        </span>
+                <tr v-for="entry in entries | filterBy query | orderBy 'timestamp' -1" track-by="$index">
+                    <td v-text="this.pageIndexOffset + $index + 1"></td>
+                    <td class="break-word" v-text="entry.client.name"></td>
+                    <!--<td class="break-word" v-text="entry.endpoint.name + '/' + entry.endpoint.version"></td>-->
+                    <td class="break-word" v-text="entry.request.method + ' ' + entry.request.uri"></td>
+                    <td class="break-word" v-text="entry.ip"></td>
+                    <td class="break-word" v-text="entry.accessed_at"></td>
+                    <td v-text="entry.elapsed + 'ms'"></td>
+                    <td v-text="entry.response.status"></td>
+                    <td>
+                            <span class="label"
+                                  ng-class="{'label-success': entry.result_code == 0,
+                                  'label-warning': entry.result_code == 2 || (entry.result_code == 0 && entry.status_code >= 400),
+                                  'label-info':  entry.result_code == 3 || entry.result_code == 5,
+                                  'label-danger': entry.result_code == 1 || entry.result_code == 4}">
+                                {{ entry.result_code }}
+                            </span>
                     </td>
-                    <td style="display: inline-block" ng-if="!entry.header_token">
-                        <span class="label"
-                              ng-class="{'label-success': entry.result_code == 0,
-                              'label-warning': entry.result_code == 2 || (entry.result_code == 0 && entry.status_code >= 400),
-                              'label-info':  entry.result_code == 3 || entry.result_code == 5,
-                              'label-danger': entry.result_code == 1 || entry.result_code == 4}">
-                            {{ entry.access_result }}
-                        </span>
-                    </td>
-                </script>
-                <tr ng-repeat="entry in entries | filter:query" ng-include="'entry_renderer.html'"></tr>
-
+                </tr>
                 </tbody>
             </table>
         </div>
 
         <div class="page-footer">
-            <script type="text/ng-template" id="pagination_render.html">
+            <div class="text-center" style="display: none" v-show="totalPage>1">
                 <div style="display: inline-block;margin-left: -190px;">
                     <ul class="pagination">
-                        <li ng-if="page_info.has_previous_page">
-                            <a href="#" ng-click="getData(page_info.previous_page)">&laquo;上一页</a></li>
-                        <li ng-if="!page_info.has_previous_page" class="disabled"><a href="#">&laquo; 上一页</a></li>
-                        <!--加上 track by $index，否则会出现错误 Error: ngRepeat:dupes Duplicate Key in Repeater-->
-                        <li ng-repeat="pi in page_info.page_list track by $index"
-                            ng-class="page_info.active==$index+1 ? 'active' : ''">
-                            <a ng-click="getData(pi=='...' ? null : pi)" href="#">
-                                <span ng-bind="pi"></span>
-                                <span ng-if="page_info.active==$index+1" class="sr-only">(current)</span></a>
+                        <li v-if="hasPreviousPage">
+                            <a href="#" @click="getPage(pageInfo.currentPage - 1)">&laquo;上一页</a></li>
+                        <li v-else class="disabled"><a href="#">&laquo; 上一页</a></li>
+                        <li v-for="pi in pageList" track_by="$index"
+                            :class="{'active': pageInfo.currentPage==pi}">
+                            <a href="#" v-if="pi!='...'" @click="getPage(pi)">
+                                <span v-text="pi"></span>
+                                <span v-if="pageInfo.currentPage==pi" class="sr-only">(current)</span></a>
+                            <a href="#" v-else>
+                                <span v-text="pi"></span>
+                                <span v-if="pageInfo.currentPage==pi" class="sr-only">(current)</span></a>
                         </li>
-                        <li ng-if="page_info.has_next_page">
-                            <a href="#" ng-click="getData(page_info.next_page)">下一页 &raquo;</a>
+                        <li v-if="hasNextPage">
+                            <a href="#" @click="getPage(pageInfo.currentPage + 1)">下一页 &raquo;</a>
                         </li>
-                        <li ng-if="!page_info.has_next_page" class="disabled"><a href="#">下一页 &raquo;</a></li>
+                        <li v-else class="disabled"><a href="#">下一页 &raquo;</a></li>
                     </ul>
                 </div>
 
-
                 <div style="display: inline-block; margin-top: 20px;margin-left: 10px;position: absolute;">
                     <input style="width:60px;display: inline-block;"
-                           ng-model="jumpPage.jumpPageId"
+                           v-model="pageInfo.jumpPageId"
                            type="text" class="form-control" placeholder="页码">
                     <button style="display: inline-block;margin-top: -3px;" type="submit" class="btn btn-default"
-                            ng-click="jumpPage.doJumpPage()">跳转
+                            @click="getPage(pageInfo.jumpPageId)">跳转
                     </button>
-                    <span style="margin-left: 10px">共 {{ page_info.total_num }} 项</span>
+                    <span style="margin-left: 10px" v-text="'共' + pageInfo.totalNum + '项'"></span>
                 </div>
-
-            </script>
-
-            <div class="text-center" ng-show="page_info.display" ng-include="'pagination_render.html'">
             </div>
-
         </div>
         {% endverbatim %}
     </div>

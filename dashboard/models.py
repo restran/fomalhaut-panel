@@ -3,6 +3,7 @@
 # created by restran on 2016/1/2
 
 from __future__ import unicode_literals
+from datetime import datetime
 import logging
 from urlparse import urlparse
 
@@ -13,8 +14,10 @@ from django.core.validators import RegexValidator
 from api_dashboard.settings import DEFAULT_ASYNC_HTTP_CONNECT_TIMEOUT, \
     DEFAULT_ASYNC_HTTP_REQUEST_TIMEOUT, DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS, \
     DEFAULT_REFRESH_TOKEN_EXPIRE_SECONDS
-from common.utils import datetime_to_str
+from common.utils import datetime_to_str, datetime_to_timestamp
 from api_dashboard.settings import DEFAULT_ACCESS_LOG_PAGE_SIZE
+from mongoengine import *
+from six import text_type
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +38,7 @@ class Client(models.Model):
     # 是否启用
     enable = models.BooleanField(default=True)
     # 去哪里验证登陆信息
-    login_auth_url = models.URLField(max_length=512, default='')
+    login_auth_url = models.URLField(max_length=512, default='', blank=True)
     # access_token 在多少秒后过期
     access_token_ex = models.IntegerField(default=DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS)
     # refresh_token 在多少秒后过期
@@ -277,7 +280,166 @@ def choice_id_to_name(choice, c_id):
     return ''
 
 
-class AccessLog(models.Model):
+class AccessLogRequest(EmbeddedDocument):
+    method = StringField()
+    content_type = StringField()
+    headers = FileField(collection_name='response_headers')
+    body = FileField(collection_name='response_body')
+    uri = StringField()
+
+    def to_json_dict(self):
+        j = {
+            'uri': self.uri,
+            'method': self.method,
+            'content_type': self.content_type,
+            'headers_id': self.headers.grid_id,
+            'body_id': self.body.grid_id
+        }
+        return j
+
+
+class AccessLogResponse(EmbeddedDocument):
+    status = IntField()
+    content_type = StringField()
+    headers = FileField(collection_name='response_headers')
+    body = FileField(collection_name='response_body')
+
+    def to_json_dict(self):
+        j = {
+            'status': self.status,
+            'content_type': self.content_type,
+            'headers_id': self.headers.grid_id,
+            'body_id': self.body.grid_id
+        }
+        return j
+
+
+class AccessLogClient(EmbeddedDocument):
+    id = IntField()
+    name = StringField()
+
+    def to_json_dict(self):
+        j = {
+            'id': self.id,
+            'name': self.name,
+        }
+        return j
+
+
+class AccessLogEndpoint(EmbeddedDocument):
+    id = IntField()
+    name = StringField()
+    is_builtin = BooleanField(default=False)
+    version = StringField()
+
+    def to_json_dict(self):
+        j = {
+            'id': self.id,
+            'name': self.name,
+            'is_builtin': self.is_builtin,
+            'version': self.version
+        }
+        return j
+
+
+class AccessLog(DynamicDocument):
+    # 转发到哪个 URL
+    forward_url = StringField(default='')
+
+    # 请求的数据
+    request = EmbeddedDocumentField(AccessLogRequest)
+    # 响应的数据
+    response = EmbeddedDocumentField(AccessLogResponse)
+
+    client = EmbeddedDocumentField(AccessLogClient)
+    endpoint = EmbeddedDocumentField(AccessLogEndpoint)
+    ip = StringField()
+    # 请求的时间
+    accessed_at = DateTimeField()
+    elapsed = IntField()
+    # 返回结果的编码
+    result_code = IntField()
+    result_msg = StringField()
+
+    meta = {
+        'indexes': [
+            ('-accessed_at', '-id'),
+            ('-accessed_at', '-id', 'result_code'),
+            ('-accessed_at', '-id', 'client.id'),
+            ('-accessed_at', '-id', 'endpoint.name', 'endpoint.version')
+        ]
+    }
+
+    def to_json_dict(self):
+        j = {
+            'id': text_type(self.id),
+            'forward_url': self.forward_url,
+            'timestamp': datetime_to_timestamp(self.accessed_at),
+            'accessed_at': datetime_to_str(self.accessed_at, '%Y-%m-%d %H:%M:%S'),
+            'elapsed': self.elapsed,
+            'result_code': self.result_code,
+            'result_msg': self.result_msg,
+            'ip': self.ip,
+            'request': self.request.to_json_dict(),
+            'response': self.response.to_json_dict(),
+            'client': self.client.to_json_dict(),
+            'endpoint': self.endpoint.to_json_dict()
+        }
+
+        return j
+
+    @classmethod
+    def query(cls, **kwargs):
+        filter_dict = {}
+        map_dict = {
+            'begin_time': 'accessed_at__gte',
+            'end_time': 'accessed_at__lte',
+            'ip_list': 'ip__in',
+            'status_list': 'status__in',
+            'ip': 'ip__icontains',
+            'uri': 'request__uri__icontains',
+            'status': 'response__status',
+            'elapsed_min': 'elapsed__gte',
+            'elapsed_max': 'elapsed__lte',
+            'selected_clients': 'client__id__in',
+            'selected_endpoints': 'endpoint__id__in',
+            'selected_results': 'result_code__in',
+        }
+        for k, v in map_dict.iteritems():
+            field = kwargs.get(k)
+            if isinstance(field, list) and len(field) == 0:
+                continue
+
+            if field is not None and field != '':
+                filter_dict[v] = kwargs.get(k)
+
+        last_item = kwargs.get('last_item')
+        if last_item is not None:
+            # accessed_at = datetime.fromtimestamp(last_item['timestamp'] / 1000.0)
+            # filter_dict['accessed_at__lte'] = accessed_at
+            filter_dict['id__lt'] = last_item['id']
+
+        # 因为是按照 id 排序的, 不能保证返回的数据是按创建的时间排序
+        # 因为 id 只能保证在秒的级别是由先后顺序的
+        order_by = ['-id']
+        limit = kwargs.get('limit', DEFAULT_ACCESS_LOG_PAGE_SIZE)
+        logger.debug(limit)
+        skip = kwargs.get('skip', 0)
+        logger.debug(skip)
+        logs = AccessLog.objects(**filter_dict).order_by(*order_by)[skip:skip + limit]
+        logs = [t.to_json_dict() for t in logs]
+
+        if kwargs.get('require_total_num'):
+            if 'id__lt' in filter_dict:
+                del filter_dict['id__lt']
+            total_num = AccessLog.objects(**filter_dict).count()
+        else:
+            total_num = None
+
+        return logs, total_num
+
+
+class AccessLog2(models.Model):
     """
     访问日志
     """

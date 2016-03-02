@@ -17,6 +17,8 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
+from pymongo import MongoClient
+from mongoengine import connect
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -226,7 +228,7 @@ DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS = 10 * 3600 * 24
 DEFAULT_REFRESH_TOKEN_EXPIRE_SECONDS = 20 * 3600 * 24
 
 # 访问日志默认分页大小
-DEFAULT_ACCESS_LOG_PAGE_SIZE = 100
+DEFAULT_ACCESS_LOG_PAGE_SIZE = 200
 
 # 使用 Redis 存储 Session 数据
 # 注意，密码要替换成服务器上的
@@ -237,8 +239,28 @@ REDIS_PASSWORD = '5iveSec0nds'
 # 代理配置redis中key前缀
 PROXY_CONFIG_REDIS_PREFIX = 'config'
 
-# 基础配置在redis中的key
-BASE_CONFIG_REDIS_KEY = 'base_config'
+
+# MongoDB 配置
+MONGO_HOST = '127.0.0.1'
+MONGO_PORT = 27017
+MONGO_USERNAME = 'api_gateway_user'
+MONGO_PASSWORD = 'api_gateway_password'
+MONGO_DBNAME = 'api_gateway'
+
+connect(
+    db=MONGO_DBNAME,
+    username=MONGO_USERNAME,
+    password=MONGO_PASSWORD,
+    host=MONGO_HOST,
+    port=MONGO_PORT
+)
+
+# 创建一个数据库连接池
+# DB_CLIENT = MongoClient(MONGO_HOST, MONGO_PORT, max_pool_size=200)
+# # 验证数据库用户名和密码
+# DB_CLIENT[MONGO_DBNAME].authenticate(
+#     MONGO_USERNAME, MONGO_PASSWORD, mechanism='SCRAM-SHA-1')
+# MONGO_DB = DB_CLIENT[MONGO_DBNAME]
 
 # 访问分析统计数据在redis中key前缀
 ANALYTICS_REDIS_PREFIX = 'a'

@@ -8,17 +8,30 @@ import logging
 import json
 
 from django.http import HttpResponse
+import time
 
 logger = logging.getLogger(__name__)
 
 
-def datetime_to_str(dt):
+def datetime_to_str(dt, format_str='%Y-%m-%d %H:%M:%S'):
     """
     将datetime转换成字符串
     :param dt:
     :return:
     """
-    return dt.strftime('%Y-%m-%d %H:%M:%S') if dt else ''
+    return dt.strftime(format_str) if dt else ''
+
+
+def datetime_to_timestamp(dt):
+    """
+    将 datetime 转换成时间戳，精确到毫秒
+    :param dt:
+    :return:
+    """
+    if dt is None:
+        return None
+    else:
+        return time.mktime(dt.timetuple()) * 1e3 + dt.microsecond / 1e3
 
 
 def error_404(request):

@@ -4,7 +4,15 @@ Web dashboard for [api-gateway](https://github.com/restran/api-gateway), still i
 
 这是 api-gateway 项目的 Web 控制台，目前仍然在开发中。
 
-![demo_page](doc/demo_page.png "")
+## 页面效果
+
+### 应用配置
+
+![config](doc/config.png "")
+
+### 访问日志
+
+![access_log](doc/access_log.png "")
 
 ## 环境和依赖
 

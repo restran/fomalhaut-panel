@@ -19,23 +19,23 @@
 }
 
 /*----------------------------*/
-
 /*回到顶部*/
 #back-to-top {
     cursor: pointer;
     position: fixed;
     right: 40px;
     bottom: 50px;
-    background-image: url(/static/img/back-top.png);
-    width: 55px;
-    height: 55px;
 }
 
-#back-to-top:hover {
-    background: url(/static/img/back-top.png) 0 -55px;
-
+#back-to-top > span {
+    border-radius: 50%;
+    color: rgba(0, 0, 0, .3);
+    font-size: 42px;
 }
 
+#back-to-top:hover > span {
+    color: rgba(0, 0, 0, .4);
+}
 /*----------------------------*/
 /*页面标题*/
 .page-header h1 {

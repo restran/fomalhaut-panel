@@ -116,19 +116,18 @@
                         <div class="col-sm-6">
                             <label for="select-access-results" class="col-xs-3 control-label">结果</label>
 
-                            <div class="col-xs-9"
-                                 data-container="body" data-toggle="popover" data-trigger="hover" data-placement="left"
-                                 data-content="访问结果：Success（成功），Forbidden（未通过令牌验证），Proxy Failed（后端网站未正确响应），Expired Token（鉴权令牌过期），Login Validated Failed（App 登录验证失败），Unknown（未知）">
+                            <div class="col-xs-9">
                                 <select id="select-access-results" class="selectpicker" multiple
                                         data-live-search="true"
                                         data-selected-text-format="count>2" data-width="100%"
                                         v-model="selectedResults">
-                                    <option value="0">Success</option>
-                                    <option value="1">Forbidden</option>
-                                    <option value="2">Proxy Failed</option>
-                                    <option value="5">Expired Token</option>
-                                    <option value="3">Login Validated Failed</option>
-                                    <option value="4">Unknown</option>
+                                    <option value="200">200 成功</option>
+                                    <option value="400">400 请求数据不完整</option>
+                                    <option value="401">401 登录验证失败</option>
+                                    <option value="403">403 HMAC 鉴权失败</option>
+                                    <option value="500">500 服务端错误</option>
+                                    <option value="503">504 Endpoint 服务不可用</option>
+                                    <option value="510">510 Client 配置有误</option>
                                 </select>
                             </div>
                         </div>
@@ -203,12 +202,11 @@
                 <tr>
                     <th class="">#</th>
                     <th class="col-md-1">应用</th>
-                    <th class="col-md-5">Request URI</th>
+                    <th class="col-md-6">Request URI</th>
                     <th class="col-md-1">IP</th>
                     <th class="col-md-2">时间</th>
                     <th class="col-md-1">耗时</th>
-                    <th class="col-md-1">状态码</th>
-                    <th class="col-md-1">结果</th>
+                    <th class="col-md-1">状态码 / 结果</th>
                 </tr>
                 </thead>
                 <tbody id="tbody-data">
@@ -219,16 +217,32 @@
                     <td class="break-word" v-text="entry.request.method + ' ' + entry.request.uri"></td>
                     <td class="break-word" v-text="entry.ip"></td>
                     <td class="break-word" v-text="entry.accessed_at"></td>
-                    <td v-text="entry.elapsed + 'ms'"></td>
-                    <td v-text="entry.response.status"></td>
                     <td>
-                            <span class="label"
-                                  ng-class="{'label-success': entry.result_code == 0,
-                                  'label-warning': entry.result_code == 2 || (entry.result_code == 0 && entry.status_code >= 400),
-                                  'label-info':  entry.result_code == 3 || entry.result_code == 5,
-                                  'label-danger': entry.result_code == 1 || entry.result_code == 4}">
-                                {{ entry.result_code }}
-                            </span>
+                        <span :class="{
+                              'label': entry.elapsed >= 3000,
+                              'label-warning': entry.elapsed >= 3000,
+                              'label-danger': entry.elapsed >= 10000 }">
+                            {{ entry.elapsed + 'ms' }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="label"
+                              :class="{
+                              'label-success': entry.response.status >= 200 && entry.response.status < 300,
+                              'label-warning': entry.response.status >= 400 && entry.response.status < 500,
+                              'label-info': (entry.response.status >= 300 && entry.response.status < 400) ||
+                              entry.response.status < 200,
+                              'label-danger': entry.response.status >= 500 }">
+                            {{ entry.response.status }}
+                        </span>
+                        <span style="margin-left: 5px;" v-show="entry.result_code != 200" class="label"
+                              :class="{
+                              'label-success': entry.result_code == 200,
+                              'label-warning': entry.result_code == 503 || entry.result_code == 400,
+                              'label-info':  entry.result_code == 401 || entry.result_code == 510,
+                              'label-danger': entry.result_code == 403 || entry.result_code == 500 }">
+                            {{ entry.result_code }}
+                        </span>
                     </td>
                 </tr>
                 </tbody>

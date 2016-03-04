@@ -2,24 +2,6 @@
  * Created by restran on 2015/7/21.
  */
 (function () {
-    // JS获得当前时间 并格式化为:yyyy-MM-dd HH:mm:SS
-    var nowFormatDate = function () {
-        var date = new Date();
-        var seperator1 = "-";
-        var seperator2 = ":";
-        var month = date.getMonth() + 1;
-        var strDate = date.getDate();
-        if (month >= 1 && month <= 9) {
-            month = "0" + month;
-        }
-        if (strDate >= 0 && strDate <= 9) {
-            strDate = "0" + strDate;
-        }
-        return date.getFullYear() + seperator1 + month + seperator1 + strDate
-            + " " + date.getHours() + seperator2 + date.getMinutes()
-            + seperator2 + date.getSeconds();
-    };
-
     var app = new Vue({
         el: '#app',
         data: {
@@ -106,7 +88,7 @@
             }
         },
         methods: {
-            loadClients: function () {
+            loadOptions: function () {
                 var apiUrl = '/api/dashboard/get_client_options/';
                 $request.get(apiUrl, null, function (data) {
                     app.clientOptions = data['data'];
@@ -322,7 +304,7 @@
         }
     });
 
-    app.loadClients();
+    app.loadOptions();
     app.getPage(1);
 
     $(document).ready(function () {

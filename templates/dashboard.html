@@ -37,132 +37,157 @@
 {% block main_content %}
     <div class="main-content" id="dashboard-app">
         {% verbatim %}
-        <div class="row">
-            <div class="col-sm-3 col-md-3">
-                <div class="panel panel-default">
-                    <div class="panel-heading clearfix">
-                        <div class="float-left">
-                            <h4 class="panel-title">累计访问</h4>
-                        </div>
-                    </div>
-                    <div class="panel-body" style="padding-bottom: 0">
-                        <div style="font-size: 35px; margin: 20px 0 5px 0; text-align: center;color: #51d466">
-                            <span id="count2-total-count" class="number-count" data-from="0"
-                                  ng-attr-data-to="{{ totalCount.totalCount }}" data-speed="1000"
-                                  data-refresh-interval="100">0</span>
-                        </div>
-
-                        <div class="db-details">
-                            <div class="db-content-one">
-                                <h3 style="color: #666;font-size:26px">
-                                   <span id="count2-yesterday-count" class="number-count" data-from="0"
-                                         ng-attr-data-to="{{ totalCount.yesterdayCount }}"
-                                         data-speed="1000"
-                                         data-refresh-interval="100">0</span>
-                                </h3>
-                                <span>昨天</span>
-                            </div>
-                            <div class="db-content-two">
-                                <h3 style="color: #666;font-size:26px">
-                                   <span id="count2-today-count" class="number-count" data-from="0"
-                                         ng-attr-data-to="{{ totalCount.todayCount }}"
-                                         data-speed="1000"
-                                         data-refresh-interval="100">0</span>
-                                </h3>
-                                <span>今天</span>
-                            </div>
-                        </div>
-                    </div>
+        <div class="page-header">
+            <div class="clearfix">
+                <div class="float-left">
+                    <h1 style="display: inline-block; margin-right: 10px">访问统计</h1>
                 </div>
-
-                <div class="panel panel-default">
-                    <div class="panel-heading clearfix" data-toggle="popover" data-trigger="hover"
-                         data-container="body"
-                         data-placement="top"
-                         data-content="只显示 Top 10">
-                        <div class="float-left">
-                            <h4 class="panel-title">访问 IP 统计</h4>
-                        </div>
+                <div class="float-right">
+                    <!--
+                    <div class="btn-group" data-toggle="buttons">
+                        <label class="btn btn-default active" ng-click="viewModeChange('day')">
+                            <input type="radio" name="options" id="mode-option1"
+                                   autocomplete="off" checked>
+                            时
+                        </label>
+                        <label class="btn btn-default"  ng-click="viewModeChange('month')">
+                            <input type="radio" name="options" id="mode-option1"
+                                   autocomplete="off"> 天
+                        </label>
+                    </div>-->
+                    <div style="display: inline">
+                        <button class="btn btn-default" role="button" data-toggle="collapse"
+                                data-target="#collapse-search"
+                                aria-expanded="false" aria-controls="collapse-search">
+                            <span class="glyphicon glyphicon-filter"></span> 高级搜索
+                        </button>
                     </div>
-                    <div class="panel-body">
-                        <div ng-repeat="entry in ipCountList" style="font-size: 16px">
-                            <div class="row" style="line-height: 1.5em">
-                                <div class="col-xs-8 col-sm-8 col-md-8" ng-bind="entry.remote_ip"></div>
-                                <div class="col-xs-4 col-sm-4 col-md-4" ng-bind="entry.m_count"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel panel-default">
-                    <div class="panel-heading clearfix" data-toggle="popover" data-trigger="hover"
-                         data-container="body"
-                         data-placement="top"
-                         data-content="只显示 Top 5">
-                        <div class="float-left">
-                            <h4 class="panel-title">异常或非法访问</h4>
-                        </div>
-                    </div>
-                    <div class="panel-body">
-                        <div ng-repeat="entry in abnormalIpCountList" style="font-size: 16px">
-                            <div class="row" style="line-height: 1.5em">
-                                <div class="col-xs-8 col-sm-8 col-md-8" ng-bind="entry.remote_ip"></div>
-                                <div class="col-xs-4 col-sm-4 col-md-4" ng-bind="entry.m_count"></div>
-                            </div>
-                        </div>
+                    <div style="display: inline">
+                        <select id="select-access-agent" class="selectpicker show-tick"
+                                data-selected-text-format="count>3"
+                                ng-model="selectedAgents">
+                            <option value="2">最近24小时</option>
+                            <option value="3">最近7天</option>
+                            <option value="4">最近30天</option>
+                            <option data-divider="true"></option>
+                            <option value="5">完整1天</option>
+                            <option value="7">完整1月</option>
+                        </select>
                     </div>
                 </div>
             </div>
+            <div class="collapse" id="collapse-search">
+                <div class="well" style="margin-top: 10px;margin-bottom: 10px;">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label for="date-base-time" class="col-xs-3 control-label">基准时间</label>
 
-            <div class="col-sm-9 col-md-9">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">访问统计 /
-                            <span ng-bind="viewMode=='month' ? '月访问量' : '24小时访问量'">24小时访问量</span></h4>
-                    </div>
-                    <div class="panel-body">
-                        <div class="clearfix">
-                            <div class="float-left">
-
+                            <div class="col-xs-9">
+                                <div class="input-group date" id="date-base-time"
+                                     data-toggle="tooltip" data-placement="top" title="选择基准时间，默认为当前时间">
+                                    <input size="16" class="form-control" v-model="baseTime"
+                                           type="text" value="" readonly>
+                                    <span class="input-group-addon" style="border-left: 0;">
+                                         <i class="glyphicon glyphicon-remove"></i>
+                                    </span>
+                                    <span class="input-group-addon">
+                                        <i class="glyphicon glyphicon-calendar"></i>
+                                    </span>
+                                </div>
                             </div>
-                            <div class="float-right">
-                                <div style="display: inline-flex">
-                                    <select id="select-access-agent" class="selectpicker" multiple
-                                            data-selected-text-format="count>3"
-                                            ng-model="selectedAgents">
-                                        <option value="-1">所有应用</option>
-                                        <option data-divider="true"></option>
-                                        <option value="-100">Success</option>
-                                        <option value="-101">Forbidden</option>
-                                        <option value="-102">Proxy Failed</option>
-                                        <option value="-105">Expired Token</option>
-                                        <option value="-103">Login Validated Failed</option>
-                                        <option value="-104">Unknown</option>
-                                        <option data-divider="true"></option>
-                                        <option ng-repeat="u in accessAgentOptions" value="{{ $index }}">{{ u.name }}
-                                        </option>
-                                    </select>
-                                </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="select-client" class="col-xs-3 control-label">应用</label>
 
-                                <div style="width: 170px;display: inline-flex">
-                                    <div class="input-group date" id="date-time">
-                                        <input size="16" class="form-control" ng-model="selectedDate"
-                                               ng-change="selectedDateChange()"
-                                               type="text" value="" readonly>
-                                        <span class="input-group-addon"><i
-                                                class="glyphicon glyphicon-calendar"></i></span>
-                                    </div>
-                                </div>
+                            <div class="col-xs-9">
+                                <select id="select-client" class="selectpicker" multiple
+                                        data-live-search="true"
+                                        data-selected-text-format="count>3" data-width="100%"
+                                        v-model="selectedClients">
+                                    <option value="-1">所有应用</option>
+                                    <option data-divider="true"></option>
+                                    <option v-for="u in clientOptions | orderBy 'name'" track-by="$index"
+                                            :value="u.id" v-text="u.name"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label for="select-endpoint" class="col-xs-3 control-label">API 端点</label>
 
+                            <div class="col-xs-9">
+                                <select id="select-endpoint" class="selectpicker" multiple
+                                        data-selected-text-format="count>3" data-width="100%"
+                                        data-live-search="true"
+                                        v-model="selectedEndpoints">
+                                    <!--
+                                    <option value="-1">所有 Endpoint</option>
+                                    <option data-divider="true"></option>-->
+                                    <option v-for="u in endpointOptions | orderBy 'unique_name'"
+                                            track-by="$index" :value="u.id"
+                                            v-text="u.unique_name"></option>
+                                </select>
                             </div>
                         </div>
 
-                        <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-                        <div id="main" style="height:500px;width: 100%;margin-top:20px"></div>
+                        <div class="col-sm-6">
+                            <label for="select-client-endpoint" class="col-xs-3 control-label">应用 &amp; API 端点</label>
+
+                            <div class="col-xs-9">
+                                <select id="select-client-endpoint" class="selectpicker" multiple
+                                        data-live-search="true"
+                                        data-selected-text-format="count>3" data-width="100%"
+                                        v-model="selectedClientEndpoints">
+                                    <option v-for="u in clientEndpointOptions | orderBy 'name'" track-by="$index"
+                                            :value="u.id" v-text="u.name"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label for="select-access-results" class="col-xs-3 control-label">访问结果</label>
+
+                            <div class="col-xs-9">
+                                <select id="select-access-results" class="selectpicker" multiple
+                                        data-live-search="true"
+                                        data-selected-text-format="count>2" data-width="100%"
+                                        v-model="selectedResults">
+                                    <option value="200">200 成功</option>
+                                    <option value="400">400 请求数据不完整</option>
+                                    <option value="401">401 登录验证失败</option>
+                                    <option value="403">403 HMAC 鉴权失败</option>
+                                    <option value="500">500 服务端错误</option>
+                                    <option value="503">504 Endpoint 服务不可用</option>
+                                    <option value="510">510 Client 配置有误</option>
+                                    <option data-divider="true"></option>
+                                    <option value="-1">4XX 客户端错误</option>
+                                    <option value="-1">5XX 服务端错误</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div style="text-align: right;padding-right: 15px;">
+                                <button class="btn btn-primary" role="button"
+                                        @click="search()">
+                                    <span class="glyphicon glyphicon-search"></span> 搜索
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                <div id="echarts-main" style="height:500px;width: 100%;margin-top:20px"></div>
+            </div>
+        </div>
+
         {% endverbatim %}
     </div>
 {% endblock %}
@@ -172,6 +197,8 @@
     <script src="/static/vendors/datetime-picker/locales/bootstrap-datetimepicker.zh-CN.js"></script>
     <script src="/static/vendors/bootstrap-select/js/bootstrap-select.min.js"></script>
     <script src="/static/vendors/jquery.countTo.js"></script>
-    <script src="/static/vendors/echarts/dist/echarts.js"></script>
+    <script src="/static/vendors/echarts3/echarts.common.min.js"></script>
+    <!-- 引入主题 -->
+    <script src="/static/vendors/echarts3/macarons.js"></script>
     <script src="/static/js/dashboard/dashboard.js"></script>
 {% endblock %}

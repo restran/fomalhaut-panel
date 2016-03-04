@@ -894,6 +894,53 @@ def api_get_access_agent_options(request):
 @login_required
 @csrf_protect
 @require_http_methods(["GET"])
+def api_get_options(request):
+    """
+    获取 client, endpoint, client_endpoint select 选项
+    """
+    success, msg, data = False, '', []
+    clients = Client.objects.all().values('id', 'name')
+    clients = [t for t in clients]
+    endpoints = Endpoint.objects.all().values('id', 'unique_name')
+    endpoints = [
+        {
+            'id': t['id'],
+            'unique_name': t['unique_name'],
+        } for t in endpoints
+        ]
+    client_endpoints = ClientEndpoint.objects.all().values(
+        'id', 'client_id', 'endpoint_id')
+    client_dict = {}
+    for t in clients:
+        client_dict[t['id']] = t['name']
+
+    endpoint_dict = {}
+    for t in endpoints:
+        endpoint_dict[t['id']] = t['unique_name']
+
+    new_client_endpoints = []
+    for t in client_endpoints:
+        new_client_endpoints.append({
+            'id': t['id'],
+            'name': '%s / %s' % (
+                client_dict.get(t['client_id'], ''),
+                endpoint_dict.get(t['endpoint_id'], '')
+            )
+        })
+
+    data = {
+        'clients': clients,
+        'endpoints': endpoints,
+        'client_endpoints': new_client_endpoints
+    }
+    success = True
+    logger.debug(data)
+    return http_response_json({'success': success, 'msg': msg, 'data': data})
+
+
+@login_required
+@csrf_protect
+@require_http_methods(["GET"])
 def api_get_client_options(request):
     """
     获取 Client select 选项

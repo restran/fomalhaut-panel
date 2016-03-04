@@ -36,6 +36,7 @@
 #back-to-top:hover > span {
     color: rgba(0, 0, 0, .4);
 }
+
 /*----------------------------*/
 /*页面标题*/
 .page-header h1 {
@@ -672,3 +673,40 @@ table thead th {
 }
 
 /*--------------------------------------*/
+.card {
+    background-color: #fff;
+    border-radius: 2px;
+    -moz-box-shadow: rgba(0, 0, 0, .0470588) 0 2px 3px 0;
+    -o-box-shadow: rgba(0, 0, 0, .0470588) 0 2px 3px 0;
+    -webkit-box-shadow: rgba(0, 0, 0, .0470588) 0 2px 3px 0;
+    box-shadow: rgba(0, 0, 0, .0470588) 0 2px 3px 0;
+    margin-bottom: 20px;
+    padding: 5px 0;
+}
+
+.card .card-header {
+    /*margin-left: 10px;*/
+    padding: 10px 5px 10px 5px;
+    /*font-size: 20px;*/
+    line-height: 30px;
+    /*border-bottom: 1px solid rgba(0, 0, 0, .12);*/
+    border-bottom: 1px solid #e0e0e0;
+    /*color: grey;*/
+    font-size: 18px;
+    margin: 0 15px;
+}
+
+.card-content {
+    padding: 10px 15px;
+}
+
+.card-content:before {
+    display: table;
+    content: " ";
+}
+
+.card-content:after {
+    clear: both;
+    display: table;
+    content: " ";
+}

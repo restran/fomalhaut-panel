@@ -72,7 +72,7 @@ def config(request, data_type='client'):
         request.page_title = '应用配置'
         display_breadcrumb = True
     elif data_type == 'endpoint':
-        request.page_title = 'API Endpoint'
+        request.page_title = 'API 端点'
         display_breadcrumb = False
     elif data_type == 'client_endpoint':
         request.page_title = '应用配置'

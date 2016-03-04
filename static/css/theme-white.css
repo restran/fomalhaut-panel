@@ -1,0 +1,313 @@
+@charset "UTF-8";
+
+body {
+    font-family: Helvetica, Arial, "Microsoft Yahei", "Hiragino Sans GB", "WenQuanYi Micro Hei", sans-serif;
+    font-size: 15px;
+    line-height: 1.5em;
+    color: #546673;
+    padding-top: 70px;
+    /*background: #eff3fa;*/
+    /*background: #f8f8f8;*/
+    /*background: #f4f8fd;*/
+    background-color: #eee;
+}
+
+h1, .h1 {
+    font-size: 26px
+}
+
+h2, .h2 {
+    font-size: 24px
+}
+
+h3, .h3 {
+    font-size: 22px
+}
+
+h4, .h4 {
+    font-size: 18px
+}
+
+h5, .h5 {
+    font-size: 16px
+}
+
+h6, .h6 {
+    font-size: 14px
+}
+
+/*-------覆盖bootstrap------*/
+.btn-primary {
+    color: #fff;
+    background-color: #2e9fff;
+    border-color: #2e9fff;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary.focus,
+.btn-primary:active,
+.btn-primary.active,
+.open > .dropdown-toggle.btn-primary {
+    color: #fff;
+    background-color: #2e7cdc;
+    border-color: #2e7cdc;
+}
+
+.btn-primary.disabled, .btn-primary.disabled.active,
+.btn-primary.disabled.focus, .btn-primary.disabled:active,
+.btn-primary.disabled:focus, .btn-primary.disabled:hover,
+.btn-primary[disabled], .btn-primary[disabled].active,
+.btn-primary[disabled].focus, .btn-primary[disabled]:active,
+.btn-primary[disabled]:focus, .btn-primary[disabled]:hover,
+fieldset[disabled] .btn-primary, fieldset[disabled] .btn-primary.active,
+fieldset[disabled] .btn-primary.focus, fieldset[disabled] .btn-primary:active,
+fieldset[disabled] .btn-primary:focus, fieldset[disabled] .btn-primary:hover {
+    background-color: #2e9fff;
+    border-color: #2e9fff;
+}
+
+.btn-success {
+    color: #fff;
+    background-color: #15CD72;
+    border-color: #15CD72;
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success.focus,
+.btn-success:active,
+.btn-success.active,
+.open > .dropdown-toggle.btn-primary {
+    color: #fff;
+    background-color: #0CB863;
+    border-color: #0CB863;
+}
+
+.btn-success.disabled, .btn-success.disabled.active,
+.btn-success.disabled.focus, .btn-success.disabled:active,
+.btn-success.disabled:focus, .btn-success.disabled:hover,
+.btn-success[disabled], .btn-success[disabled].active,
+.btn-success[disabled].focus, .btn-success[disabled]:active,
+.btn-success[disabled]:focus, .btn-success[disabled]:hover,
+fieldset[disabled] .btn-success, fieldset[disabled] .btn-success.active,
+fieldset[disabled] .btn-success.focus, fieldset[disabled] .btn-success:active,
+fieldset[disabled] .btn-success:focus, fieldset[disabled] .btn-success:hover {
+    background-color: #15CD72;
+    border-color: #15CD72;
+}
+
+.nav-pills > li.active > a, .nav-pills > li.active > a:focus, .nav-pills > li.active > a:hover {
+    color: #fff;
+    background-color: #2e9fff;
+}
+
+.pagination > .active > a, .pagination > .active > a:focus, .pagination > .active > a:hover, .pagination > .active > span, .pagination > .active > span:focus, .pagination > .active > span:hover {
+    background-color: #2e9fff;
+    border-color: #2e9fff;
+}
+
+/*------------------------*/
+
+.page-header {
+    margin: 0;
+}
+
+.navbar-default .navbar-header a:hover {
+    color: #2e9fff;
+    /*color: #ddd;*/
+}
+
+/*分辨率较小时，右侧的功能按钮*/
+.navbar-default .navbar-toggle:hover, .navbar-default .navbar-toggle:focus {
+    border: 0;
+}
+
+.navbar-default .navbar-toggle {
+    border: 0;
+}
+
+.navbar-default .navbar-toggle .icon-bar {
+    background-color: #2e9fff;
+}
+
+/*-----------------------------------------*/
+.navbar-default .navbar-brand {
+    color: #2e9fff;
+}
+
+/*导航条的样式*/
+.navbar-default {
+    border: 0;
+}
+
+.navbar-default .navbar-nav > li > a {
+    font-size: 16px;
+    line-height: 1.5;
+    text-align: center;
+    color: #a1d2ff;
+    transition: color 0.5s;
+    -moz-transition: color 0.5s; /* Firefox 4 */
+    -webkit-transition: color 0.5s; /* Safari and Chrome */
+    -o-transition: color 0.5s; /* Opera */
+}
+
+.navbar-default .navbar-nav > li > a:focus,
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:active {
+    color: #2e9fff;
+}
+
+/*.navbar-default .navbar-nav > li > a:hover {*/
+/*color: #2e9fff;*/
+/*}*/
+
+/*当前页面时的状态*/
+/*.navbar-default .navbar-nav > li .active {*/
+/*color: #2e9fff;*/
+/*color: #fff;*/
+/*background-color: rgba(0, 0, 0, 0.05);*/
+/*}*/
+
+/*.navbar-default .navbar-toggle:hover, .navbar-default .navbar-toggle:focus {*/
+/*background-color: rgba(45, 54, 66, .8);*/
+/*}*/
+.navbar-default .navbar-nav > li {
+    padding: 0 3px;
+}
+
+.navbar-default .navbar-nav > li.active > a {
+    color: #2e9fff;
+    background: transparent;
+    /*border-bottom: 3px solid #2e9fff;*/
+}
+
+/*.navbar-default .navbar-nav > li.active > a:after {*/
+/*position: absolute;*/
+/*/!*top: 100%;*!/*/
+/*left: 0;*/
+/*bottom: 0;*/
+/*width: 100%;*/
+/*height: 3px;*/
+/*background: #2e9fff;*/
+/*content: '';*/
+/*transition: all 250ms;*/
+/*}*/
+
+.navbar-default .navbar-nav > li.active > a:after, .navbar-default .navbar-nav > li > a:hover:after {
+    position: absolute;
+    /*top: 100%;*/
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 3px;
+    background: #2e9fff;
+    content: '';
+    transition: all 250ms;
+}
+
+.navbar-default .navbar-nav > li.active > a:hover, .navbar-default .navbar-nav > li.active > a:focus {
+    color: #2e9fff;
+    background-color: transparent;
+}
+
+@media (max-width: 767px) {
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a {
+        color: #ddd;
+    }
+
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover, .navbar-default .navbar-nav .open .dropdown-menu > li > a:focus {
+        color: #fff;
+        background-color: rgba(255, 255, 255, .1);
+    }
+}
+
+.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:hover, .navbar-default .navbar-nav > .open > a:focus {
+    background-color: rgba(255, 255, 255, .1);
+    color: #2e9fff;
+}
+
+.navbar-toggle {
+    margin-right: 5px;
+}
+
+.width-50 {
+    width: 50px;
+}
+
+/*---------------------------------*/
+.nav-header-bar {
+    background-size: auto;
+    border-radius: 0;
+    color: #fff;
+    /*background: rgba(255, 255, 255, .95);*/
+    background: #fff;
+    opacity: 0.85;
+    /*兼容ie8*/
+    -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=85);
+    filter: alpha(opacity=85);
+    z-index: 20;
+    border-bottom: solid 1px #e5e5e5;
+    /*-webkit-box-shadow: rgba(0, 0, 0, .0470588) 0 2px 3px 0;*/
+    /*box-shadow: rgba(0, 0, 0, .0470588) 0 2px 3px 0;*/
+}
+
+@media (max-width: 767px) {
+    /*小屏幕时，卷动的菜单*/
+    .navbar-collapse ul li a {
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+}
+
+@media (min-width: 768px) {
+    .container {
+        width: 95%;
+    }
+}
+
+@media (min-width: 992px) {
+    .container {
+        width: 970px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .container {
+        width: 1170px;
+    }
+}
+
+/*-------覆盖bootstrap------*/
+.btn-primary {
+    color: #fff;
+    background-color: #15CD72;
+    border-color: #15CD72;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary.focus,
+.btn-primary:active,
+.btn-primary.active,
+.open > .dropdown-toggle.btn-primary {
+    color: #fff;
+    background-color: #0CB863;
+    border-color: #0CB863;
+}
+
+.btn-primary.disabled, .btn-primary.disabled.active,
+.btn-primary.disabled.focus, .btn-primary.disabled:active,
+.btn-primary.disabled:focus, .btn-primary.disabled:hover,
+.btn-primary[disabled], .btn-primary[disabled].active,
+.btn-primary[disabled].focus, .btn-primary[disabled]:active,
+.btn-primary[disabled]:focus, .btn-primary[disabled]:hover,
+fieldset[disabled] .btn-primary, fieldset[disabled] .btn-primary.active,
+fieldset[disabled] .btn-primary.focus, fieldset[disabled] .btn-primary:active,
+fieldset[disabled] .btn-primary:focus, fieldset[disabled] .btn-primary:hover {
+    background-color: #15CD72;
+    border-color: #15CD72;
+}
+
+/*------------------------*/
+

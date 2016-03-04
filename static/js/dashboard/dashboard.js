@@ -2,409 +2,340 @@
  * Created by restran on 2015/7/11.
  */
 (function () {
-    var app = angular.module('app', []);
-    app.controller('appCtrl', ['$scope', '$http', '$timeout', '$filter', function ($scope, $http, $timeout, $filter) {
+    var app = new Vue({
+        el: '#dashboard-app',
+        data: {
+            baseTime: null,
+            selectedClients: [],
+            selectedEndpoints: [],
+            selectedResults: [],
+            clientOptions: [],
+            endpointOptions: [],
+            clientEndpointOptions: [],
+            entriesReady: false,
+            entries: [],
+            cachedQuery: null
+        },
+        computed: {},
+        methods: {
+            loadOptions: function () {
+                var apiUrl = '/api/dashboard/get_options/';
+                $request.get(apiUrl, null, function (data) {
+                    app.clientOptions = data['data']['clients'];
+                    app.endpointOptions = data['data']['endpoints'];
+                    app.clientEndpointOptions = data['data']['client_endpoints'];
 
-        // 由于django的csrftoken保护
-        $http.defaults.xsrfCookieName = 'csrftoken';
-        $http.defaults.xsrfHeaderName = 'X-CSRFToken';
-
-        // JS获得当前时间 并格式化为:yyyy-MM-dd HH:MM:SS
-        function getNowFormatDate() {
-            var date = new Date();
-            var seperator1 = "-";
-            var seperator2 = ":";
-            var month = date.getMonth() + 1;
-            var strDate = date.getDate();
-            if (month >= 1 && month <= 9) {
-                month = "0" + month;
-            }
-            if (strDate >= 0 && strDate <= 9) {
-                strDate = "0" + strDate;
-            }
-            return date.getFullYear() + seperator1 + month + seperator1 + strDate
-                + " " + date.getHours() + seperator2 + date.getMinutes()
-                + seperator2 + date.getSeconds();
-        }
-
-        $scope.selectedDate = getNowFormatDate().slice(0, 10);
-        console.log($scope.selectedDate);
-
-        // 访问IP统计
-        $scope.ipCountList = [];
-
-        // 获取应用的访问计数
-        $scope.getAppAccessCount = function () {
-            $timeout(function () {
-                NProgress.start();
-            });
-
-            if ($scope.selectedAgents == null || $scope.selectedAgents.length == 0) {
-                load_echarts([], [], []);
-                NProgress.done();
-                return;
-            }
-
-            var date, year, month;
-            if ($scope.viewMode == 'month') {
-                year = $scope.selectedDate.slice(0, 4);
-                month = $scope.selectedDate.slice(5, 7);
-            } else {
-                date = $scope.selectedDate;
-            }
-
-            var agent_id_list = [];
-            var agent_name_list = [];
-            var name_dict = {
-                '-1': '所有应用', '-100': 'Success', '-101': 'Forbidden', '-102': 'Proxy Failed',
-                '-105': 'Expired Token', '-103': 'Login Validated Failed', '-104': 'Unknown'
-            };
-            for (var i = 0; i < $scope.selectedAgents.length; i++) {
-                var index = parseInt($scope.selectedAgents[i]);
-                if (index < 0) {
-                    agent_id_list.push(index);
-                    agent_name_list.push(name_dict[$scope.selectedAgents[i]]);
-                } else {
-                    agent_id_list.push($scope.accessAgentOptions[index].id);
-                    agent_name_list.push($scope.accessAgentOptions[index].name);
+                    Vue.nextTick(function () {
+                        // DOM 更新了
+                        $('#select-client').selectpicker('refresh');
+                        $('#select-endpoint').selectpicker('refresh');
+                        $('#select-client-endpoint').selectpicker('refresh');
+                    });
+                }, function (data, msg) {
+                    toastr["error"](msg);
+                })
+            },
+            search: function () {
+                console.log('search');
+                this.getPage(1, true);
+            },
+            getPage: function (pageId, isSearch) {
+                pageId = parseInt(pageId);
+                if (isNaN(pageId)) {
+                    toastr['error']('请输入整数页码');
+                    return;
                 }
-            }
 
-            var post_url;
-            var post_data;
-            if ($scope.viewMode == 'month') {
-                post_url = '/api/dashboard/get_total_by_month_access/';
-                post_data = {'year': year, 'month': month, 'agent_id_list': agent_id_list};
-            } else {
-                post_url = '/api/dashboard/get_total_by_day_access/';
-                post_data = {'date': date, 'agent_id_list': agent_id_list};
-            }
+                if (pageId < 1 || pageId > this.totalPage) {
+                    console.log('error pageId ' + pageId);
+                    toastr['error']('请输入正确的页码范围');
+                    return;
+                }
 
-            var get_access_count_done = false;
-            var get_ip_count_done = false;
-            var get_abnormal_ip_count_done = false;
+                var pageInfo = this.pageInfo;
+                var skip, lastItem;
+                var i;
 
-            post_data['request_type'] = $scope.requestType;
-            $http({
-                url: post_url,
-                method: 'POST',
-                async: true,
-                cache: false,
-                data: post_data,
-                headers: {'Content-Type': 'application/json; charset=utf-8'}
-            }).success(function (data, status, headers, config) {
-                console.log(data);
-                if (data['success'] == true) {
-                    var series = [];
-                    for (var j = 0; j < data['data'].length; j++) {
-                        var serie = {
-                            name: agent_name_list[j],
-                            type: 'line',
-                            data: data['data'][j],
-                            smooth: true,
-                            itemStyle: {normal: {areaStyle: {type: 'default'}}},
-                            markPoint: {
-                                data: [
-                                    {type: 'max', name: '最大值'},
-                                    {type: 'min', name: '最小值'}
-                                ]
-                            }
-                        };
+                if (!isSearch && pageId == pageInfo.currentPage) {
+                    return;
+                }
 
-                        series.push(serie);
+                if (pageId == 1) {
+                    pageInfo.currentPage = 1;
+                    pageInfo.lastItem = null;
+                    pageInfo.pageHistory = [];
+                    pageInfo.totalNum = 0;
+                } else {
+                    // 记录页面历史
+                    pageInfo.pageHistory.push({
+                        pageId: pageInfo.currentPage,
+                        lastItem: pageInfo.lastItem
+                    });
+
+                    if (pageInfo.pageHistory.length > 20) {
+                        // 删掉最后一个元素
+                        pageInfo.pageHistory.pop();
+                    }
+                }
+
+                var minOffset = null;
+                var page = null;
+                for (i = 0; i < pageInfo.pageHistory.length; i++) {
+                    var item = pageInfo.pageHistory[i];
+                    var offset = pageId - item.pageId;
+                    if (minOffset == null || (offset > 0 && offset < minOffset)) {
+                        page = item;
+                        minOffset = offset;
+                    }
+                }
+                console.log(page);
+                if (page != null) {
+                    skip = pageInfo.pageSize * (pageId - page.pageId - 1);
+                    lastItem = page.lastItem;
+                } else {
+                    skip = pageInfo.pageSize * (pageId - 1);
+                    lastItem = null;
+                }
+
+                pageInfo.currentPage = pageId;
+                var postData;
+                if (pageId != 1) {
+                    postData = $.extend(true, {}, this.cachedQuery);
+                } else {
+                    var statusList = this.status.replace('，', ',').split(',');
+                    var ipList = this.ip.replace('，', ',').split(',');
+                    var newIpList = [];
+                    for (i = 0; i < ipList.length; i++) {
+                        var ip = ipList[i].trim();
+                        if (ip != '') {
+                            newIpList.push(ip);
+                        }
+                    }
+                    ipList = newIpList;
+
+                    var newStatusList = [];
+                    for (i = 0; i < statusList.length; i++) {
+                        var status = statusList[i].trim();
+                        if (status != '' && !isNaN(status)) {
+                            newStatusList.push(parseInt(status))
+                        }
+                    }
+                    statusList = newStatusList;
+                    console.log(statusList);
+                    console.log(ipList);
+                    postData = {
+                        'begin_time': this.beginTime,
+                        'end_time': this.endTime,
+                        'uri': this.uri,
+                        'elapsed_min': parseInt(this.elapsedMin),
+                        'elapsed_max': parseInt(this.elapsedMax),
+                        'selected_clients': this.selectedClients,
+                        'selected_endpoints': this.selectedEndpoints,
+                        'selected_results': this.selectedResults
+                    };
+                    if (statusList.length == 1) {
+                        postData['status'] = statusList[0];
+                    } else {
+                        postData['status_list'] = statusList;
                     }
 
-                    load_echarts(agent_name_list, data['x-data'], series);
-                } else {
-                    toastr["error"]('获取数据失败');
+                    if (ipList.length == 1) {
+                        postData['ip'] = ipList[0];
+                    } else {
+                        postData['ip_list'] = ipList;
+                    }
+
+                    this.cachedQuery = $.extend(true, {}, postData);
                 }
-            }).error(function (data, status, headers, config) {
-                toastr["error"]('获取数据失败');
-            }).finally(function () {
-                get_access_count_done = true;
-                if (get_ip_count_done == true && get_abnormal_ip_count_done == true) {
-                    $timeout(function () {
-                        NProgress.done();
+                postData['limit'] = pageInfo.pageSize;
+                postData['skip'] = skip;
+                postData['last_item'] = lastItem;
+
+                postData['require_total_num'] = pageId == 1;
+
+                this.getAccessLog(postData, pageId);
+            },
+            getAccessLog: function (postData) {
+                this.entriesReady = false;
+                var apiUrl = '/api/dashboard/access_log/query/';
+                console.log(postData);
+                $request.post(apiUrl, postData, function (data) {
+                    console.log(data);
+                    app.entries = data['data']['entries'];
+                    var totalNum = data['data']['total_num'];
+                    if (totalNum != null) {
+                        app.pageInfo.totalNum = totalNum;
+                        console.log(totalNum);
+                    }
+
+                    var lastItem;
+                    if (app.entries.length == 0) {
+                        lastItem = null;
+                    } else {
+                        lastItem = {
+                            'id': app.entries[app.entries.length - 1]['id'],
+                            'timestamp': app.entries[app.entries.length - 1]['timestamp']
+                        }
+                    }
+
+                    app.pageInfo.lastItem = lastItem;
+                    console.log(lastItem);
+
+                    //if (totalNum != null) {
+                    //    app.firstPageFirstItem = lastItem;
+                    //}
+                    Vue.nextTick(function () {
+                        app.entriesReady = true;
                     });
-                } else {
-                    $timeout(function () {
-                        NProgress.inc();
+                }, function (data, msg) {
+                    toastr["error"](msg);
+                    Vue.nextTick(function () {
+                        app.entriesReady = true;
                     });
-                }
-            });
-
-            // 获取访问IP统计
-            $http({
-                url: '/api/dashboard/get_ip_count/',
-                method: 'POST',
-                async: true,
-                cache: false,
-                data: post_data,
-                headers: {'Content-Type': 'application/json; charset=utf-8'}
-            }).success(function (data, status, headers, config) {
-                console.log(data);
-                if (data['success'] == true) {
-                    $scope.ipCountList = data['data'];
-                    console.log(data['data']);
-                } else {
-                    toastr["error"]('获取IP统计数据失败');
-                }
-            }).error(function (data, status, headers, config) {
-                toastr["error"]('获取IP统计数据失败');
-            }).finally(function () {
-                get_ip_count_done = true;
-                if (get_access_count_done == true && get_abnormal_ip_count_done == true) {
-                    $timeout(function () {
-                        NProgress.done();
-                    });
-                } else {
-                    $timeout(function () {
-                        NProgress.inc();
-                    });
-                }
-            });
-
-
-            // 获取异常访问IP统计
-            $http({
-                url: '/api/dashboard/get_abnormal_ip_count/',
-                method: 'POST',
-                async: true,
-                cache: false,
-                data: post_data,
-                headers: {'Content-Type': 'application/json; charset=utf-8'}
-            }).success(function (data, status, headers, config) {
-                console.log(data);
-                if (data['success'] == true) {
-                    $scope.abnormalIpCountList = data['data'];
-                    console.log(data['data']);
-                } else {
-                    toastr["error"]('获取IP统计数据失败');
-                }
-            }).error(function (data, status, headers, config) {
-                toastr["error"]('获取IP统计数据失败');
-            }).finally(function () {
-                get_abnormal_ip_count_done = true;
-                if (get_access_count_done == true && get_ip_count_done == true) {
-                    $timeout(function () {
-                        NProgress.done();
-                    });
-                } else {
-                    $timeout(function () {
-                        NProgress.inc();
-                    });
-                }
-            });
-        };
-
-        // 获取累计访问计数
-        $scope.getTotalCount = function () {
-            var api_url = '/api/dashboard/get_total_count/?request_type=' + $scope.requestType;
-            $http.get(api_url).success(function (data, status, headers, config) {
-                console.log(data);
-                if (data['success'] == true) {
-                    $scope.totalCount.totalCount = data['data']['total_count'];
-                    $scope.totalCount.todayCount = data['data']['today_count'];
-                    $scope.totalCount.yesterdayCount = data['data']['yesterday_count'];
-                    $timeout(function () {
-                        // 因为 data-to 第一次以后的获取有问题，因此这里直接传
-                        $('#count2-total-count').countTo({to: $scope.totalCount.totalCount});
-                        $('#count2-yesterday-count').countTo({to: $scope.totalCount.yesterdayCount});
-                        $('#count2-today-count').countTo({to: $scope.totalCount.todayCount});
-                    });
-
-                } else {
-                    toastr["error"]('获取数据失败');
-                }
-
-            }).error(function (data, status, headers, config) {
-                toastr["error"]('获取数据失败');
-            }).finally(function () {
-            });
-        };
-
-        // 获取AccessAgentOptions
-        $scope.getAccessAgentOptions = function () {
-            var api_url = '/api/dashboard/get_access_agent_options/';
-            $http.get(api_url).success(function (data, status, headers, config) {
-                console.log(data);
-                if (data['success'] == true) {
-                    $scope.accessAgentOptions = data['data'];
-                    console.log($scope.accessAgentOptions);
-
-                    $timeout(function () {
-                        var ele_select_agents = $('#select-access-agent');
-                        ele_select_agents.selectpicker('refresh');
-                        ele_select_agents.selectpicker('val', '-1');
-                    });
-
-                } else {
-                    toastr["error"]('获取数据失败');
-                }
-
-            }).error(function (data, status, headers, config) {
-                toastr["error"]('获取数据失败');
-            }).finally(function () {
-            });
-        };
-
-        // 选择的日期发生变化
-        $scope.selectedDateChange = function () {
-            $scope.getAppAccessCount();
-        };
-
-        $scope.viewMode = 'day';
-        // 访问类型
-        $scope.requestType = 'all';
-
-        // 查看模式发生变化
-        $scope.viewModeChange = function (mode) {
-            $scope.viewMode = mode;
-            var ele_datetime = $('#date-time');
-            if (mode == 'month') {
-                // 需要先清除，否则datetimepicker无法刷新
-                ele_datetime.datetimepicker('remove');
-                ele_datetime.datetimepicker({
-                    minView: 3,// 只显示到月选择
-                    language: 'zh-CN',
-                    autoclose: true,
-                    startView: 3,// 一开始就显示到月选择
-                    format: "yyyy-mm"
-                });
-
-                $scope.selectedDate = getNowFormatDate().slice(0, 7);
-            } else {
-                ele_datetime.datetimepicker('remove');
-                ele_datetime.datetimepicker({
-                    minView: 2,// 只显示到天选择
-                    language: 'zh-CN',
-                    autoclose: true,
-                    todayHighlight: true,
-                    format: "yyyy-mm-dd"
-                });
-
-                $scope.selectedDate = getNowFormatDate().slice(0, 10);
+                })
             }
+        },
+        watch: {}
+    });
 
-            $scope.getAppAccessCount();
-        };
 
-        // 访问类型发生变化
-        $scope.requestTypeChange = function (type) {
-            $scope.requestType = type;
-            $scope.getTotalCount();
-            $scope.getAppAccessCount();
-        };
+    // 第二个参数可以指定前面引入的主题
+    var chart = echarts.init(document.getElementById('echarts-main'), 'macarons');
 
-        // 路径配置
-        require.config({
-            paths: {
-                echarts: '/static/js/echarts/dist'
+    var option = {
+        title: {
+            text: '',
+            show: false
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        legend: {
+            data: ['邮件营销', '联盟广告', '视频广告', '直接访问', '搜索引擎']
+        },
+        toolbox: {
+            feature: {
+                saveAsImage: {}
             }
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        xAxis: [
+            {
+                splitLine: {
+                    show: false
+                },
+                splitArea: {
+                    show: false
+                },
+                type: 'category',
+                boundaryGap: false,
+                data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+            }
+        ],
+        yAxis: [
+            {
+                splitLine: {
+                    show: true
+                },
+                splitArea: {
+                    show: false
+                },
+                type: 'value'
+            }
+        ],
+        series: [
+            {
+                name: '邮件营销',
+                type: 'line',
+                areaStyle: {normal: {opacity: 0.25}},
+                markPoint: {
+                    data: [
+                        {type: 'max', name: '最大值'},
+                        {type: 'min', name: '最小值'}
+                    ]
+                },
+                data: [120, 132, 101, 134, 90, 230, 210]
+            },
+            {
+                name: '联盟广告',
+                type: 'line',
+                areaStyle: {normal: {opacity: 0.25}},
+                markPoint: {
+                    data: [
+                        {type: 'max', name: '最大值'},
+                        {type: 'min', name: '最小值'}
+                    ]
+                },
+                data: [220, 182, 191, 234, 290, 330, 310]
+            },
+            {
+                name: '视频广告',
+                type: 'line',
+                areaStyle: {normal: {opacity: 0.25}},
+                markPoint: {
+                    data: [
+                        {type: 'max', name: '最大值'},
+                        {type: 'min', name: '最小值'}
+                    ]
+                },
+                data: [150, 232, 201, 154, 190, 330, 410]
+            },
+            {
+                name: '直接访问',
+                type: 'line',
+                areaStyle: {normal: {opacity: 0.25}},
+                markPoint: {
+                    data: [
+                        {type: 'max', name: '最大值'},
+                        {type: 'min', name: '最小值'}
+                    ]
+                },
+                data: [320, 332, 301, 334, 390, 330, 320]
+            },
+            {
+                name: '搜索引擎',
+                type: 'line',
+                //label: {
+                //    normal: {
+                //        show: true,
+                //        position: 'top'
+                //    }
+                //},
+                areaStyle: {normal: {opacity: 0.25}},
+                markPoint: {
+                    data: [
+                        {type: 'max', name: '最大值'},
+                        {type: 'min', name: '最小值'}
+                    ]
+                },
+                data: [820, 932, 901, 934, 1290, 1330, 1320]
+            }
+        ]
+    };
+    chart.setOption(option);
+
+    app.loadOptions();
+
+
+    $(document).ready(function () {
+        $(".date").datetimepicker({
+            minView: 0,
+            language: 'zh-CN',
+            autoclose: true,
+            todayHighlight: true,
+            format: "yyyy-mm-dd hh:ii"
         });
 
-        var load_echarts = function (legend_data, x_data, series) {
-            // 使用
-            require(
-                [
-                    'echarts',
-                    'echarts/chart/line'
-                ], // 按需加载
-                function (ec) {
-                    // 基于准备好的dom，初始化echarts图表
-                    var myChart = ec.init(document.getElementById('main'), 'macarons');
+        $('.selectpicker').selectpicker();
 
-                    var option = {
-                        title: {
-                            show: false,
-                            text: '',
-                            subtext: ''
-                        },
-                        tooltip: {
-                            trigger: 'axis'
-                        },
-                        legend: {
-                            data: legend_data
-                        },
-                        calculable: false,
-                        grid: {
-                            x: 65,
-                            y: 100,
-                            x2: 20,
-                            y2: 60
-                        },
-                        xAxis: [
-                            {
-                                splitLine: {
-                                    show: false
-                                },
-                                splitArea: {
-                                    show: false
-                                },
-                                type: 'category',
-                                boundaryGap: false,
-                                data: x_data
-                            }
-                        ],
-                        yAxis: [
-                            {
-                                splitLine: {},
-                                splitArea: {
-                                    show: false
-                                },
-                                type: 'value',
-                                axisLabel: {
-                                    formatter: '{value}'
-                                }
-                            }
-                        ],
-                        series: series
-                    };
-
-                    // 为echarts对象加载数据
-                    myChart.setOption(option);
-                }
-            );
-        };
-
-
-        //---------------------------------------------
-        $(document).ready(function () {
-            $("#date-time").datetimepicker({
-                minView: 2,// 只显示到月
-                language: 'zh-CN',
-                autoclose: true,
-                todayHighlight: true,
-                format: "yyyy-mm-dd"
-            });
-
-            $('[data-toggle="popover"]').popover();
-            $('[data-toggle="tooltip"]').tooltip();
-
-            $('.selectpicker').selectpicker();
-            var ele_select_agents = $('#select-access-agent');
-            // 默认选择所有应用
-            ele_select_agents.selectpicker('val', '-1');
-            var $selectpicker = ele_select_agents.data('selectpicker').$newElement;
-
-            // selectpicker 隐藏的时候，才更新数据
-            $selectpicker.on('hide.bs.dropdown', function () {
-                console.log('hide');
-                $scope.getAppAccessCount();
-                $scope.$apply();
-            });
-        });
-
-        //----------------------------------
-        $scope.totalCount = {};
-        $scope.accessAgentOptions = [];
-        // 选择的AccessAgent
-        $scope.selectedAgents = [-1];
-        $scope.getAccessAgentOptions();
-        $scope.getTotalCount();
-        $scope.getAppAccessCount();
-    }]);
-
+        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="popover"]').popover();
+    });
 })();
 
 

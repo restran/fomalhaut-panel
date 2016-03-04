@@ -360,13 +360,17 @@ class AccessLog(DynamicDocument):
     # 返回结果的编码
     result_code = IntField()
     result_msg = StringField()
+    # 是否被数据统计任务处理过
+    flag = BooleanField(default=False)
 
     meta = {
+        'collection': 'access_log',
         'indexes': [
+            '-id',
             ('-accessed_at', '-id'),
             ('-accessed_at', '-id', 'result_code'),
             ('-accessed_at', '-id', 'client.id'),
-            ('-accessed_at', '-id', 'endpoint.name', 'endpoint.version')
+            ('-accessed_at', '-id', 'client.id', 'endpoint.id')
         ]
     }
 
@@ -426,7 +430,8 @@ class AccessLog(DynamicDocument):
         logger.debug(limit)
         skip = kwargs.get('skip', 0)
         logger.debug(skip)
-        logs = AccessLog.objects(**filter_dict).order_by(*order_by)[skip:skip + limit]
+        logs = AccessLog.objects(**filter_dict).no_dereference().order_by(
+            *order_by)[skip:skip + limit]
         logs = [t.to_json_dict() for t in logs]
 
         if kwargs.get('require_total_num'):
@@ -439,144 +444,89 @@ class AccessLog(DynamicDocument):
         return logs, total_num
 
 
-class AccessLog2(models.Model):
+class AccessTotalDayCounter(DynamicDocument):
     """
-    访问日志
+    所有访问量, 按天的计数
     """
-    url = models.CharField(max_length=1024)
-    # 访问结果编码
-    result_code = models.CharField(max_length=2, choices=ACCESS_RESULT_TYPE,
-                                   default=ACCESS_RESULT_UNKNOWN)
-    agent_id = models.IntegerField(db_index=True, null=True)
-    site_id = models.IntegerField(null=True)
-    agent_name = models.CharField(max_length=512)
-    site_name = models.CharField(max_length=512)
-    time = models.DateTimeField()
-    remote_ip = models.CharField(max_length=512)
-    status_code = models.IntegerField(null=True)
-    # 耗时
-    elapsed = models.IntegerField(default=-1)
-    # 访问方法， GET 或 POST
-    method = models.CharField(max_length=40, default='GET')
-    # 鉴权的令牌是否在 header 中，用来判断是否属于页面浏览
-    header_token = models.BooleanField(default=False)
-    date = models.DateField(db_index=True)
-    hour = models.IntegerField()
+    count = IntField()
+    date = DateTimeField()
 
-    class Meta:
-        app_label = 'dashboard'
-        db_table = 'dashboard_access_log'
-        index_together = [
-            ['time', 'result_code'], ['time', 'agent_id'],
+    meta = {
+        'collection': 'counter_total_day',
+        'indexes': [
+            ('-date', '-id'),
         ]
-
-    def to_json_dict(self):
-        d = {
-            'id': self.id,
-            'url': self.url,
-            'result_code': self.result_code,
-            'access_result': choice_id_to_name(ACCESS_RESULT_TYPE, self.result_code),
-            'agent_id': self.agent_id,
-            'site_id': self.site_id,
-            'agent_name': self.agent_name,
-            'site_name': self.site_name, 'remote_ip': self.remote_ip,
-            'status_code': self.status_code,
-            'method': self.method,
-            'time': datetime_to_str(self.time),
-            'header_token': self.header_token,
-            'elapsed': self.elapsed
-        }
-
-        return d
-
-    @classmethod
-    def get_page_in_json(cls, date, agent_id_list, result_code_list, page_id=1):
-        page_size = DEFAULT_ACCESS_LOG_PAGE_SIZE
-        offset = page_size * (page_id - 1)
-        logger.debug(page_id)
-        logger.debug(page_size)
-
-        if agent_id_list is None:
-            if result_code_list is None:
-                data = AccessLog.objects.filter(
-                    date=date).order_by('-time')[offset:offset + page_size + 1]
-            else:
-                data = AccessLog.objects.filter(
-                    date=date,
-                    result_code__in=result_code_list).order_by('-time')[offset:offset + page_size + 1]
-        else:
-            if result_code_list is None:
-                # 多取1个，是为了判断是否有 next
-                data = AccessLog.objects.filter(
-                    date=date,
-                    agent_id__in=agent_id_list).order_by('-time')[offset:offset + page_size + 1]
-            else:
-                # 多取1个，是为了判断是否有 next
-                data = AccessLog.objects.filter(
-                    date=date,
-                    agent_id__in=agent_id_list,
-                    result_code__in=result_code_list).order_by('-time')[offset:offset + page_size + 1]
-
-        json_list = []
-        for t in data:
-            json_list.append(t.to_json_dict())
-
-        has_next_page = False
-        length = len(data)
-        if length > page_size:
-            json_list = json_list[:-1]
-            has_next_page = True
-            if agent_id_list is None:
-                if result_code_list is None:
-                    total_num = AccessLog.objects.filter(
-                        date=date).count()
-                else:
-                    total_num = AccessLog.objects.filter(
-                        date=date,
-                        result_code__in=result_code_list).count()
-            else:
-                if result_code_list is None:
-                    total_num = AccessLog.objects.filter(
-                        date=date,
-                        agent_id__in=agent_id_list).count()
-                else:
-                    total_num = AccessLog.objects.filter(
-                        date=date,
-                        agent_id__in=agent_id_list,
-                        result_code__in=result_code_list).count()
-
-        elif length > 0:
-            total_num = offset + length
-        else:
-            # length为0，表示这一页为空，或者不应该有这一页
-            # 显示这一页为空
-            total_num = offset  # total_num <= offset
-
-        if offset > 0:
-            has_previous_page = True
-        else:
-            has_previous_page = False
-
-        return json_list, total_num, has_previous_page, has_next_page, offset
+    }
 
 
-class AccessDayCounter(models.Model):
+class AccessDayCounter(DynamicDocument):
     """
-    累计访问计数
+    访问应用和端点, 按天的访问计数
     """
-    count = models.IntegerField()
-    # 是否是页面浏览，代理的请求中会有很多页面内的css和js文件的请求
-    # 通过判断令牌信息是否位于 header 中来判断
-    # 因为css和js文件的请求目前不能在 header 中放令牌信息，只能通过 cookie
-    page_view = models.BooleanField(default=False)
-    date = models.DateField()
+    count = IntField()
+    endpoint_id = IntField()
+    client_id = IntField()
+    date = DateTimeField()
 
-    class Meta:
-        app_label = 'dashboard'
-        db_table = 'dashboard_access_day_counter'
-        index_together = [
-            ['date', 'page_view']
+    meta = {
+        'collection': 'counter_access_day',
+        'indexes': [
+            ('-date', '-id'),
+            ('-date', 'client.id', 'endpoint.id'),
+            ('-date', 'endpoint.id')
         ]
+    }
+
+
+class AccessHourCounter(DynamicDocument):
+    """
+    访问应用和端点, 按小时的访问计数
+    """
+    count = IntField()
+    endpoint_id = IntField()
+    client_id = IntField()
+    date = DateTimeField()
+
+    meta = {
+        'collection': 'counter_access_hour',
+        'indexes': [
+            ('-date', '-id'),
+            ('-date', 'client.id', 'endpoint.id'),
+            ('-date', 'endpoint.id')
+        ]
+    }
+
+
+class AccessResultDayCounter(DynamicDocument):
+    """
+    访问结果, 按天的访问计数
+    """
+    count = IntField()
+    code = IntField()
+    date = DateTimeField()
+
+    meta = {
+        'collection': 'counter_result_day',
+        'indexes': [
+            ('-date', 'code'),
+        ]
+    }
+
+
+class AccessResultHourCounter(DynamicDocument):
+    """
+    访问结果, 按小时的访问计数
+    """
+    count = IntField()
+    code = IntField()
+    date = DateTimeField()
+
+    meta = {
+        'collection': 'counter_result_hour',
+        'indexes': [
+            ('-date', 'code'),
+        ]
+    }
 
 
 def get_export_config_json(skip_id=False):

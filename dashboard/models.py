@@ -3,7 +3,7 @@
 # created by restran on 2016/1/2
 
 from __future__ import unicode_literals
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from urlparse import urlparse
 
@@ -459,6 +459,21 @@ class AccessTotalDayCounter(DynamicDocument):
     }
 
 
+class AccessTotalHourCounter(DynamicDocument):
+    """
+    所有访问量, 按小时的计数
+    """
+    count = IntField()
+    date = DateTimeField()
+
+    meta = {
+        'collection': 'counter_total_hour',
+        'indexes': [
+            ('-date', '-id'),
+        ]
+    }
+
+
 class AccessDayCounter(DynamicDocument):
     """
     访问应用和端点, 按天的访问计数
@@ -527,6 +542,246 @@ class AccessResultHourCounter(DynamicDocument):
             ('-date', 'code'),
         ]
     }
+
+
+def _render_time_frame_data(unit, time_frame, name_map, data, data_type, count_list_dict):
+    count_data = []
+    if unit == 'hour':
+        dk_format = '%Y-%m-%d %H'
+    else:
+        dk_format = '%Y-%m-%d'
+
+    if data_type == 'total':
+        count_dict = {}
+        for t in data:
+            k = t.date.strftime(dk_format)
+            count_dict[k] = t.count
+
+        temp_data = []
+        for t in time_frame:
+            temp_data.append(count_dict.get(t, 0))
+
+        name = name_map.get('total', '全部应用')
+        count_data.append([name, temp_data])
+    elif data_type in ['client', 'endpoint']:
+        # count_list_dict = {}
+        k_field = data_type + '_id'
+        for t in data:
+            k = t['_id'][k_field]
+            dk = t['_id']['date'].strftime(dk_format)
+            if k in count_list_dict:
+                count_list_dict[k][dk] = t['count']
+            else:
+                count_list_dict[k] = {dk: t['count']}
+
+        for k, v in count_list_dict.iteritems():
+            temp_data = []
+            for t in time_frame:
+                temp_data.append(v.get(t, 0))
+
+            name = name_map[data_type].get(text_type(k), text_type(k))
+            count_data.append([name, temp_data])
+    elif data_type == 'client_endpoint':
+        # count_list_dict = {}
+        for t in data:
+            k = '%s/%s' % (t['_id']['client_id'], t['_id']['endpoint_id'])
+            dk = t['_id']['date'].strftime(dk_format)
+            if k in count_list_dict:
+                count_list_dict[k][dk] = t['count']
+            else:
+                count_list_dict[k] = {dk: t['count']}
+
+        for k, v in count_list_dict.iteritems():
+            temp_data = []
+            for t in time_frame:
+                temp_data.append(v.get(t, 0))
+
+            name = name_map[data_type].get(text_type(k), text_type(k))
+            count_data.append([name, temp_data])
+    elif data_type == 'result_code':
+        # count_list_dict = {}
+        for t in data:
+            k = t['_id']['code']
+            dk = t['_id']['date'].strftime(dk_format)
+            if k in count_list_dict:
+                count_list_dict[k][dk] = t['count']
+            else:
+                count_list_dict[k] = {dk: t['count']}
+
+        for k, v in count_list_dict.iteritems():
+            temp_data = []
+            for t in time_frame:
+                temp_data.append(v.get(t, 0))
+
+            name = name_map[data_type].get(text_type(k), text_type(k))
+            count_data.append([name, temp_data])
+    return count_data
+
+
+def _get_model_cls_by_unit(time_unit, data_type):
+    if time_unit == 'hour':
+        if data_type == 'total':
+            return AccessTotalHourCounter
+        elif data_type == 'result_code':
+            return AccessResultHourCounter
+        else:
+            return AccessHourCounter
+    else:
+        if data_type == 'total':
+            return AccessTotalDayCounter
+        elif data_type == 'result_code':
+            return AccessResultDayCounter
+        else:
+            return AccessDayCounter
+
+
+def query_access_count(**kwargs):
+    count_data = []
+    client_list = kwargs.get('client_list', [])
+    endpoint_list = kwargs.get('endpoint_list', [])
+    client_endpoint_list = kwargs.get('client_endpoint_list', [])
+    result_code_list = kwargs.get('result_code_list', [])
+    name_map = kwargs.get('name_map', {})
+    # 时间单位, 时或者天
+    time_unit = kwargs.get('time_unit')
+    require_total = kwargs.get('require_total', False)
+    begin_time = kwargs.get('begin_time', None)
+    end_time = kwargs.get('end_time', None)
+    filter_dict = {}
+    time_frame = []
+    for i, t in enumerate(client_list):
+        if t == '-1':
+            require_total = True
+            client_list.pop(i)
+
+    if begin_time is not None:
+        filter_dict['date__gte'] = begin_time
+    if end_time is not None:
+        filter_dict['date__lte'] = end_time
+
+    now = datetime.now()
+    x_data = []
+    if time_unit == 'hour':
+        if end_time is None:
+            end_time = datetime(now.year, now.month, now.day, now.hour)
+
+        dt = datetime(begin_time.year, begin_time.month, begin_time.day, begin_time.hour)
+        x_data_use_hour = kwargs.get('x_data_use_hour', False)
+        while dt <= end_time:
+            time_frame.append(dt.strftime('%Y-%m-%d %H'))
+            if x_data_use_hour:
+                x_data.append(dt.hour)
+            else:
+                x_data.append(dt.strftime('%m-%d %H'))
+            dt += timedelta(hours=1)
+    else:
+        if end_time is None:
+            end_time = datetime(now.year, now.month, now.day)
+
+        dt = datetime(begin_time.year, begin_time.month, begin_time.day)
+        while dt <= end_time:
+            time_frame.append(dt.strftime('%Y-%m-%d'))
+            x_data.append(dt.strftime('%m-%d'))
+            dt += timedelta(days=1)
+
+    if require_total:
+        model_cls = _get_model_cls_by_unit(time_unit, 'total')
+        count_total_list = model_cls.objects(**filter_dict)
+        ret_data = _render_time_frame_data(time_unit, time_frame, name_map,
+                                           count_total_list, 'total', None)
+        count_data.extend(ret_data)
+
+    if len(client_list) > 0:
+        pipeline = [
+            {
+                "$group": {
+                    "_id": {"date": "$date", "client_id": "$client_id"},
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+        model_cls = _get_model_cls_by_unit(time_unit, 'client')
+        count_client_list = model_cls.objects(
+            client_id__in=client_list, **filter_dict).aggregate(*pipeline)
+        count_list_dict = {}
+        for t in client_list:
+            count_list_dict[t] = {}
+
+        ret_data = _render_time_frame_data(time_unit, time_frame, name_map,
+                                           count_client_list, 'client', count_list_dict)
+        count_data.extend(ret_data)
+
+    if len(endpoint_list) > 0:
+        pipeline = [
+            {
+                "$group": {
+                    "_id": {"date": "$date", "endpoint_id": "$endpoint_id"},
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+        model_cls = _get_model_cls_by_unit(time_unit, 'endpoint')
+        count_endpoint_list = model_cls.objects(
+            endpoint_id__in=endpoint_list, **filter_dict).aggregate(*pipeline)
+        count_list_dict = {}
+        for t in endpoint_list:
+            count_list_dict[t] = {}
+        ret_data = _render_time_frame_data(time_unit, time_frame, name_map,
+                                           count_endpoint_list, 'endpoint', count_list_dict)
+        count_data.extend(ret_data)
+
+    if len(client_endpoint_list) > 0:
+        pipeline = [
+            {
+                "$group": {
+                    "_id": {
+                        "date": "$date",
+                        "client_id": "$client_id",
+                        "endpoint_id": "$endpoint_id"
+                    },
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+
+        t_client_list = set([t[0] for t in client_endpoint_list])
+        t_endpoint_list = set([t[1] for t in client_endpoint_list])
+        model_cls = _get_model_cls_by_unit(time_unit, 'client_endpoint')
+        count_client_endpoint_list = model_cls.objects(
+            client_id__in=t_client_list, endpoint_id__in=t_endpoint_list,
+            **filter_dict).aggregate(*pipeline)
+        count_list_dict = {}
+        for t in client_endpoint_list:
+            k = '%s/%s' % (t[0], t[1])
+            count_list_dict[k] = {}
+        ret_data = _render_time_frame_data(time_unit, time_frame, name_map,
+                                           count_client_endpoint_list,
+                                           'client_endpoint', count_list_dict)
+        count_data.extend(ret_data)
+    if len(result_code_list) > 0:
+        pipeline = [
+            {
+                "$group": {
+                    "_id": {
+                        "date": "$date",
+                        "code": "$code"
+                    },
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+        model_cls = _get_model_cls_by_unit(time_unit, 'result_code')
+        count_result_code_list = model_cls.objects(
+            code__in=result_code_list, **filter_dict).aggregate(*pipeline)
+        count_list_dict = {}
+        for t in result_code_list:
+            count_list_dict[t] = {}
+        ret_data = _render_time_frame_data(time_unit, time_frame, name_map,
+                                           count_result_code_list,
+                                           'result_code', count_list_dict)
+        count_data.extend(ret_data)
+
+    return x_data, count_data
 
 
 def get_export_config_json(skip_id=False):

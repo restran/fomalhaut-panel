@@ -4,32 +4,28 @@
 
 from __future__ import unicode_literals
 
-from datetime import datetime, timedelta, time
-import calendar
 import json
 import traceback
-import time
-from copy import copy, deepcopy
+
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 from django.db import transaction
+
 from cerberus import Validator
 import redis
-from django.db.models import Count, Sum, Q
+
 from api_dashboard import settings
-from common.utils import insert_many
-from forms import *
+from ..forms import *
 from common.utils import http_response_json, json_dumps
 from accounts.decorators import login_required
 from common.utils import error_404
-from tasks import parse_access_logs
 
 logger = logging.getLogger(__name__)
 
 
 @login_required
 @require_http_methods(["GET"])
-def api_get_model_data(request, model_name):
+def get_model_data(request, model_name):
     logger.debug('run api_get_model_data')
     return_data = {'success': False, 'msg': ''}
     get_default_form = request.GET.get('get_default_form', False)
@@ -140,7 +136,7 @@ def do_create_or_update_model_data(request, model_name, is_update, post_data, fo
 @login_required
 @csrf_protect
 @require_http_methods(["POST"])
-def api_create_model_data(request, model_name):
+def create_model_data(request, model_name):
     """
     创建或更新数据
     :param request:
@@ -168,7 +164,7 @@ def api_create_model_data(request, model_name):
 @login_required
 @csrf_protect
 @require_http_methods(["POST"])
-def api_update_model_data(request, model_name, entry_id):
+def update_model_data(request, model_name, entry_id):
     """
     创建或更新数据
     :param request:
@@ -219,7 +215,7 @@ def api_update_model_data(request, model_name, entry_id):
 @login_required
 @csrf_protect
 @require_http_methods(["POST"])
-def api_delete_model_data(request, model_name, entry_id=None):
+def delete_model_data(request, model_name, entry_id=None):
     """
     删除数据
     :param request:
@@ -252,7 +248,7 @@ def api_delete_model_data(request, model_name, entry_id=None):
 @login_required
 @csrf_protect
 @require_http_methods(["POST"])
-def api_update_enable_state_model_data(request, model_name, entry_id=None):
+def update_enable_state_model_data(request, model_name, entry_id=None):
     """
     点击启用按钮，更新启用状态
     :param request:
@@ -528,7 +524,7 @@ def do_import_config(upload_file):
 @login_required
 @csrf_protect
 @require_http_methods(["POST"])
-def api_import_config(request):
+def import_config(request):
     """
     上传文件，导入配置
     """
@@ -548,7 +544,7 @@ def api_import_config(request):
 @login_required
 @csrf_protect
 @require_http_methods(["POST"])
-def api_transfer_to_redis(request):
+def transfer_to_redis(request):
     """
     将配置数据同步到Redis中
     """
@@ -595,438 +591,3 @@ def api_transfer_to_redis(request):
         logger.error(traceback.format_exc())
 
     return http_response_json({'success': success, 'msg': msg})
-
-
-@login_required
-@csrf_protect
-@require_http_methods(["POST"])
-def api_get_total_by_day_access(request):
-    """
-    获取24小时访问统计
-    """
-    success, msg, data = False, '', []
-    post_data = json.loads(request.body)
-    request_type = post_data.get('request_type', 'all')
-    logger.debug(post_data)
-    date = datetime.strptime(post_data['date'], '%Y-%m-%d').date()
-    if date == datetime.today().date():
-        max_hour = datetime.now().hour + 1
-    else:
-        max_hour = 24
-
-    agent_id_list = post_data['agent_id_list']
-
-    count_data = []
-    for aid in agent_id_list:
-        if aid <= -100:
-            result_code = abs(aid) - 100
-            count_list = AccessLog.objects.filter(
-                result_code=result_code, date=date).values('hour').annotate(count=Count('id'))
-        elif aid != -1:
-            if request_type == 'all':
-                count_list = AccessLog.objects.filter(
-                    agent_id=aid, date=date).values('hour').annotate(count=Count('id'))
-            else:
-                count_list = AccessLog.objects.filter(
-                    agent_id=aid, date=date, header_token=True).values('hour').annotate(count=Count('id'))
-        else:
-            if request_type == 'all':
-                # 所有
-                count_list = AccessLog.objects.filter(
-                    date=date).values('hour').annotate(count=Count('id'))
-            else:
-                count_list = AccessLog.objects.filter(
-                    date=date, header_token=True).values('hour').annotate(count=Count('id'))
-
-        count_dict = {}
-        for t in count_list:
-            t['hour'] = int(t['hour'])
-            count_dict[t['hour']] = t
-
-        logger.debug(count_list)
-
-        new_count_list = []
-        for t in range(max_hour):
-            if t not in count_dict:
-                new_count_list.append(0)
-            else:
-                new_count_list.append(count_dict[t]['count'])
-
-        count_data.append(new_count_list)
-        logger.debug(new_count_list)
-
-    success = True
-    return http_response_json({'success': success, 'msg': msg, 'data': count_data,
-                               'x-data': range(0, 24)})
-
-
-@login_required
-@csrf_protect
-@require_http_methods(["POST"])
-def api_get_total_by_month_access(request):
-    """
-    获取月访问统计
-    """
-    success, msg, data = False, '', []
-    post_data = json.loads(request.body)
-    request_type = post_data.get('request_type', 'all')
-    year = int(post_data['year'])
-    month = int(post_data['month'])
-    _, month_max_day = calendar.monthrange(year, month)
-    today = datetime.today().date()
-    if month == today.month and year == today.year:
-        max_day = today.day + 1
-    else:
-        max_day = month_max_day + 1
-
-    min_date = datetime(year=year, month=month, day=1)
-    max_date = datetime(year=year, month=month, day=month_max_day)
-    agent_id_list = post_data['agent_id_list']
-    count_data = []
-    for aid in agent_id_list:
-        if aid <= -100:
-            result_code = abs(aid) - 100
-            count_list = AccessLog.objects.filter(
-                result_code=result_code, date__gte=min_date, date__lte=max_date). \
-                values('date').annotate(m_count=Count('id'))
-        elif aid != -1:
-            if request_type == 'all':
-                count_list = AccessLog.objects.filter(agent_id=aid, date__gte=min_date, date__lte=max_date). \
-                    values('date').annotate(m_count=Count('id'))
-            else:
-                count_list = AccessLog.objects.filter(agent_id=aid, header_token=True, date__gte=min_date,
-                                                      date__lte=max_date). \
-                    values('date').annotate(m_count=Count('id'))
-        else:
-            if request_type == 'all':
-                # 所有
-                count_list = AccessDayCounter.objects.filter(date__gte=min_date, date__lte=max_date). \
-                    values('date').annotate(m_count=Sum('count'))
-            else:
-                count_list = AccessDayCounter.objects.filter(page_view=True, date__gte=min_date, date__lte=max_date). \
-                    values('date').annotate(m_count=Sum('count'))
-
-        count_dict = {}
-        for t in count_list:
-            day = t['date'].day
-            count_dict[day] = t
-
-        logger.debug(count_list)
-
-        new_count_list = []
-        for t in range(1, max_day):
-            if t not in count_dict:
-                new_count_list.append(0)
-            else:
-                new_count_list.append(count_dict[t]['m_count'])
-
-        count_data.append(new_count_list)
-        logger.debug(new_count_list)
-
-    success = True
-    return http_response_json({'success': success, 'msg': msg, 'data': count_data,
-                               'x-data': range(1, month_max_day + 1)})
-
-
-@login_required
-@csrf_protect
-@require_http_methods(["GET"])
-def api_get_total_count(request):
-    """
-    获取累计访问数量
-    """
-    success, msg, data = False, '', []
-    # 查看类型，是查看所有请求，还是只查看页面访问
-    request_type = request.GET.get('request_type', 'all')
-    logger.debug(request_type)
-    if request_type == 'all':
-        total_count = AccessDayCounter.objects.aggregate(total_count=Sum('count'))
-        today_count = AccessDayCounter.objects.filter(
-            date=datetime.today().date()).aggregate(
-            today_count=Sum('count'))
-
-        yesterday_count = AccessDayCounter.objects.filter(
-            date=datetime.today().date() - timedelta(days=1)).aggregate(
-            yesterday_count=Sum('count'))
-    else:
-        total_count = AccessDayCounter.objects.filter(
-            page_view=True).aggregate(total_count=Sum('count'))
-        logger.debug(total_count)
-        today_count = AccessDayCounter.objects.filter(
-            date=datetime.today().date(),
-            page_view=True).aggregate(today_count=Sum('count'))
-
-        yesterday_count = AccessDayCounter.objects.filter(
-            date=datetime.today().date() - timedelta(days=1),
-            page_view=True).aggregate(yesterday_count=Sum('count'))
-
-    data = {}
-    data.update(total_count)
-    data.update(today_count)
-    data.update(yesterday_count)
-
-    for k, v in data.iteritems():
-        if v is None:
-            data[k] = 0
-
-    logger.debug(data)
-
-    success = True
-    return http_response_json({'success': success, 'msg': msg, 'data': data})
-
-
-@login_required
-@csrf_protect
-@require_http_methods(["POST"])
-def api_get_ip_count(request):
-    """
-    获取IP访问统计数量
-    """
-    success, msg, data = False, '', []
-    post_data = json.loads(request.body)
-    # 查看类型，是查看所有请求，还是只查看页面访问
-    request_type = post_data.get('request_type', 'all')
-    date = post_data.get('date')
-    if date:
-        date = datetime.strptime(post_data['date'], '%Y-%m-%d').date()
-        min_date = date
-        max_date = date
-    else:
-        year = int(post_data['year'])
-        month = int(post_data['month'])
-        _, month_max_day = calendar.monthrange(year, month)
-
-        min_date = datetime(year=year, month=month, day=1)
-        max_date = datetime(year=year, month=month, day=month_max_day)
-
-    agent_id_list = [t for t in post_data['agent_id_list'] if t >= -1]
-    result_code_list = [abs(t) - 100 for t in post_data['agent_id_list'] if t <= -100]
-
-    # 是否请求所有的应用
-    all_agents = False
-    for t in post_data['agent_id_list']:
-        if t == -1:
-            all_agents = True
-            break
-
-    if all_agents:
-        if request_type == 'all':
-            ip_count_list = AccessLog.objects.filter(
-                date__gte=min_date, date__lte=max_date).values(
-                'remote_ip').annotate(m_count=Count('id')).order_by('-m_count')[:10]
-        else:
-            # 使用 header token 来判断是否属于页面访问
-            ip_count_list = AccessLog.objects.filter(
-                date__gte=min_date, date__lte=max_date,
-                header_token=True).values(
-                'remote_ip').annotate(m_count=Count('id')).order_by('-m_count')[:10]
-    else:
-        if request_type == 'all':
-            ip_count_list = AccessLog.objects.filter(
-                (Q(result_code__in=result_code_list) |
-                 Q(agent_id__in=agent_id_list)) & Q(
-                    date__gte=min_date, date__lte=max_date)).values(
-                'remote_ip').annotate(m_count=Count('id')).order_by('-m_count')[:10]
-        else:
-            ip_count_list = AccessLog.objects.filter(
-                (Q(result_code__in=result_code_list) |
-                 Q(agent_id__in=agent_id_list)) & Q(
-                    header_token=True,
-                    date__gte=min_date, date__lte=max_date)).values(
-                'remote_ip').annotate(m_count=Count('id')).order_by('-m_count')[:10]
-
-    # 因为返回的是 QuerySet，不这样处理会出现 not JSON serializable
-    ip_count_list = list(ip_count_list)
-    logger.debug(ip_count_list)
-    success = True
-    return http_response_json({'success': success, 'msg': msg, 'data': ip_count_list})
-
-
-@login_required
-@csrf_protect
-@require_http_methods(["POST"])
-def api_get_abnormal_ip_count(request):
-    """
-    获取异常访问IP统计数量
-    """
-    success, msg, data = False, '', []
-    post_data = json.loads(request.body)
-    date = post_data.get('date')
-    if date:
-        date = datetime.strptime(post_data['date'], '%Y-%m-%d').date()
-        min_date = date
-        max_date = date
-    else:
-        year = int(post_data['year'])
-        month = int(post_data['month'])
-        _, month_max_day = calendar.monthrange(year, month)
-
-        min_date = datetime(year=year, month=month, day=1)
-        max_date = datetime(year=year, month=month, day=month_max_day)
-
-    ip_count_list = AccessLog.objects.filter(
-        result_code=ACCESS_RESULT_FORBIDDEN,
-        date__gte=min_date, date__lte=max_date).values(
-        'remote_ip').annotate(m_count=Count('id')).order_by('-m_count')[:5]
-
-    # 因为返回的是 QuerySet，不这样处理会出现 not JSON serializable
-    ip_count_list = list(ip_count_list)
-    logger.debug(ip_count_list)
-    success = True
-    return http_response_json({'success': success, 'msg': msg, 'data': ip_count_list})
-
-
-@login_required
-@csrf_protect
-@require_http_methods(["GET"])
-def api_get_access_agent_options(request):
-    """
-    获取AccessAgent，select 选项
-    """
-    success, msg, data = False, '', []
-    data = Client.objects.all().values('id', 'name')
-    data = [t for t in data]
-    success = True
-    logger.debug(data)
-    return http_response_json({'success': success, 'msg': msg, 'data': data})
-
-
-@login_required
-@csrf_protect
-@require_http_methods(["GET"])
-def api_get_options(request):
-    """
-    获取 client, endpoint, client_endpoint select 选项
-    """
-    success, msg, data = False, '', []
-    clients = Client.objects.all().values('id', 'name')
-    clients = [t for t in clients]
-    endpoints = Endpoint.objects.all().values('id', 'unique_name')
-    endpoints = [
-        {
-            'id': t['id'],
-            'unique_name': t['unique_name'],
-        } for t in endpoints
-        ]
-    client_endpoints = ClientEndpoint.objects.all().values(
-        'id', 'client_id', 'endpoint_id')
-    client_dict = {}
-    for t in clients:
-        client_dict[t['id']] = t['name']
-
-    endpoint_dict = {}
-    for t in endpoints:
-        endpoint_dict[t['id']] = t['unique_name']
-
-    new_client_endpoints = []
-    for t in client_endpoints:
-        new_client_endpoints.append({
-            'id': t['id'],
-            'name': '%s / %s' % (
-                client_dict.get(t['client_id'], ''),
-                endpoint_dict.get(t['endpoint_id'], '')
-            )
-        })
-
-    data = {
-        'clients': clients,
-        'endpoints': endpoints,
-        'client_endpoints': new_client_endpoints
-    }
-    success = True
-    logger.debug(data)
-    return http_response_json({'success': success, 'msg': msg, 'data': data})
-
-
-@login_required
-@csrf_protect
-@require_http_methods(["GET"])
-def api_get_client_options(request):
-    """
-    获取 Client select 选项
-    """
-    success, msg, data = False, '', []
-    data = Client.objects.all().values('id', 'name')
-    data = [t for t in data]
-    success = True
-    logger.debug(data)
-    return http_response_json({'success': success, 'msg': msg, 'data': data})
-
-
-@login_required
-@csrf_protect
-@require_http_methods(["POST"])
-def api_get_endpoint_options(request):
-    """
-    获取 Endpoint select 选项
-    """
-    success, msg, data = False, '', []
-    post_data = json.loads(request.body)
-    clients = post_data.get('clients', [])
-
-    if len(clients) == 0:
-        data = Endpoint.objects.all().values('id', 'unique_name', 'name', 'version')
-        data = [
-            {
-                'id': t['id'],
-                'unique_name': t['unique_name'],
-                'name': t['name'],
-                'version': t['version']
-            } for t in data
-            ]
-    else:
-        data = ClientEndpoint.objects.filter(
-            client_id__in=clients).select_related('endpoint')
-        data = [
-            {
-                'id': t.endpoint.id,
-                'unique_name': t.endpoint.unique_name,
-                'name': t.endpoint.name,
-                'version': t.endpoint.version
-            }
-            for t in data
-            ]
-
-    success = True
-    logger.debug(data)
-    return http_response_json({'success': success, 'msg': msg, 'data': data})
-
-
-@login_required
-@csrf_protect
-@require_http_methods(["POST"])
-def api_get_access_log(request):
-    """
-    获取访问日志
-    :param request:
-    :return:
-    """
-    success, msg, data = False, '', []
-    post_data = json.loads(request.body)
-    if post_data['begin_time'] != '' and post_data['begin_time'] is not None:
-        post_data['begin_time'] = datetime.strptime(post_data['begin_time'], '%Y-%m-%d %H:%M')
-
-    if post_data['end_time'] != '' and post_data['end_time'] is not None:
-        post_data['end_time'] = datetime.strptime(post_data['end_time'], '%Y-%m-%d %H:%M')
-
-    entries, total_num = AccessLog.query(**post_data)
-    data = {
-        'entries': entries,
-        'total_num': total_num
-    }
-    # logger.debug(data)
-    return http_response_json({'success': True, 'msg': msg, 'data': data})
-
-
-@login_required
-@csrf_protect
-@require_http_methods(["POST"])
-def api_refresh_access_log(request):
-    """
-    立即从redis中更新访问日志
-    :param request:
-    :return:
-    """
-    success, msg, data = False, '', []
-    parse_access_logs()
-    return http_response_json({'success': True, 'msg': msg})

@@ -198,7 +198,7 @@ fieldset[disabled] .btn-primary:focus, fieldset[disabled] .btn-primary:hover {
 
 /*------------------------*/
 
-@media (max-width: 768px) {
+@media (max-width: 1366px) {
     .container {
         width: 95%;
     }

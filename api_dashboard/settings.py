@@ -17,7 +17,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
-from pymongo import MongoClient
+# from pymongo import MongoClient
 from mongoengine import connect
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)

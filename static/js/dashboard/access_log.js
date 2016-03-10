@@ -284,22 +284,23 @@
                     });
                 })
             },
-            dateTimeChange: function () {
-                console.log('kkk');
+            checkDateTime: function () {
                 if (this.beginTime != null && this.beginTime != '' &&
                     this.endTime != null && this.endTime != '') {
                     if (this.beginTime > this.endTime) {
                         toastr['error']('开始时间不能大于结束时间');
+                        return false;
                     }
                 }
+                return true;
             }
         },
         watch: {
             beginTime: function () {
-                this.dateTimeChange();
+                this.checkDateTime();
             },
             endTime: function () {
-                this.dateTimeChange();
+                this.checkDateTime();
             }
         }
     });

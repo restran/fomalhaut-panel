@@ -37,10 +37,18 @@
 {% block main_content %}
     <div class="main-content" id="dashboard-app">
         {% verbatim %}
+
         <div class="page-header">
             <div class="clearfix">
                 <div class="float-left">
                     <h1 style="display: inline-block; margin-right: 10px">访问统计</h1>
+                    <span> 累计访问
+                        <span id="count2-total-count" class="number-count" data-from="0"
+                                  style="font-size: 30px; margin: 20px 0 5px 0; text-align: center;color: #51d466"
+                                  :data-to="totalCount" data-speed="1000"
+                                  data-refresh-interval="100">0</span>
+                    </span>
+
                 </div>
                 <div class="float-right">
                     <!--
@@ -63,15 +71,15 @@
                         </button>
                     </div>
                     <div style="display: inline">
-                        <select id="select-access-agent" class="selectpicker show-tick"
+                        <select id="select-time-frame" :disabled="disabledTimeFrame" class="selectpicker show-tick"
                                 data-selected-text-format="count>3"
-                                ng-model="selectedAgents">
-                            <option value="2">最近24小时</option>
-                            <option value="3">最近7天</option>
-                            <option value="4">最近30天</option>
+                                v-model="selectedTimeFrame">
+                            <option value="24h">最近24小时</option>
+                            <option value="7d">最近7天</option>
+                            <option value="30d">最近30天</option>
                             <option data-divider="true"></option>
-                            <option value="5">完整1天</option>
-                            <option value="7">完整1月</option>
+                            <option value="1d">完整1天</option>
+                            <option value="1m">完整1月</option>
                         </select>
                     </div>
                 </div>
@@ -80,12 +88,12 @@
                 <div class="well" style="margin-top: 10px;margin-bottom: 10px;">
                     <div class="row">
                         <div class="col-sm-6">
-                            <label for="date-base-time" class="col-xs-3 control-label">基准时间</label>
+                            <label for="date-begin-time" class="col-xs-3 control-label">开始时间</label>
 
                             <div class="col-xs-9">
-                                <div class="input-group date" id="date-base-time"
-                                     data-toggle="tooltip" data-placement="top" title="选择基准时间，默认为当前时间">
-                                    <input size="16" class="form-control" v-model="baseTime"
+                                <div class="input-group date" id="date-begin-time"
+                                     data-toggle="tooltip" data-placement="top" title="选择开始时间">
+                                    <input size="16" class="form-control" v-model="beginTime"
                                            type="text" value="" readonly>
                                     <span class="input-group-addon" style="border-left: 0;">
                                          <i class="glyphicon glyphicon-remove"></i>
@@ -96,6 +104,25 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-sm-6">
+                            <label for="date-end-time" class="col-xs-3 control-label">结束时间</label>
+
+                            <div class="col-xs-9">
+                                <div class="input-group date" id="date-end-time"
+                                     data-toggle="tooltip" data-placement="top" title="选择结束时间，默认为当前时间">
+                                    <input size="16" class="form-control" v-model="endTime"
+                                           type="text" value="" readonly>
+                                    <span class="input-group-addon" style="border-left: 0;">
+                                         <i class="glyphicon glyphicon-remove"></i>
+                                    </span>
+                                    <span class="input-group-addon">
+                                        <i class="glyphicon glyphicon-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-sm-6">
                             <label for="select-client" class="col-xs-3 control-label">应用</label>
 
@@ -111,8 +138,6 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
-                    <div class="row">
                         <div class="col-sm-6">
                             <label for="select-endpoint" class="col-xs-3 control-label">API 端点</label>
 
@@ -130,7 +155,9 @@
                                 </select>
                             </div>
                         </div>
+                    </div>
 
+                    <div class="row">
                         <div class="col-sm-6">
                             <label for="select-client-endpoint" class="col-xs-3 control-label">应用 &amp; API 端点</label>
 
@@ -140,13 +167,10 @@
                                         data-selected-text-format="count>3" data-width="100%"
                                         v-model="selectedClientEndpoints">
                                     <option v-for="u in clientEndpointOptions | orderBy 'name'" track-by="$index"
-                                            :value="u.id" v-text="u.name"></option>
+                                            :value="$index" v-text="u.name"></option>
                                 </select>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="row">
                         <div class="col-sm-6">
                             <label for="select-access-results" class="col-xs-3 control-label">访问结果</label>
 
@@ -162,13 +186,12 @@
                                     <option value="500">500 服务端错误</option>
                                     <option value="503">504 Endpoint 服务不可用</option>
                                     <option value="510">510 Client 配置有误</option>
-                                    <option data-divider="true"></option>
-                                    <option value="-1">4XX 客户端错误</option>
-                                    <option value="-1">5XX 服务端错误</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="col-sm-6">
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-offset-6 col-sm-6">
                             <div style="text-align: right;padding-right: 15px;">
                                 <button class="btn btn-primary" role="button"
                                         @click="search()">

@@ -5,16 +5,30 @@
     var app = new Vue({
         el: '#dashboard-app',
         data: {
-            baseTime: null,
-            selectedClients: [],
+            disabledTimeFrame: false,
+            totalCount: 0,
+            beginTime: null,
+            endTime: null,
+            selectedTimeFrame: '24h',
+            selectedClients: ['-1'],
             selectedEndpoints: [],
+            selectedClientEndpoints: [],
             selectedResults: [],
             clientOptions: [],
             endpointOptions: [],
             clientEndpointOptions: [],
-            entriesReady: false,
-            entries: [],
-            cachedQuery: null
+            clientOptionDict: {},
+            endpointOptionDict: {},
+            clientEndpointOptionDict: {},
+            resultOptionDict: {
+                '200': '200 成功',
+                '400': '400 请求数据不完整',
+                '401': '401 登录验证失败',
+                '403': '403 HMAC 鉴权失败',
+                '500': '500 服务端错误',
+                '503': '504 Endpoint 服务不可用',
+                '510': '510 Client 配置有误'
+            }
         },
         computed: {},
         methods: {
@@ -24,10 +38,28 @@
                     app.clientOptions = data['data']['clients'];
                     app.endpointOptions = data['data']['endpoints'];
                     app.clientEndpointOptions = data['data']['client_endpoints'];
+                    var i, item;
+                    for (i = 0; i < app.clientOptions.length; i++) {
+                        item = app.clientOptions[i];
+                        app.clientOptionDict[item.id] = item.name;
+                    }
+                    app.clientOptionDict['-1'] = '所有应用';
+                    for (i = 0; i < app.endpointOptions.length; i++) {
+                        item = app.endpointOptions[i];
+                        app.endpointOptionDict[item.id] = item['unique_name'];
+                    }
+                    for (i = 0; i < app.clientEndpointOptions.length; i++) {
+                        item = app.clientEndpointOptions[i];
+                        console.log(item);
+                        console.log(item.client_id + '/' + item.endpoint_id);
+                        app.clientEndpointOptionDict[item.client_id + '/' + item.endpoint_id] = item.name;
+                    }
 
                     Vue.nextTick(function () {
                         // DOM 更新了
-                        $('#select-client').selectpicker('refresh');
+                        var ele = $('#select-client');
+                        ele.selectpicker('refresh');
+                        //ele.selectpicker('val', '-1');
                         $('#select-endpoint').selectpicker('refresh');
                         $('#select-client-endpoint').selectpicker('refresh');
                     });
@@ -36,166 +68,187 @@
                 })
             },
             search: function () {
+                if (this.checkDateTime() == false) {
+                    return;
+                }
                 console.log('search');
-                this.getPage(1, true);
-            },
-            getPage: function (pageId, isSearch) {
-                pageId = parseInt(pageId);
-                if (isNaN(pageId)) {
-                    toastr['error']('请输入整数页码');
-                    return;
+                var client_endpoint_list = [];
+                var i, item;
+                for (i = 0; i < this.selectedClientEndpoints.length; i++) {
+                    item = this.clientEndpointOptions[this.selectedClientEndpoints[i]];
+                    client_endpoint_list.push([item.client_id, item.endpoint_id]);
+                }
+                var postData = {
+                    'by_search': true,
+                    'begin_time': this.beginTime,
+                    'end_time': null,
+                    'client_list': this.selectedClients,
+                    'endpoint_list': this.selectedEndpoints,
+                    'client_endpoint_list': client_endpoint_list,
+                    'result_code_list': this.selectedResults
+                };
+                if (this.disabledTimeFrame == false) {
+                    postData['time_frame'] = this.selectedTimeFrame;
+                }
+                if (this.endTime != null && this.endTime != '') {
+                    postData['end_time'] = this.endTime;
                 }
 
-                if (pageId < 1 || pageId > this.totalPage) {
-                    console.log('error pageId ' + pageId);
-                    toastr['error']('请输入正确的页码范围');
-                    return;
+                var nameMap = {
+                    'total': '全部应用',
+                    'client': {},
+                    'endpoint': {},
+                    'client_endpoint': {},
+                    'result_code': {}
+                };
+
+                var clientMap = {};
+                for (i = 0; i < postData['client_list'].length; i++) {
+                    item = postData['client_list'][i];
+                    clientMap[item] = this.clientOptionDict[item];
                 }
+                nameMap['client'] = clientMap;
 
-                var pageInfo = this.pageInfo;
-                var skip, lastItem;
-                var i;
-
-                if (!isSearch && pageId == pageInfo.currentPage) {
-                    return;
+                var endpointMap = {};
+                for (i = 0; i < postData['endpoint_list'].length; i++) {
+                    item = postData['endpoint_list'][i];
+                    endpointMap[item] = this.endpointOptionDict[item];
                 }
+                nameMap['endpoint'] = endpointMap;
 
-                if (pageId == 1) {
-                    pageInfo.currentPage = 1;
-                    pageInfo.lastItem = null;
-                    pageInfo.pageHistory = [];
-                    pageInfo.totalNum = 0;
-                } else {
-                    // 记录页面历史
-                    pageInfo.pageHistory.push({
-                        pageId: pageInfo.currentPage,
-                        lastItem: pageInfo.lastItem
-                    });
-
-                    if (pageInfo.pageHistory.length > 20) {
-                        // 删掉最后一个元素
-                        pageInfo.pageHistory.pop();
-                    }
+                var clientEndpointMap = {};
+                for (i = 0; i < postData['client_endpoint_list'].length; i++) {
+                    item = postData['client_endpoint_list'][i];
+                    var k = item[0] + '/' + item[1];
+                    clientEndpointMap[k] = this.clientEndpointOptionDict[k];
                 }
+                nameMap['client_endpoint'] = clientEndpointMap;
 
-                var minOffset = null;
-                var page = null;
-                for (i = 0; i < pageInfo.pageHistory.length; i++) {
-                    var item = pageInfo.pageHistory[i];
-                    var offset = pageId - item.pageId;
-                    if (minOffset == null || (offset > 0 && offset < minOffset)) {
-                        page = item;
-                        minOffset = offset;
-                    }
+                var resultMap = {};
+                for (i = 0; i < postData['result_code_list'].length; i++) {
+                    item = postData['result_code_list'][i];
+                    resultMap[item] = this.resultOptionDict[item];
                 }
-                console.log(page);
-                if (page != null) {
-                    skip = pageInfo.pageSize * (pageId - page.pageId - 1);
-                    lastItem = page.lastItem;
-                } else {
-                    skip = pageInfo.pageSize * (pageId - 1);
-                    lastItem = null;
-                }
+                nameMap['result_code'] = resultMap;
 
-                pageInfo.currentPage = pageId;
-                var postData;
-                if (pageId != 1) {
-                    postData = $.extend(true, {}, this.cachedQuery);
-                } else {
-                    var statusList = this.status.replace('，', ',').split(',');
-                    var ipList = this.ip.replace('，', ',').split(',');
-                    var newIpList = [];
-                    for (i = 0; i < ipList.length; i++) {
-                        var ip = ipList[i].trim();
-                        if (ip != '') {
-                            newIpList.push(ip);
-                        }
-                    }
-                    ipList = newIpList;
+                postData['name_map'] = nameMap;
 
-                    var newStatusList = [];
-                    for (i = 0; i < statusList.length; i++) {
-                        var status = statusList[i].trim();
-                        if (status != '' && !isNaN(status)) {
-                            newStatusList.push(parseInt(status))
-                        }
-                    }
-                    statusList = newStatusList;
-                    console.log(statusList);
-                    console.log(ipList);
-                    postData = {
-                        'begin_time': this.beginTime,
-                        'end_time': this.endTime,
-                        'uri': this.uri,
-                        'elapsed_min': parseInt(this.elapsedMin),
-                        'elapsed_max': parseInt(this.elapsedMax),
-                        'selected_clients': this.selectedClients,
-                        'selected_endpoints': this.selectedEndpoints,
-                        'selected_results': this.selectedResults
-                    };
-                    if (statusList.length == 1) {
-                        postData['status'] = statusList[0];
-                    } else {
-                        postData['status_list'] = statusList;
-                    }
-
-                    if (ipList.length == 1) {
-                        postData['ip'] = ipList[0];
-                    } else {
-                        postData['ip_list'] = ipList;
-                    }
-
-                    this.cachedQuery = $.extend(true, {}, postData);
-                }
-                postData['limit'] = pageInfo.pageSize;
-                postData['skip'] = skip;
-                postData['last_item'] = lastItem;
-
-                postData['require_total_num'] = pageId == 1;
-
-                this.getAccessLog(postData, pageId);
-            },
-            getAccessLog: function (postData) {
-                this.entriesReady = false;
-                var apiUrl = '/api/dashboard/access_log/query/';
+                var apiUrl = '/api/dashboard/query_access_count/';
                 console.log(postData);
                 $request.post(apiUrl, postData, function (data) {
                     console.log(data);
-                    app.entries = data['data']['entries'];
-                    var totalNum = data['data']['total_num'];
-                    if (totalNum != null) {
-                        app.pageInfo.totalNum = totalNum;
-                        console.log(totalNum);
-                    }
-
-                    var lastItem;
-                    if (app.entries.length == 0) {
-                        lastItem = null;
-                    } else {
-                        lastItem = {
-                            'id': app.entries[app.entries.length - 1]['id'],
-                            'timestamp': app.entries[app.entries.length - 1]['timestamp']
-                        }
-                    }
-
-                    app.pageInfo.lastItem = lastItem;
-                    console.log(lastItem);
-
-                    //if (totalNum != null) {
-                    //    app.firstPageFirstItem = lastItem;
-                    //}
-                    Vue.nextTick(function () {
-                        app.entriesReady = true;
-                    });
+                    var x_data = data['data']['x_data'];
+                    var y_data = data['data']['y_data'];
+                    app.renderChart(x_data, y_data);
                 }, function (data, msg) {
                     toastr["error"](msg);
+                });
+            },
+            switchTimeFrame: function () {
+                //if (this.checkDateTime() == false) {
+                //    return;
+                //}
+                //var postData = {
+                //    'by_search': false,
+                //    'begin_time': this.beginTime,
+                //    'end_time': null,
+                //    'time_frame': this.selectedTimeFrame,
+                //    'client_list': [],
+                //    'endpoint_list': [],
+                //    'client_endpoint_list': [],
+                //    'result_code_list': []
+                //};
+                //
+                //postData['name_map'] = {
+                //    'total': '全部应用'
+                //};
+                //var apiUrl = '/api/dashboard/query_access_count/';
+                //console.log(postData);
+                //$request.post(apiUrl, postData, function (data) {
+                //    console.log(data);
+                //    var x_data = data['data']['x_data'];
+                //    var y_data = data['data']['y_data'];
+                //    app.renderChart(x_data, y_data);
+                //}, function (data, msg) {
+                //    toastr["error"](msg);
+                //});
+                this.search();
+            },
+            renderChart: function (x_data, y_data) {
+                var legend = [];
+                var series = [];
+                console.log(y_data.length);
+                for (var i = 0; i < y_data.length; i++) {
+                    var item = y_data[i];
+                    legend.push(item[0]);
+                    var entry = {
+                        name: item[0],
+                        type: 'line',
+                        areaStyle: {normal: {opacity: 0.25}},
+                        markPoint: {
+                            data: [
+                                {type: 'max', name: '最大值'}
+                                //{type: 'min', name: '最小值'}
+                            ]
+                        },
+                        data: item[1]
+                    };
+
+                    series.push(entry);
+                }
+                option.legend.data = legend;
+                console.log(legend);
+                console.log(x_data);
+                console.log(series);
+                option.xAxis[0].data = x_data;
+                option.series = series;
+                console.log(option);
+                chart.clear();
+                chart.setOption(option);
+            },
+            checkDateTime: function () {
+                if (this.beginTime != null && this.beginTime != '' &&
+                    this.endTime != null && this.endTime != '') {
+                    if (this.beginTime > this.endTime) {
+                        toastr['error']('开始时间不能大于结束时间');
+                        return false;
+                    }
+                }
+
+                return true;
+            },
+            getTotalCount: function () {
+                var apiUrl = '/api/dashboard/get_total_count/';
+                $request.get(apiUrl, null, function (data) {
+
+                    app.totalCount = data['data']['total_count'];
                     Vue.nextTick(function () {
-                        app.entriesReady = true;
+                        // DOM 更新了
+                        $('#count2-total-count').countTo({to: app.totalCount});
                     });
-                })
+                    console.log(app.totalCount);
+                }, function (data, msg) {
+                    toastr["error"](msg);
+                });
             }
         },
-        watch: {}
+        watch: {
+            selectedTimeFrame: function () {
+                console.log('selectedTimeFrame change');
+                this.switchTimeFrame();
+            },
+            beginTime: function () {
+                this.checkDateTime();
+                this.disabledTimeFrame = !!(this.beginTime != null && this.beginTime != '');
+                Vue.nextTick(function () {
+                    // DOM 更新了
+                    $('#select-time-frame').selectpicker('refresh');
+                });
+            },
+            endTime: function () {
+                this.checkDateTime();
+            }
+        }
     });
 
 
@@ -211,7 +264,7 @@
             trigger: 'axis'
         },
         legend: {
-            data: ['邮件营销', '联盟广告', '视频广告', '直接访问', '搜索引擎']
+            data: []
         },
         toolbox: {
             feature: {
@@ -234,7 +287,7 @@
                 },
                 type: 'category',
                 boundaryGap: false,
-                data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                data: []
             }
         ],
         yAxis: [
@@ -248,79 +301,13 @@
                 type: 'value'
             }
         ],
-        series: [
-            {
-                name: '邮件营销',
-                type: 'line',
-                areaStyle: {normal: {opacity: 0.25}},
-                markPoint: {
-                    data: [
-                        {type: 'max', name: '最大值'},
-                        {type: 'min', name: '最小值'}
-                    ]
-                },
-                data: [120, 132, 101, 134, 90, 230, 210]
-            },
-            {
-                name: '联盟广告',
-                type: 'line',
-                areaStyle: {normal: {opacity: 0.25}},
-                markPoint: {
-                    data: [
-                        {type: 'max', name: '最大值'},
-                        {type: 'min', name: '最小值'}
-                    ]
-                },
-                data: [220, 182, 191, 234, 290, 330, 310]
-            },
-            {
-                name: '视频广告',
-                type: 'line',
-                areaStyle: {normal: {opacity: 0.25}},
-                markPoint: {
-                    data: [
-                        {type: 'max', name: '最大值'},
-                        {type: 'min', name: '最小值'}
-                    ]
-                },
-                data: [150, 232, 201, 154, 190, 330, 410]
-            },
-            {
-                name: '直接访问',
-                type: 'line',
-                areaStyle: {normal: {opacity: 0.25}},
-                markPoint: {
-                    data: [
-                        {type: 'max', name: '最大值'},
-                        {type: 'min', name: '最小值'}
-                    ]
-                },
-                data: [320, 332, 301, 334, 390, 330, 320]
-            },
-            {
-                name: '搜索引擎',
-                type: 'line',
-                //label: {
-                //    normal: {
-                //        show: true,
-                //        position: 'top'
-                //    }
-                //},
-                areaStyle: {normal: {opacity: 0.25}},
-                markPoint: {
-                    data: [
-                        {type: 'max', name: '最大值'},
-                        {type: 'min', name: '最小值'}
-                    ]
-                },
-                data: [820, 932, 901, 934, 1290, 1330, 1320]
-            }
-        ]
+        series: []
     };
-    chart.setOption(option);
+    //chart.setOption(option);
 
     app.loadOptions();
-
+    app.switchTimeFrame();
+    app.getTotalCount();
 
     $(document).ready(function () {
         $(".date").datetimepicker({
@@ -335,6 +322,11 @@
 
         $('[data-toggle="tooltip"]').tooltip();
         $('[data-toggle="popover"]').popover();
+
+        $(window).on('resize', function () {
+            console.log('resize');
+            chart.resize();
+        });
     });
 })();
 

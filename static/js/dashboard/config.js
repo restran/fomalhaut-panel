@@ -108,12 +108,13 @@
                                         scrollTop: scrollTop
                                     }, 1000);
 
-                                    setTimeout(function () {
-                                        ele.addClass('go-to-table-row focus');
-                                    }, 1000);
+                                    ele.addClass('go-to-table-row focus');
+                                    //setTimeout(function () {
+                                    //
+                                    //}, 1000);
                                     setTimeout(function () {
                                         ele.removeClass('focus');
-                                    }, 5000);
+                                    }, 3500);
                                 }
                             });
                         }
@@ -396,7 +397,7 @@
                 var rawKey = shaObj.getHash("SHA-1", "HEX");
                 var key = [];
                 if (type == 'access_key') {
-                    for (var i = 0; i < rawKey.length; i+=2) {
+                    for (var i = 0; i < rawKey.length; i += 2) {
                         key.push(rawKey[i]);
                     }
                     model.data = key.join('');

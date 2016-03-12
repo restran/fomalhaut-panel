@@ -24,7 +24,7 @@
     {% block head_script %}{# defer-incapable JS block #}{% endblock %}
 
 </head>
-<body {% block ng_app_body_scope %}{% endblock %}>
+<body {% block ng_app_body_scope %}{% endblock %} id="particles-js">
 
 <div class="container">
     {% block main_content %}{% endblock %}
@@ -34,6 +34,8 @@
 <script src="/static/vendors/bootstrap/js/bootstrap.min.js"></script>
 <script src="/static/vendors/angularjs/angular.min.js"></script>
 <script src="/static/vendors/toastr/toastr.min.js"></script>
+<script src="/static/vendors/particles/particles.min.js"></script>
+<script src="/static/vendors/particles/particles-app.js"></script>
 
 {% block tail_script %}{# defer-capable JS block #}{% endblock %}
 </body>

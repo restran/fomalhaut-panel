@@ -38,36 +38,6 @@
                        ng-model="config.formData.version.data">
             </div>
 
-            <!--
-            <div class="form-group {{ (config.formData.name.has_error
-                || config.formData.uri_prefix.has_error) ? 'has-error' : '' }}">
-                <label class="control-label input-required" for="modal-form-netloc">API 资源访问名称</label>
-                <label ng-show="config.formData.name.has_error
-                || config.formData.uri_prefix.has_error" class="control-label"
-                       ng-bind="config.formData.name.errors + '  ' +
-                       config.formData.uri_prefix.errors"></label>
-
-                <div class="row">
-                    <div class="col-sm-12 col-md-12">
-                        <div class="input-group">
-                            <span class="input-group-addon">http://example.com/</span>
-                            <input type="text" class="form-control"
-                                   required
-                                   ng-model="config.formData.name.data"
-                                   placeholder="API 名称">
-                            <span class="input-group-addon" style="border-left: 0; border-right: 0"> / </span>
-                            <input data-toggle="popover" data-trigger="hover"
-                                   data-container="body"
-                                   data-placement="top"
-                                   data-content="URI 前缀，例如 resource/v1 或者 v1，也可以为空"
-                                   type="text" class="form-control"
-                                   ng-model="config.formData.uri_prefix.data"
-                                   placeholder="URI 前缀，例如用作版本号">
-                        </div>
-                    </div>
-                </div>
-            </div>
--->
             <div ng-show="config.formData.is_builtin.data==false" class="form-group {{ config.formData.url.has_error ? 'has-error' : '' }}">
                 <label class="control-label input-required" for="modal-form-url">Endpoint URL</label>
                 <label ng-show="config.formData.url.has_error" class="control-label"

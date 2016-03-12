@@ -29,7 +29,17 @@
                 pageHistory: [],
                 jumpPageId: null
             },
-            cachedQuery: null
+            cachedQuery: null,
+            detailData: {
+                request: {
+                    headers: '',
+                    body: ''
+                },
+                response: {
+                    headers: '',
+                    body: ''
+                }
+            }
         },
         computed: {
             totalPage: function () {
@@ -294,6 +304,59 @@
                     }
                 }
                 return true;
+            },
+            showDetail: function (entry) {
+                Pace.restart();
+                $('#detail-modal').modal('show');
+                $('#detail-data-tabs').find('a[href="#tab_request"]').click();
+                var apiUrl = '/api/dashboard/access_log/get_access_detail/';
+                var reqData = {
+                    'headers_id': entry['request']['headers_id'],
+                    'data_type': 'request'
+                };
+
+                $request.post(apiUrl, reqData, function (data) {
+                    app.detailData.request.headers = data['data'];
+                }, function (data, msg) {
+                    toastr["error"](msg);
+                    app.detailData.request.headers = '';
+                });
+
+                reqData = {
+                    'body_id': entry['request']['body_id'],
+                    'data_type': 'request'
+                };
+
+                $request.rawPost(apiUrl, reqData, function (data) {
+                    app.detailData.request.body = data;
+                }, function (data, msg) {
+                    toastr["error"](msg);
+                    app.detailData.request.body = '';
+                });
+
+                var resData = {
+                    'headers_id': entry['response']['headers_id'],
+                    'data_type': 'response'
+                };
+
+                $request.post(apiUrl, resData, function (data) {
+                    app.detailData.response.headers = data['data'];
+                }, function (data, msg) {
+                    toastr["error"](msg);
+                    app.detailData.response.headers = '';
+                });
+
+                resData = {
+                    'body_id': entry['response']['body_id'],
+                    'data_type': 'response'
+                };
+
+                $request.rawPost(apiUrl, resData, function (data) {
+                    app.detailData.response.body = data;
+                }, function (data, msg) {
+                    toastr["error"](msg);
+                    app.detailData.response.body = '';
+                });
             }
         },
         watch: {
@@ -343,6 +406,11 @@
         //    console.log('hide');
         //    $scope.getData(1);
         //});
+
+        $('#detail-data-tabs').click(function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        });
 
         $('[data-toggle="tooltip"]').tooltip();
         $('[data-toggle="popover"]').popover();

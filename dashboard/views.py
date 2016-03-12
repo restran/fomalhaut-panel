@@ -33,16 +33,16 @@ def test(request):
     from dashboard.tasks import parse_access_logs
     from dashboard.models import AccessLog
     # AccessLog.objects().update(flag=False)
-    # parse_access_logs()
+    parse_access_logs()
     # pipeline = [
     #     {"$group": {"_id": "$date", "count": {"$sum": 1}}}
     # ]
     # ret = AccessHourCounter.objects().aggregate(*pipeline)
-    pipeline = [
-        {"$group": {"_id": {"date": "$date", "client_id": "$client_id"}, "count": {"$sum": 1}}}
-    ]
-    ret = AccessHourCounter.objects().aggregate(*pipeline)
-    logger.debug(ret)
+    # pipeline = [
+    #     {"$group": {"_id": {"date": "$date", "client_id": "$client_id"}, "count": {"$sum": 1}}}
+    # ]
+    # ret = AccessHourCounter.objects().aggregate(*pipeline)
+    # logger.debug(ret)
     return HttpResponse("test")
 
 

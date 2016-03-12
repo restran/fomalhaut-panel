@@ -711,3 +711,19 @@ table thead th {
     display: table;
     content: " ";
 }
+
+.color-success {
+    color: #5cb85c;
+}
+
+.color-warning {
+    color: #f0ad4e;
+}
+
+.color-info {
+    color: #5bc0de;
+}
+
+.color-danger {
+    color: #d9534f;
+}

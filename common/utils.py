@@ -8,9 +8,20 @@ import logging
 import json
 
 from django.http import HttpResponse
+from six import binary_type, text_type
 import time
 
 logger = logging.getLogger(__name__)
+
+
+def utf8(value):
+    """Get the UTF8-encoded version of a value."""
+    if not isinstance(value, binary_type) and not isinstance(value, text_type):
+        value = binary_type(value)
+    if isinstance(value, text_type):
+        return value.encode('utf-8')
+    else:
+        return value
 
 
 def datetime_to_str(dt, format_str='%Y-%m-%d %H:%M:%S'):

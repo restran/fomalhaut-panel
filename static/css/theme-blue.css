@@ -153,6 +153,7 @@ code, .popover {
     /*background: #2089cf;*/
     /*background: #298eea;*/
     background: rgba(41, 142, 234, .9);
+    /*background: linear-gradient(90deg, rgba(143, 64, 234, 0.9), rgba(103, 110, 234, 0.9));*/
     /*background: #2b84f4;*/
     /*opacity: 0.9;*/
 }

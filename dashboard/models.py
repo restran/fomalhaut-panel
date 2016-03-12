@@ -257,8 +257,8 @@ class ClientEndpoint(models.Model):
 class AccessLogRequest(EmbeddedDocument):
     method = StringField()
     content_type = StringField()
-    headers = FileField(collection_name='response_headers')
-    body = FileField(collection_name='response_body')
+    headers = FileField(collection_name='request_headers')
+    body = FileField(collection_name='request_body')
     uri = StringField()
 
     def to_json_dict(self):
@@ -266,8 +266,8 @@ class AccessLogRequest(EmbeddedDocument):
             'uri': self.uri,
             'method': self.method,
             'content_type': self.content_type,
-            'headers_id': self.headers.grid_id,
-            'body_id': self.body.grid_id
+            'headers_id': text_type(self.headers.grid_id),
+            'body_id': text_type(self.body.grid_id)
         }
         return j
 
@@ -282,8 +282,8 @@ class AccessLogResponse(EmbeddedDocument):
         j = {
             'status': self.status,
             'content_type': self.content_type,
-            'headers_id': self.headers.grid_id,
-            'body_id': self.body.grid_id
+            'headers_id': text_type(self.headers.grid_id),
+            'body_id': text_type(self.body.grid_id)
         }
         return j
 
@@ -416,6 +416,29 @@ class AccessLog(DynamicDocument):
             total_num = None
 
         return logs, total_num
+
+    @classmethod
+    def get_detail(cls, **kwargs):
+        data_type = kwargs['data_type']
+        if data_type == 'request':
+            model_cls = AccessLogRequest
+        else:
+            model_cls = AccessLogResponse
+
+        entry = model_cls()
+        body_id = kwargs.get('body_id')
+        if body_id:
+            entry.body.grid_id = body_id
+            body = entry.body.read()
+            return body
+
+        headers_id = kwargs.get('headers_id')
+        if headers_id:
+            entry.headers.grid_id = headers_id
+            headers = entry.headers.read()
+            return headers
+
+        return ''
 
 
 class AccessTotalDayCounter(DynamicDocument):

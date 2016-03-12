@@ -7,14 +7,14 @@ from __future__ import unicode_literals
 import json
 
 from django.views.decorators.http import require_http_methods
-
 from django.views.decorators.csrf import csrf_protect
-
-from common.utils import http_response_json
+from django.http import HttpResponse
+from common.utils import http_response_json, utf8
 from accounts.decorators import login_required
 import logging
 from ..models import AccessLog
 from datetime import datetime
+from base64 import b64encode
 
 logger = logging.getLogger(__name__)
 
@@ -43,3 +43,21 @@ def get_access_log(request):
     }
     # logger.debug(data)
     return http_response_json({'success': True, 'msg': msg, 'data': data})
+
+
+@login_required
+@csrf_protect
+@require_http_methods(["POST"])
+def get_access_detail(request):
+    """
+    获取访问日志的详情
+    :param request:
+    :return:
+    """
+    success, msg, data = False, '', []
+    post_data = json.loads(request.body)
+    data = AccessLog.get_detail(**post_data)
+    if post_data.get('headers_id') is not None:
+        return http_response_json({'success': True, 'msg': msg, 'data': data})
+    else:
+        return HttpResponse(data)

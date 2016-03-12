@@ -6,6 +6,10 @@ Web dashboard for [api-gateway](https://github.com/restran/api-gateway), still i
 
 ## 页面效果
 
+### 访问日志
+
+![dashboard](doc/dashboard.png "")
+
 ### 应用配置
 
 ![config](doc/config.png "")
@@ -13,6 +17,10 @@ Web dashboard for [api-gateway](https://github.com/restran/api-gateway), still i
 ### 访问日志
 
 ![access_log](doc/access_log.png "")
+
+### 日志详情
+
+![access_log_detail](doc/access_log_detail.png "")
 
 ## 环境和依赖
 
@@ -36,6 +44,12 @@ uwsgi
 MySQL-python
 ConcurrentLogHandler
 ``` 
+
+## 配置文件
+
+可以导入 json 配置文件，参考样例在 `/doc/export_config.json`
+
+## 部署
 
 Django 项目的部署可以参考我写的一篇博客，[CentOS 环境下基于 Nginx uwsgi 搭建 Django 站点](http://www.restran.net/2015/04/09/centos-uwsgi-nginx-django/)
 

@@ -53,6 +53,9 @@ ConcurrentLogHandler
 
 Django 项目的部署可以参考我写的一篇博客，[CentOS 环境下基于 Nginx uwsgi 搭建 Django 站点](http://www.restran.net/2015/04/09/centos-uwsgi-nginx-django/)
 
+## Celery
+
+定时解析访问统计数据的任务, 依赖于 Celery
 
 # TODO
 

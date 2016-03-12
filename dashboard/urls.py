@@ -36,6 +36,8 @@ urlpatterns.extend([
 
     url(r'^api/dashboard/query_access_count/$', api.dashboard.get_count_by_query),
     url(r'^api/dashboard/get_total_count/$', api.dashboard.get_total_count),
+    url(r'^api/dashboard/get_client_ratio/$', api.dashboard.get_client_ratio),
+    url(r'^api/dashboard/get_endpoint_ratio/$', api.dashboard.get_endpoint_ratio),
     # url(r'^api/dashboard/get_total_by_month_access/$', api.api_get_total_by_month_access),
     # url(r'^api/dashboard/get_total_count/$', api.api_get_total_count),
     # url(r'^api/dashboard/get_ip_count/$', api.api_get_ip_count),

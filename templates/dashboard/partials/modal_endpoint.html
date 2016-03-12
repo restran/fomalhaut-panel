@@ -68,7 +68,7 @@
                 </div>
             </div>
 -->
-            <div class="form-group {{ config.formData.url.has_error ? 'has-error' : '' }}">
+            <div ng-show="config.formData.is_builtin.data==false" class="form-group {{ config.formData.url.has_error ? 'has-error' : '' }}">
                 <label class="control-label input-required" for="modal-form-url">Endpoint URL</label>
                 <label ng-show="config.formData.url.has_error" class="control-label"
                        ng-bind="config.formData.url.errors"></label>
@@ -110,7 +110,6 @@
                 </div>
             </div>
 
-
             <div class="form-group">
                 <div class="row">
                     <div class="col-sm-4 col-md-4 col-lg-4">
@@ -133,6 +132,17 @@
                             <input type="checkbox" id="modal-form-enable-acl"
                                    ng-model="config.formData.enable_acl.data">
                             <label for="modal-form-enable-acl">访问控制列表</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-4 col-md-4 col-lg-4">
+                        <div class="ui toggle checkbox"
+                             data-toggle="popover" data-trigger="hover"
+                             data-container="body"
+                             data-placement="top"
+                             data-content="api-gateway 内置的 Endpoint">
+                            <input type="checkbox" id="modal-form-is-builtin"
+                                   ng-model="config.formData.is_builtin.data">
+                            <label for="modal-form-is-builtin">是否内置</label>
                         </div>
                     </div>
                 </div>

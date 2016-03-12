@@ -246,6 +246,7 @@
                 this.getAccessLog(postData, pageId);
             },
             getAccessLog: function (postData) {
+                Pace.restart();
                 this.entriesReady = false;
                 var apiUrl = '/api/dashboard/access_log/query/';
                 console.log(postData);

@@ -112,7 +112,9 @@ class Endpoint(models.Model):
             message='仅使用字母数字和下划线')])
 
     # 完整的URL，如 http://192.168.10.2:9090
-    url = models.URLField(max_length=512)
+    url = models.URLField(max_length=512, default='', blank=True)
+    # 是否为内置的 endpoint, 如果是就可以不用输入 url
+    is_builtin = models.BooleanField(default=False)
     # 是否启用访问控制列表
     enable_acl = models.BooleanField(default=False)
 
@@ -150,6 +152,7 @@ class Endpoint(models.Model):
             'unique_name': self.unique_name,
             'name': self.name,
             'url': self.url,
+            'is_builtin': self.is_builtin,
             'netloc': netloc,
             'version': self.version,
             'enable_acl': self.enable_acl,
@@ -249,35 +252,6 @@ class ClientEndpoint(models.Model):
     def get_all_in_json(cls, client_id):
         data = ClientEndpoint.objects.select_related().filter(client_id=client_id)
         return [t.to_json_dict() for t in data]
-
-
-# 访问结果类型
-ACCESS_RESULT_SUCCESS = '0'  # 成功
-ACCESS_RESULT_FORBIDDEN = '1'  # 禁止访问
-ACCESS_RESULT_PROXY_FAILED = '2'  # 代理失败
-ACCESS_RESULT_LOGIN_VALIDATED_FAILED = '3'  # 验证App登录失败
-ACCESS_RESULT_UNKNOWN = '4'  # 未知
-ACCESS_RESULT_EXPIRED_TOKEN = '5'  # 鉴权令牌过期
-
-ACCESS_RESULT_TYPE = (
-    (ACCESS_RESULT_SUCCESS, 'Success'),
-    (ACCESS_RESULT_FORBIDDEN, 'Forbidden'),
-    (ACCESS_RESULT_PROXY_FAILED, 'Proxy Failed'),
-    (ACCESS_RESULT_LOGIN_VALIDATED_FAILED, 'Login Validated Failed'),
-    (ACCESS_RESULT_UNKNOWN, 'Unknown'),
-    (ACCESS_RESULT_EXPIRED_TOKEN, 'Expired Token')
-)
-
-
-def choice_id_to_name(choice, c_id):
-    """
-    models 中，对于choice，将其从id转换为名称
-    """
-    for c in choice:
-        if c[0] == c_id:
-            return c[1]
-
-    return ''
 
 
 class AccessLogRequest(EmbeddedDocument):
@@ -696,7 +670,7 @@ def query_access_count(**kwargs):
             {
                 "$group": {
                     "_id": {"date": "$date", "client_id": "$client_id"},
-                    "count": {"$sum": 1}
+                    "count": {"$sum": "$count"}
                 }
             }
         ]
@@ -716,7 +690,7 @@ def query_access_count(**kwargs):
             {
                 "$group": {
                     "_id": {"date": "$date", "endpoint_id": "$endpoint_id"},
-                    "count": {"$sum": 1}
+                    "count": {"$sum": "$count"}
                 }
             }
         ]
@@ -739,7 +713,7 @@ def query_access_count(**kwargs):
                         "client_id": "$client_id",
                         "endpoint_id": "$endpoint_id"
                     },
-                    "count": {"$sum": 1}
+                    "count": {"$sum": "$count"}
                 }
             }
         ]
@@ -766,7 +740,7 @@ def query_access_count(**kwargs):
                         "date": "$date",
                         "code": "$code"
                     },
-                    "count": {"$sum": 1}
+                    "count": {"$sum": "$count"}
                 }
             }
         ]

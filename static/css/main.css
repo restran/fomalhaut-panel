@@ -25,6 +25,7 @@
     position: fixed;
     right: 40px;
     bottom: 50px;
+    z-index: 99999;
 }
 
 #back-to-top > span {
@@ -593,15 +594,15 @@ table thead th {
     color: #8a6d3b !important;
 }
 
-#collapse-search .row {
+.well .row {
     margin-bottom: 10px;
 }
 
-#collapse-search .row:last-child {
+.well .row:last-child {
     margin-bottom: 0;
 }
 
-#collapse-search .row label {
+.well .row label {
     padding-top: 7px;
 }
 

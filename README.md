@@ -1,6 +1,6 @@
 # API Gateway Dashboard
 
-Web dashboard for [api-gateway](https://github.com/restran/api-gateway), still in developing.
+Web dashboard for [api-gateway](https://github.com/restran/api-gateway), still in development.
 
 这是 api-gateway 项目的 Web 控制台，目前仍然在开发中。
 
@@ -44,7 +44,7 @@ Django 项目的部署可以参考我写的一篇博客，[CentOS 环境下基�
 
 - [x] Client, API Endpoint 配置
 - [x] 用户账号
-- [ ] 访问日志
-- [ ] 首页的访问统计
+- [x] 访问日志
+- [x] 首页的访问统计
 - [ ] IP 白名单, 黑名单配置
 

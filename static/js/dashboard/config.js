@@ -114,7 +114,7 @@
                                     //}, 1000);
                                     setTimeout(function () {
                                         ele.removeClass('focus');
-                                    }, 3500);
+                                    }, 5000);
                                 }
                             });
                         }
@@ -395,6 +395,8 @@
 
                 var shaObj = new jsSHA(randomStr(), "TEXT");
                 var rawKey = shaObj.getHash("SHA-1", "HEX");
+                //var rawKey = randomStr();
+                //model.data = randomStr();
                 var key = [];
                 if (type == 'access_key') {
                     for (var i = 0; i < rawKey.length; i += 2) {
@@ -404,7 +406,6 @@
                 } else {
                     model.data = rawKey;
                 }
-
             },
             loadEndpoints: function () {
                 var api_url = '/api/dashboard/endpoint/';

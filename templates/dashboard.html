@@ -9,24 +9,6 @@
 
 {% block head_script %}
     <style>
-
-        .db-details {
-            text-align: center;
-        }
-
-        .db-details .db-content-one {
-            float: left;
-            width: 50%;
-            height: 100%;
-            padding: 10px;
-        }
-
-        .db-details .db-content-two {
-            margin-left: 50%;
-            height: 100%;
-            padding: 10px;
-        }
-
         .panel-default > .panel-heading {
             background-color: #fcfcfc;
         }
@@ -35,179 +17,291 @@
 {% endblock %}
 
 {% block main_content %}
-    <div class="main-content" id="dashboard-app">
+    <div class="main-content">
         {% verbatim %}
-
-        <div class="page-header">
-            <div class="clearfix">
-                <div class="float-left">
-                    <h1 style="display: inline-block; margin-right: 10px">访问统计</h1>
-                    <span> 累计访问
-                        <span id="count2-total-count" class="number-count" data-from="0"
-                                  style="font-size: 30px; margin: 20px 0 5px 0; text-align: center;color: #51d466"
+        <div id="dashboard-app">
+            <div class="row">
+                <div class="col-sm-3 col-md-3">
+                    <div class="panel panel-default">
+                        <div class="panel-heading clearfix">
+                            <div class="float-left">
+                                <h4 class="panel-title">累计访问</h4>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div style="font-size: 35px; line-height: 120px; height:120px;text-align: center;color: #51d466">
+                            <span id="count2-total-count" class="number-count" data-from="0"
                                   :data-to="totalCount" data-speed="1000"
                                   data-refresh-interval="100">0</span>
-                    </span>
-
-                </div>
-                <div class="float-right">
-                    <!--
-                    <div class="btn-group" data-toggle="buttons">
-                        <label class="btn btn-default active" ng-click="viewModeChange('day')">
-                            <input type="radio" name="options" id="mode-option1"
-                                   autocomplete="off" checked>
-                            时
-                        </label>
-                        <label class="btn btn-default"  ng-click="viewModeChange('month')">
-                            <input type="radio" name="options" id="mode-option1"
-                                   autocomplete="off"> 天
-                        </label>
-                    </div>-->
-                    <div style="display: inline">
-                        <button class="btn btn-default" role="button" data-toggle="collapse"
-                                data-target="#collapse-search"
-                                aria-expanded="false" aria-controls="collapse-search">
-                            <span class="glyphicon glyphicon-filter"></span> 高级搜索
-                        </button>
+                            </div>
+                        </div>
                     </div>
-                    <div style="display: inline">
-                        <select id="select-time-frame" :disabled="disabledTimeFrame" class="selectpicker show-tick"
-                                data-selected-text-format="count>3"
-                                v-model="selectedTimeFrame">
-                            <option value="24h">最近24小时</option>
-                            <option value="7d">最近7天</option>
-                            <option value="30d">最近30天</option>
-                            <option data-divider="true"></option>
-                            <option value="1d">完整1天</option>
-                            <option value="1m">完整1月</option>
-                        </select>
+                </div>
+
+                <div class="col-sm-9 col-md-9">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">最近7天访问量<span
+                                    v-text="' / 累计' + sum7d +' / 平均' + Math.round(sum7d / 7)"></span></h4>
+                        </div>
+                        <div class="panel-body">
+                            <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                            <div id="echarts-total" style="height:120px;width: 100%;"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="collapse" id="collapse-search">
-                <div class="well" style="margin-top: 10px;margin-bottom: 10px;">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <label for="date-begin-time" class="col-xs-3 control-label">开始时间</label>
 
-                            <div class="col-xs-9">
-                                <div class="input-group date" id="date-begin-time"
-                                     data-toggle="tooltip" data-placement="top" title="选择开始时间">
-                                    <input size="16" class="form-control" v-model="beginTime"
-                                           type="text" value="" readonly>
-                                    <span class="input-group-addon" style="border-left: 0;">
-                                         <i class="glyphicon glyphicon-remove"></i>
-                                    </span>
-                                    <span class="input-group-addon">
-                                        <i class="glyphicon glyphicon-calendar"></i>
-                                    </span>
-                                </div>
-                            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading" style="padding: 5px 15px">
+                    <div class="clearfix">
+                        <div class="float-left">
+                            <h4 class="panel-title" style="line-height: 34px">访问统计</h4>
                         </div>
-                        <div class="col-sm-6">
-                            <label for="date-end-time" class="col-xs-3 control-label">结束时间</label>
-
-                            <div class="col-xs-9">
-                                <div class="input-group date" id="date-end-time"
-                                     data-toggle="tooltip" data-placement="top" title="选择结束时间，默认为当前时间">
-                                    <input size="16" class="form-control" v-model="endTime"
-                                           type="text" value="" readonly>
-                                    <span class="input-group-addon" style="border-left: 0;">
-                                         <i class="glyphicon glyphicon-remove"></i>
-                                    </span>
-                                    <span class="input-group-addon">
-                                        <i class="glyphicon glyphicon-calendar"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <label for="select-client" class="col-xs-3 control-label">应用</label>
-
-                            <div class="col-xs-9">
-                                <select id="select-client" class="selectpicker" multiple
-                                        data-live-search="true"
-                                        data-selected-text-format="count>3" data-width="100%"
-                                        v-model="selectedClients">
-                                    <option value="-1">所有应用</option>
-                                    <option data-divider="true"></option>
-                                    <option v-for="u in clientOptions | orderBy 'name'" track-by="$index"
-                                            :value="u.id" v-text="u.name"></option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <label for="select-endpoint" class="col-xs-3 control-label">API 端点</label>
-
-                            <div class="col-xs-9">
-                                <select id="select-endpoint" class="selectpicker" multiple
-                                        data-selected-text-format="count>3" data-width="100%"
-                                        data-live-search="true"
-                                        v-model="selectedEndpoints">
-                                    <!--
-                                    <option value="-1">所有 Endpoint</option>
-                                    <option data-divider="true"></option>-->
-                                    <option v-for="u in endpointOptions | orderBy 'unique_name'"
-                                            track-by="$index" :value="u.id"
-                                            v-text="u.unique_name"></option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <label for="select-client-endpoint" class="col-xs-3 control-label">应用 &amp; API 端点</label>
-
-                            <div class="col-xs-9">
-                                <select id="select-client-endpoint" class="selectpicker" multiple
-                                        data-live-search="true"
-                                        data-selected-text-format="count>3" data-width="100%"
-                                        v-model="selectedClientEndpoints">
-                                    <option v-for="u in clientEndpointOptions | orderBy 'name'" track-by="$index"
-                                            :value="$index" v-text="u.name"></option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <label for="select-access-results" class="col-xs-3 control-label">访问结果</label>
-
-                            <div class="col-xs-9">
-                                <select id="select-access-results" class="selectpicker" multiple
-                                        data-live-search="true"
-                                        data-selected-text-format="count>2" data-width="100%"
-                                        v-model="selectedResults">
-                                    <option value="200">200 成功</option>
-                                    <option value="400">400 请求数据不完整</option>
-                                    <option value="401">401 登录验证失败</option>
-                                    <option value="403">403 HMAC 鉴权失败</option>
-                                    <option value="500">500 服务端错误</option>
-                                    <option value="503">504 Endpoint 服务不可用</option>
-                                    <option value="510">510 Client 配置有误</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-offset-6 col-sm-6">
-                            <div style="text-align: right;padding-right: 15px;">
-                                <button class="btn btn-primary" role="button"
-                                        @click="search()">
-                                    <span class="glyphicon glyphicon-search"></span> 搜索
+                        <div class="float-right">
+                            <div style="display: inline">
+                                <button class="btn btn-default" role="button" data-toggle="collapse"
+                                        data-target="#collapse-search"
+                                        aria-expanded="false" aria-controls="collapse-search">
+                                    <span class="glyphicon glyphicon-filter"></span> 高级搜索
                                 </button>
                             </div>
+                            <div style="display: inline">
+                                <select id="select-time-frame" :disabled="disableTimeFrame"
+                                        class="selectpicker show-tick"
+                                        data-selected-text-format="count>3"
+                                        v-model="selectedTimeFrame">
+                                    <option value="24h">最近24小时</option>
+                                    <option value="7d">最近7天</option>
+                                    <option value="30d">最近30天</option>
+                                    <option data-divider="true"></option>
+                                    <option value="1d">完整1天</option>
+                                    <option value="1m">完整1月</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
+                    <div class="collapse" id="collapse-search">
+                        <div class="well" style="margin-top: 10px;margin-bottom: 10px;">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <label for="date-begin-time" class="col-xs-3 control-label">开始时间</label>
+
+                                    <div class="col-xs-9">
+                                        <div class="input-group date date-hour" id="date-begin-time"
+                                             data-toggle="tooltip" data-placement="top" title="选择开始时间">
+                                            <input size="16" class="form-control" v-model="beginTime"
+                                                   type="text" value="" readonly>
+                                    <span class="input-group-addon" style="border-left: 0;">
+                                         <i class="glyphicon glyphicon-remove"></i>
+                                    </span>
+                                    <span class="input-group-addon">
+                                        <i class="glyphicon glyphicon-calendar"></i>
+                                    </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="date-end-time" class="col-xs-3 control-label">结束时间</label>
+
+                                    <div class="col-xs-9">
+                                        <div class="input-group date date-hour" id="date-end-time"
+                                             data-toggle="tooltip" data-placement="top" title="选择结束时间，默认为当前时间">
+                                            <input size="16" class="form-control" v-model="endTime"
+                                                   type="text" value="" readonly>
+                                    <span class="input-group-addon" style="border-left: 0;">
+                                         <i class="glyphicon glyphicon-remove"></i>
+                                    </span>
+                                    <span class="input-group-addon">
+                                        <i class="glyphicon glyphicon-calendar"></i>
+                                    </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <label for="select-client" class="col-xs-3 control-label">应用</label>
+
+                                    <div class="col-xs-9">
+                                        <select id="select-client" class="selectpicker" multiple
+                                                data-live-search="true"
+                                                data-selected-text-format="count>3" data-width="100%"
+                                                v-model="selectedClients">
+                                            <option value="-1">所有应用</option>
+                                            <option data-divider="true"></option>
+                                            <option v-for="u in clientOptions | orderBy 'name'" track-by="$index"
+                                                    :value="u.id" v-text="u.name"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="select-endpoint" class="col-xs-3 control-label">API 端点</label>
+
+                                    <div class="col-xs-9">
+                                        <select id="select-endpoint" class="selectpicker" multiple
+                                                data-selected-text-format="count>3" data-width="100%"
+                                                data-live-search="true"
+                                                v-model="selectedEndpoints">
+                                            <!--
+                                            <option value="-1">所有 Endpoint</option>
+                                            <option data-divider="true"></option>-->
+                                            <option v-for="u in endpointOptions | orderBy 'unique_name'"
+                                                    track-by="$index" :value="u.id"
+                                                    v-text="u.unique_name"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <label for="select-client-endpoint" class="col-xs-3 control-label">应用 &amp; API
+                                        端点</label>
+
+                                    <div class="col-xs-9">
+                                        <select id="select-client-endpoint" class="selectpicker" multiple
+                                                data-live-search="true"
+                                                data-selected-text-format="count>3" data-width="100%"
+                                                v-model="selectedClientEndpoints">
+                                            <option v-for="u in clientEndpointOptions | orderBy 'name'"
+                                                    track-by="$index"
+                                                    :value="$index" v-text="u.name"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="select-access-results" class="col-xs-3 control-label">访问结果</label>
+
+                                    <div class="col-xs-9">
+                                        <select id="select-access-results" class="selectpicker" multiple
+                                                data-live-search="true"
+                                                data-selected-text-format="count>2" data-width="100%"
+                                                v-model="selectedResults">
+                                            <option value="200">200 成功</option>
+                                            <option value="400">400 请求数据不完整</option>
+                                            <option value="401">401 登录验证失败</option>
+                                            <option value="403">403 HMAC 鉴权失败</option>
+                                            <option value="500">500 服务端错误</option>
+                                            <option value="503">504 Endpoint 服务不可用</option>
+                                            <option value="510">510 Client 配置有误</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-offset-6 col-sm-6">
+                                    <div style="text-align: right;padding-right: 15px;">
+                                        <button class="btn btn-primary" role="button"
+                                                @click="search()">
+                                            <span class="glyphicon glyphicon-search"></span> 搜索
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-body">
+                    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+                    <div id="echarts-main" style="height:500px;width: 100%;margin-top:20px"></div>
                 </div>
             </div>
         </div>
 
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-                <div id="echarts-main" style="height:500px;width: 100%;margin-top:20px"></div>
+        <div id="ratio-app">
+
+            <div class="panel panel-default">
+                <div class="panel-heading" style="padding: 5px 15px">
+                    <div class="clearfix">
+                        <div class="float-left">
+                            <h4 class="panel-title" style="line-height: 34px">访问占比</h4>
+                        </div>
+                        <div class="float-right">
+                            <div style="display: inline">
+                                <button class="btn btn-default" role="button" data-toggle="collapse"
+                                        data-target="#collapse-ratio-search"
+                                        aria-expanded="false" aria-controls="collapse-search">
+                                    <span class="glyphicon glyphicon-filter"></span> 高级搜索
+                                </button>
+                            </div>
+                            <div style="display: inline">
+                                <select id="select-ratio-time-frame" :disabled="disableTimeFrame"
+                                        class="selectpicker show-tick"
+                                        data-selected-text-format="count>3"
+                                        v-model="selectedTimeFrame">
+                                    <option value="24h">最近24小时</option>
+                                    <option value="7d">最近7天</option>
+                                    <option value="30d">最近30天</option>
+                                    <option data-divider="true"></option>
+                                    <option value="1d">完整1天</option>
+                                    <option value="1m">完整1月</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="collapse" id="collapse-ratio-search">
+                        <div class="well" style="margin-top: 10px;margin-bottom: 10px;">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <label for="date-ratio-begin-time" class="col-xs-3 control-label">开始时间</label>
+
+                                    <div class="col-xs-9">
+                                        <div class="input-group date date-day" id="date-ratio-begin-time"
+                                             data-toggle="tooltip" data-placement="top" title="选择开始时间">
+                                            <input size="16" class="form-control" v-model="beginTime"
+                                                   type="text" value="" readonly>
+                                    <span class="input-group-addon" style="border-left: 0;">
+                                         <i class="glyphicon glyphicon-remove"></i>
+                                    </span>
+                                    <span class="input-group-addon">
+                                        <i class="glyphicon glyphicon-calendar"></i>
+                                    </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="date-ratio-end-time" class="col-xs-3 control-label">结束时间</label>
+
+                                    <div class="col-xs-9">
+                                        <div class="input-group date date-day" id="date-ratio-end-time"
+                                             data-toggle="tooltip" data-placement="top" title="选择结束时间">
+                                            <input size="16" class="form-control" v-model="endTime"
+                                                   type="text" value="" readonly>
+                                    <span class="input-group-addon" style="border-left: 0;">
+                                         <i class="glyphicon glyphicon-remove"></i>
+                                    </span>
+                                    <span class="input-group-addon">
+                                        <i class="glyphicon glyphicon-calendar"></i>
+                                    </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-offset-6 col-sm-6">
+                                    <div style="text-align: right;padding-right: 15px;">
+                                        <button class="btn btn-primary" role="button"
+                                                @click="search()">
+                                            <span class="glyphicon glyphicon-search"></span> 搜索
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-6 col-md-6">
+                            <div id="echarts-client-ratio" style="height:300px;width: 100%;margin-top:20px"></div>
+                        </div>
+                        <div class="col-sm-6 col-md-6">
+                            <div id="echarts-endpoint-ratio" style="height:300px;width: 100%;margin-top:20px"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

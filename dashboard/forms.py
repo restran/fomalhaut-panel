@@ -48,13 +48,17 @@ class EndpointForm(BaseModelForm):
 
     class Meta:
         model = Endpoint
-        fields = ('name', 'url', 'unique_name', 'enable_acl', 'version',
+        fields = ('name', 'is_builtin', 'url', 'unique_name', 'enable_acl', 'version',
                   'async_http_connect_timeout', 'async_http_request_timeout',
                   'memo', 'require_login')
 
-    # def clean_uri_prefix(self):
-    #     uri_prefix = self.cleaned_data['uri_prefix']
-    #     return uri_prefix.strip('/')
+    def clean_url(self):
+        is_builtin = self.cleaned_data['is_builtin']
+        url = self.cleaned_data['url']
+        if not is_builtin and (url is None or url == ''):
+            raise forms.ValidationError(_('Endpoint URL 不能为空'))
+        else:
+            return url
 
     def clean_unique_name(self):
         unique_name = self.cleaned_data['unique_name']
@@ -71,7 +75,7 @@ class EndpointForm(BaseModelForm):
 
 
 EndpointForm.base_fields.keyOrder = [
-    'name', 'unique_name', 'url', 'prefix_uri', 'enable_acl',
+    'name', 'unique_name', 'is_builtin', 'url', 'prefix_uri', 'enable_acl',
     'async_http_connect_timeout', 'async_http_request_timeout',
     'memo', 'require_login']
 

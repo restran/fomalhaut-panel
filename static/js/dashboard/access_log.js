@@ -31,7 +31,9 @@
             },
             cachedQuery: null,
             detailData: {
+                entry: {},
                 request: {
+                    uri: '',
                     headers: '',
                     body: ''
                 },
@@ -314,12 +316,12 @@
                     'headers_id': entry['request']['headers_id'],
                     'data_type': 'request'
                 };
-
+                this.detailData.entry = entry;
+                app.detailData.request.headers = '';
                 $request.post(apiUrl, reqData, function (data) {
                     app.detailData.request.headers = data['data'];
                 }, function (data, msg) {
                     toastr["error"](msg);
-                    app.detailData.request.headers = '';
                 });
 
                 reqData = {
@@ -327,36 +329,43 @@
                     'data_type': 'request'
                 };
 
-                $request.rawPost(apiUrl, reqData, function (data) {
-                    app.detailData.request.body = data;
-                }, function (data, msg) {
-                    toastr["error"](msg);
-                    app.detailData.request.body = '';
-                });
+                app.detailData.request.body = '';
+                if (entry.request['text_type'] == true) {
+                    $request.rawPost(apiUrl, reqData, function (data) {
+                        app.detailData.request.body = data;
+                    }, function (data, msg) {
+                        toastr["error"](msg);
+                    });
+                } else {
+
+                }
 
                 var resData = {
                     'headers_id': entry['response']['headers_id'],
                     'data_type': 'response'
                 };
 
+                app.detailData.response.headers = '';
                 $request.post(apiUrl, resData, function (data) {
                     app.detailData.response.headers = data['data'];
                 }, function (data, msg) {
                     toastr["error"](msg);
-                    app.detailData.response.headers = '';
                 });
 
                 resData = {
                     'body_id': entry['response']['body_id'],
                     'data_type': 'response'
                 };
+                app.detailData.response.body = '';
+                if (entry.response['text_type'] == true) {
+                    $request.rawPost(apiUrl, resData, function (data) {
+                        app.detailData.response.body = data;
+                    }, function (data, msg) {
+                        toastr["error"](msg);
+                    });
+                } else {
 
-                $request.rawPost(apiUrl, resData, function (data) {
-                    app.detailData.response.body = data;
-                }, function (data, msg) {
-                    toastr["error"](msg);
-                    app.detailData.response.body = '';
-                });
+                }
             }
         },
         watch: {

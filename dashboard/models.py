@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from datetime import datetime, timedelta
 import logging
 from urlparse import urlparse
+from bson import ObjectId
 
 from django.db import models
 
@@ -17,6 +18,7 @@ from api_dashboard.settings import DEFAULT_ASYNC_HTTP_CONNECT_TIMEOUT, \
 from common.utils import datetime_to_str, datetime_to_timestamp
 from api_dashboard.settings import DEFAULT_ACCESS_LOG_PAGE_SIZE
 from mongoengine import *
+from mongoengine.connection import get_db
 from six import text_type
 
 logger = logging.getLogger(__name__)
@@ -254,11 +256,38 @@ class ClientEndpoint(models.Model):
         return [t.to_json_dict() for t in data]
 
 
-class AccessLogRequest(EmbeddedDocument):
+class FileHandlerMixin(object):
+    _headers_collection_name = None
+    _body_collection_name = None
+
+    @classmethod
+    def delete_headers_files(cls, file_id_list):
+        cls._delete_gridfs_files(file_id_list,
+                                 cls._headers_collection_name)
+
+    @classmethod
+    def delete_body_files(cls, file_id_list):
+        cls._delete_gridfs_files(file_id_list,
+                                 cls._body_collection_name)
+
+    @classmethod
+    def _delete_gridfs_files(cls, file_id_list, collection_name):
+        database = get_db()
+        collection = database[collection_name]
+        files = collection.files
+        chunks = collection.chunks
+        files.delete_many({"_id": {'$in': file_id_list}})
+        chunks.delete_many({"files_id": {'$in': file_id_list}})
+
+
+class AccessLogRequest(EmbeddedDocument, FileHandlerMixin):
+    _headers_collection_name = 'request_headers'
+    _body_collection_name = 'request_body'
+
     method = StringField()
     content_type = StringField()
-    headers = FileField(collection_name='request_headers')
-    body = FileField(collection_name='request_body')
+    headers = FileField(collection_name=_headers_collection_name)
+    body = FileField(collection_name=_body_collection_name)
     uri = StringField()
 
     def to_json_dict(self):
@@ -269,14 +298,23 @@ class AccessLogRequest(EmbeddedDocument):
             'headers_id': text_type(self.headers.grid_id),
             'body_id': text_type(self.body.grid_id)
         }
+        content_type = text_type(self.content_type).lower()
+        if content_type.startswith('text') or content_type.startswith('application/json'):
+            j['text_type'] = True
+        else:
+            j['text_type'] = False
+
         return j
 
 
-class AccessLogResponse(EmbeddedDocument):
+class AccessLogResponse(EmbeddedDocument, FileHandlerMixin):
+    _headers_collection_name = 'response_headers'
+    _body_collection_name = 'response_body'
+
     status = IntField()
     content_type = StringField()
-    headers = FileField(collection_name='response_headers')
-    body = FileField(collection_name='response_body')
+    headers = FileField(collection_name=_headers_collection_name)
+    body = FileField(collection_name=_body_collection_name)
 
     def to_json_dict(self):
         j = {
@@ -285,6 +323,12 @@ class AccessLogResponse(EmbeddedDocument):
             'headers_id': text_type(self.headers.grid_id),
             'body_id': text_type(self.body.grid_id)
         }
+        content_type = text_type(self.content_type).lower()
+        if content_type.startswith('text') or content_type.startswith('application/json'):
+            j['text_type'] = True
+        else:
+            j['text_type'] = False
+
         return j
 
 
@@ -427,14 +471,14 @@ class AccessLog(DynamicDocument):
 
         entry = model_cls()
         body_id = kwargs.get('body_id')
-        if body_id:
-            entry.body.grid_id = body_id
+        if body_id and body_id != 'None':
+            entry.body.grid_id = ObjectId(body_id)
             body = entry.body.read()
             return body
 
         headers_id = kwargs.get('headers_id')
-        if headers_id:
-            entry.headers.grid_id = headers_id
+        if headers_id and headers_id != 'None':
+            entry.headers.grid_id = ObjectId(headers_id)
             headers = entry.headers.read()
             return headers
 
@@ -537,6 +581,46 @@ class AccessResultHourCounter(DynamicDocument):
         'collection': 'counter_result_hour',
         'indexes': [
             ('-date', 'code'),
+        ]
+    }
+
+
+class RefRequestHeaders(DynamicDocument):
+    count = IntField()
+    meta = {
+        'collection': 'ref_request_headers',
+        'indexes': [
+            'count'
+        ]
+    }
+
+
+class RefRequestBody(DynamicDocument):
+    count = IntField()
+    meta = {
+        'collection': 'ref_request_body',
+        'indexes': [
+            'count'
+        ]
+    }
+
+
+class RefResponseHeaders(DynamicDocument):
+    count = IntField()
+    meta = {
+        'collection': 'ref_response_headers',
+        'indexes': [
+            'count'
+        ]
+    }
+
+
+class RefResponseBody(DynamicDocument):
+    count = IntField()
+    meta = {
+        'collection': 'ref_response_body',
+        'indexes': [
+            'count'
         ]
     }
 

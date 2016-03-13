@@ -15,6 +15,7 @@ import logging
 from ..models import AccessLog
 from datetime import datetime
 from base64 import b64encode
+from api_dashboard.settings import ACCESS_LOG_DETAIL_MAX_BODY_LENGTH
 
 logger = logging.getLogger(__name__)
 
@@ -60,4 +61,6 @@ def get_access_detail(request):
     if post_data.get('headers_id') is not None:
         return http_response_json({'success': True, 'msg': msg, 'data': data})
     else:
+        if data and len(data) > ACCESS_LOG_DETAIL_MAX_BODY_LENGTH:
+            data = data[:ACCESS_LOG_DETAIL_MAX_BODY_LENGTH]
         return HttpResponse(data)

@@ -9,7 +9,6 @@ from dashboard import views, api
 model_name_regex = r'(?P<model_name>client|endpoint|client_endpoint)'
 
 urlpatterns = [
-    url(r'^test/$', views.test),
     url(r'^$', views.dashboard),
     url(r'^dashboard/$', views.dashboard),
     url(r'^dashboard/access_log/$', views.access_log),
@@ -38,10 +37,6 @@ urlpatterns.extend([
     url(r'^api/dashboard/get_total_count/$', api.dashboard.get_total_count),
     url(r'^api/dashboard/get_client_ratio/$', api.dashboard.get_client_ratio),
     url(r'^api/dashboard/get_endpoint_ratio/$', api.dashboard.get_endpoint_ratio),
-    # url(r'^api/dashboard/get_total_by_month_access/$', api.api_get_total_by_month_access),
-    # url(r'^api/dashboard/get_total_count/$', api.api_get_total_count),
-    # url(r'^api/dashboard/get_ip_count/$', api.api_get_ip_count),
-    # url(r'^api/dashboard/get_abnormal_ip_count/$', api.api_get_abnormal_ip_count),
 
     url(r'^api/dashboard/get_options/$', api.get_options),
     url(r'^api/dashboard/get_client_options/$', api.get_client_options),

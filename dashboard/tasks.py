@@ -5,17 +5,78 @@
 from __future__ import unicode_literals
 
 import traceback
+
 from pymongo import UpdateOne
-from datetime import datetime, timedelta
+
 from models import *
 from api_dashboard import settings
 from api_dashboard.celery import app
-from copy import deepcopy
+
 logger = logging.getLogger(__name__)
 
 
 def id_to_str(entity_id):
     return text_type(entity_id) if entity_id is not None else ''
+
+
+def do_clear_old_access_logs(expires, limit=1000):
+    logs = AccessLog.objects(accessed_at__lt=expires).only(
+        'id', 'request.headers', 'request.body',
+        'response.headers', 'response.body')[:limit]
+    logs = list(logs)
+
+    request_headers_dict = {}
+    request_body_dict = {}
+    response_headers_dict = {}
+    response_body_dict = {}
+
+    def count_id(obj, container):
+        _id = obj.grid_id
+        if _id is None:
+            pass
+        else:
+            if _id not in container:
+                container[_id] = 1
+            else:
+                container[_id] += 1
+
+    # 找出非重复的 headers 和 body 对应的文件 id
+    for t in logs:
+        map(count_id, [t.request.headers, t.request.body,
+                       t.response.headers, t.request.body],
+            [request_headers_dict, request_body_dict,
+             response_headers_dict, response_body_dict])
+
+    # 更新引用计数记录的 count 值
+    map(bulk_dec_ref_counter,
+        [request_headers_dict, request_body_dict,
+         response_headers_dict, response_body_dict],
+        [RefRequestHeaders, RefRequestBody,
+         RefResponseHeaders, RefResponseBody]
+        )
+
+    # 删除 header 和 body 的 grid_fs 文件
+    id_list = RefRequestHeaders.objects(count__lte=0).only('id')
+    AccessLogRequest.delete_headers_files([t.id for t in id_list])
+
+    id_list = RefRequestBody.objects(count__lte=0).only('id')
+    AccessLogRequest.delete_body_files([t.id for t in id_list])
+
+    id_list = RefResponseHeaders.objects(count__lte=0).only('id')
+    AccessLogResponse.delete_headers_files([t.id for t in id_list])
+
+    id_list = RefResponseBody.objects(count__lte=0).only('id')
+    AccessLogResponse.delete_body_files([t.id for t in id_list])
+
+    # 删除 count 为 0 的 引用计数记录
+    RefRequestHeaders.objects(count=0).delete()
+    RefRequestBody.objects(count=0).delete()
+    RefResponseHeaders.objects(count=0).delete()
+    RefResponseBody.objects(count=0).delete()
+
+    # 删除 access_log
+    AccessLog.objects(id__in=[t.id for t in logs]).delete()
+    return len(logs)
 
 
 @app.task
@@ -26,15 +87,38 @@ def clear_old_access_logs():
     """
     logger.info('执行 clear_old_access_logs')
     access_log_keep_days = settings.ACCESS_LOG_KEEP_DAYS
-    expires = datetime.datetime.utcnow() - datetime.timedelta(days=access_log_keep_days)
+    expires = datetime.utcnow() - timedelta(days=access_log_keep_days)
     logger.debug(expires)
-
-    # AccessLog.objects.filter(time__lt=expires).delete()
+    limit = 1000
+    while True:
+        count = do_clear_old_access_logs(expires, limit)
+        logger.info('清理%s条日志' % count)
+        if count < limit:
+            break
 
     logger.info('执行 clear_old_access_logs 完成')
 
 
-def bulk_update(entities, model):
+def bulk_dec_ref_counter(data_list, model):
+    bulk_operations = []
+    for k, v in data_list.iteritems():
+        try:
+            # 只有 $inc, 没有 $dec
+            update_dict = {'$inc': {'count': -1 * v}}
+            filter_dict = {'_id': k}
+            # logger.debug(filter_dict)
+            bulk_operations.append(
+                UpdateOne(filter_dict, update_dict))
+
+        except ValidationError as e:
+            logger.error(e)
+
+    if bulk_operations:
+        collection = model._get_collection() \
+            .bulk_write(bulk_operations, ordered=False)
+
+
+def bulk_update_counter(entities, model):
     bulk_operations = []
     for entity in entities:
         try:
@@ -171,12 +255,12 @@ def do_parse_access_logs(limit):
             counter.count = 1
             result_hour_counter_dict[key] = counter
 
-    bulk_update(total_day_counter_dict.values(), AccessTotalDayCounter)
-    bulk_update(total_hour_counter_dict.values(), AccessTotalHourCounter)
-    bulk_update(access_day_counter_dict.values(), AccessDayCounter)
-    bulk_update(access_hour_counter_dict.values(), AccessHourCounter)
-    bulk_update(result_day_counter_dict.values(), AccessResultDayCounter)
-    bulk_update(result_hour_counter_dict.values(), AccessResultHourCounter)
+    bulk_update_counter(total_day_counter_dict.values(), AccessTotalDayCounter)
+    bulk_update_counter(total_hour_counter_dict.values(), AccessTotalHourCounter)
+    bulk_update_counter(access_day_counter_dict.values(), AccessDayCounter)
+    bulk_update_counter(access_hour_counter_dict.values(), AccessHourCounter)
+    bulk_update_counter(result_day_counter_dict.values(), AccessResultDayCounter)
+    bulk_update_counter(result_hour_counter_dict.values(), AccessResultHourCounter)
 
     AccessLog.objects(id__in=[t.id for t in logs]).update(flag=True)
 

@@ -9,7 +9,6 @@ var app = angular.module('app', []);
 app.controller('appCtrl', ['$scope', '$http', appCtrl]);
 
 function appCtrl($scope, $http) {
-    //NProgress.start();
 
     // 由于django的csrftoken保护
     $http.defaults.xsrfCookieName = 'csrftoken';
@@ -22,7 +21,6 @@ function appCtrl($scope, $http) {
             $scope.entries = data['data'];
         }
     }).finally(function () {
-        //NProgress.done();
     });
 
 

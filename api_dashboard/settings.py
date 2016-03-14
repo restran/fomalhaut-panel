@@ -270,7 +270,7 @@ connect(
 # 访问分析统计数据在redis中key前缀
 ANALYTICS_REDIS_PREFIX = 'a'
 
-# 访问日志，数据库保存月份
+# 访问日志，数据库保存天数
 ACCESS_LOG_KEEP_DAYS = 60
 
 # 网站发送出去的邮箱账号设定

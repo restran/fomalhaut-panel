@@ -393,9 +393,9 @@
                     return text;
                 }
 
-                var shaObj = new jsSHA(randomStr(), "TEXT");
-                var rawKey = shaObj.getHash("SHA-1", "HEX");
-                //var rawKey = randomStr();
+                // var shaObj = new jsSHA(randomStr(), "TEXT");
+                // var rawKey = shaObj.getHash("SHA-1", "HEX");
+                var rawKey = randomStr();
                 //model.data = randomStr();
                 var key = [];
                 if (type == 'access_key') {

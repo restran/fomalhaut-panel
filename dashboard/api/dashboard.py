@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 # created by restran on 2016/03/06
-from __future__ import unicode_literals
-
-import json
+from __future__ import unicode_literals, absolute_import
 
 from bson import SON
 from django.views.decorators.http import require_http_methods
-
 from django.views.decorators.csrf import csrf_protect
-
-from common.utils import http_response_json
+from common.utils import http_response_json, json_loads
 from accounts.decorators import login_required
 import logging
 from ..models import AccessHourCounter, AccessTotalDayCounter, \
@@ -31,7 +27,7 @@ def get_count_by_query(request):
     """
     success, msg, data = False, '', []
     now = datetime.now()
-    post_data = json.loads(request.body)
+    post_data = json_loads(request.body)
     logger.debug(post_data)
     if post_data['begin_time'] != '' and post_data['begin_time'] is not None:
         post_data['begin_time'] = datetime.strptime(post_data['begin_time'], '%Y-%m-%d %H:%M')
@@ -108,7 +104,7 @@ def get_total_count(request):
     :return:
     """
     success, msg, data = False, '', []
-    # post_data = json.loads(request.body)
+    # post_data = json_loads(request.body)
     total_count = AccessTotalDayCounter.objects().aggregate_sum('count')
     data = {'total_count': total_count}
     return http_response_json({'success': True, 'msg': msg, 'data': data})
@@ -186,7 +182,7 @@ def get_client_ratio(request):
     :return:
     """
     success, msg, data = False, '', []
-    post_data = json.loads(request.body)
+    post_data = json_loads(request.body)
     model_cls, filter_dict = parse_ratio_post_data(post_data)
     pipeline = [
         {
@@ -233,7 +229,7 @@ def get_endpoint_ratio(request):
     :return:
     """
     success, msg, data = False, '', []
-    post_data = json.loads(request.body)
+    post_data = json_loads(request.body)
     model_cls, filter_dict = parse_ratio_post_data(post_data)
 
     pipeline = [

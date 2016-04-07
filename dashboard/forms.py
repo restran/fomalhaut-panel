@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 # created by restran on 2016/1/2
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-from models import *
+from .models import *
 from common.forms import BaseModelForm
 
 logger = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ class EndpointForm(BaseModelForm):
     class Meta:
         model = Endpoint
         fields = ('name', 'is_builtin', 'url', 'unique_name', 'enable_acl', 'version',
-                  'async_http_connect_timeout', 'async_http_request_timeout',
+                  'async_http_connect_timeout', 'async_http_request_timeout', 'enable_hmac',
                   'memo', 'require_login')
 
     def clean_url(self):
@@ -76,7 +76,7 @@ class EndpointForm(BaseModelForm):
 
 EndpointForm.base_fields.keyOrder = [
     'name', 'unique_name', 'is_builtin', 'url', 'prefix_uri', 'enable_acl',
-    'async_http_connect_timeout', 'async_http_request_timeout',
+    'async_http_connect_timeout', 'async_http_request_timeout', 'enable_hmac',
     'memo', 'require_login']
 
 

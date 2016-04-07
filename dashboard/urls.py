@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 # created by restran on 2016/1/2
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 from django.conf.urls import url
-from dashboard import views, api
+from . import views, api
 
 model_name_regex = r'(?P<model_name>client|endpoint|client_endpoint)'
 

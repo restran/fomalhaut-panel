@@ -6,10 +6,9 @@ from __future__ import unicode_literals
 
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
-from common.utils import error_404, http_response_json
-from decorators import login_required, admin_required
-
-import settings
+from common.utils import error_404, http_response_json, json_loads
+from .decorators import login_required, admin_required
+from . import settings
 import json
 from .forms import *
 from .utils import login
@@ -30,7 +29,7 @@ def api_create_admin(request):
         return error_404(request)
     else:
         logger.debug(request.body)
-        post_data = json.loads(request.body)
+        post_data = json_loads(request.body)
         form = UserCreationForm(post_data)
         if form.is_valid():
             form.save(is_admin=True)  # 将数据保存到数据库中
@@ -55,7 +54,7 @@ def api_user_login(request):
         # 如果还没有创建管理员，就先创建管理员
         return http_response_json({'success': False, 'msg': '请先创建管理员'})
     else:
-        post_data = json.loads(request.body)
+        post_data = json_loads(request.body)
         email = post_data.get('email', '')
         password = post_data.get('password', '')
         remember_me = post_data.get('remember_me', False)
@@ -107,7 +106,7 @@ def api_create_account(request):
     """
     msg, success = '', False
     logger.debug('api_create_account')
-    post_data = json.loads(request.body)
+    post_data = json_loads(request.body)
     logger.debug(post_data)
     form = UserInfoCreateForm(post_data)
     if form.is_valid():
@@ -135,7 +134,7 @@ def api_update_account(request, user_id):
     msg, success = '', False
     logger.debug('api_update_account')
     logger.debug(request.POST)
-    post_data = json.loads(request.body)
+    post_data = json_loads(request.body)
     user = SiteUser.get_user(user_id)
     if user is None:
         return http_response_json({'success': success, 'msg': u'用户不存在'})
@@ -162,14 +161,14 @@ def api_delete_account(request):
     """
     msg, success = '', False
     logger.debug('api_delete_account')
-    post_data = json.loads(request.body)
+    post_data = json_loads(request.body)
     user_id = post_data.get('user_id', None)
     if user_id:
         try:
             if SiteUser.delete_user(user_id):
                 success = True
-        except Exception, e:
-            logger.debug(e.message)
+        except Exception as e:
+            logger.debug(e)
             msg = '删除用户出现异常'
 
     return http_response_json({'success': success, 'msg': msg})
@@ -186,7 +185,7 @@ def api_update_password(request):
     """
     msg, success = '', False
     logger.debug('api_update_password')
-    post_data = json.loads(request.body)
+    post_data = json_loads(request.body)
     if hasattr(request, 'site_user'):
         user = request.site_user
         form = PasswordChangeForm(user, post_data)
@@ -211,7 +210,7 @@ def api_reset_password(request):
     """
     msg, success = '', False
     logger.debug('api_reset_password')
-    post_data = json.loads(request.body)
+    post_data = json_loads(request.body)
     user_id = post_data.get('user_id', None)
     token = post_data.get('token', None)
     new_password = post_data.get('new_password', None)

@@ -2,11 +2,11 @@
 <tr>
     <th class="col-md-1">#</th>
     <th class="col-md-2">名称</th>
-    <th class="col-md-1">访问名称</th>
-    <th class="col-md-1">版本号</th>
+    <th class="col-md-1">访问名称/版本号</th>
     <th class="col-md-3">Endpoint URL</th>
     <th class="col-md-1">是否内置</th>
     <th class="col-md-1">需要登录</th>
+    <th class="col-md-1">HMAC 签名</th>
     <th class="col-md-1">访问控制列表</th>
     <th class="col-md-1">&nbsp</th>
 </tr>
@@ -17,11 +17,11 @@
 <script type="text/ng-template" id="entry_renderer">
     <td ng-bind="$index+1"></td>
     <td ng-bind="entry.unique_name"></td>
-    <td ng-bind="entry.name"></td>
-    <td ng-bind="entry.version"></td>
+    <td ng-bind="entry.name + '/' + entry.version"></td>
     <td class="break-word" ng-bind="entry.url"></td>
     <td ng-bind="entry.is_builtin ? '是' : '否'"></td>
     <td ng-bind="entry.require_login ? '是' : '否'"></td>
+    <td ng-bind="entry.enable_hmac ? '是' : '否'"></td>
     <td ng-bind="entry.enable_acl ? '是' : '否'"></td>
     <td class="nowrap">
         <a href="javascript:void 0;" ng-click="config.showEditDialog('update', $index)">编辑</a>&nbsp;

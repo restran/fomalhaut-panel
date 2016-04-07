@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 # created by restran on 2016/1/2
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
-import json
 import traceback
 
 from django.views.decorators.http import require_http_methods
@@ -16,7 +15,7 @@ import redis
 
 from api_dashboard import settings
 from ..forms import *
-from common.utils import http_response_json, json_dumps
+from common.utils import http_response_json, json_dumps, json_loads
 from accounts.decorators import login_required
 from common.utils import error_404
 
@@ -145,7 +144,7 @@ def create_model_data(request, model_name):
     """
     logger.debug('run api_create_model_data')
 
-    post_data = json.loads(request.body)
+    post_data = json_loads(request.body)
     logger.debug(post_data)
     if model_name == 'client':
         form = ClientForm(post_data['data'])
@@ -188,7 +187,7 @@ def update_model_data(request, model_name, entry_id):
         model = None
         model_form = None
 
-    post_data = json.loads(request.body)
+    post_data = json_loads(request.body)
     logger.debug(post_data)
 
     if model_name != 'client_endpoint':
@@ -267,7 +266,7 @@ def update_enable_state_model_data(request, model_name, entry_id=None):
     else:
         model = None
 
-    post_data = json.loads(request.body)
+    post_data = json_loads(request.body)
     if model and entry_id:
         try:
             model.objects.filter(id=entry_id).update(enable=post_data['enable'])
@@ -287,7 +286,7 @@ def do_import_config(upload_file):
     """
     file_contents = upload_file.read()
     try:
-        json_data = json.loads(file_contents)
+        json_data = json_loads(file_contents)
     except Exception as e:
         logger.error(e.message)
         return False, u'上传的文件不是JSON或者格式有误', []

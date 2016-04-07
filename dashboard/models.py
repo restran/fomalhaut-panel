@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 # created by restran on 2016/1/2
 
-from __future__ import unicode_literals
+
+from __future__ import unicode_literals, absolute_import
 from datetime import datetime, timedelta
-import logging
-from urlparse import urlparse
+# pycharm 无法识别, 会标记错误, 原因不明
+from six.moves.urllib.parse import urlparse
+from six import text_type
 from bson import ObjectId
-
 from django.db import models
-
 from django.core.validators import RegexValidator
 
 from api_dashboard.settings import DEFAULT_ASYNC_HTTP_CONNECT_TIMEOUT, \
@@ -19,7 +19,7 @@ from common.utils import datetime_to_str, datetime_to_timestamp
 from api_dashboard.settings import DEFAULT_ACCESS_LOG_PAGE_SIZE
 from mongoengine import *
 from mongoengine.connection import get_db
-from six import text_type
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class Client(models.Model):
         try:
             return Client.objects.get(id=client_id)
         except Exception as e:
-            logger.debug(e.message)
+            logger.debug(e)
             return None
 
 
@@ -119,7 +119,8 @@ class Endpoint(models.Model):
     is_builtin = models.BooleanField(default=False)
     # 是否启用访问控制列表
     enable_acl = models.BooleanField(default=False)
-
+    # 是否启用 hmac 签名
+    enable_hmac = models.BooleanField(default=True)
     # 配置超时时间，默认情况下 Tornado 是 20.0，避免有的网站很慢，需要很久才响应
     # Timeout for initial connection in seconds
     async_http_connect_timeout = models.IntegerField(
@@ -128,7 +129,7 @@ class Endpoint(models.Model):
     async_http_request_timeout = models.IntegerField(
         default=DEFAULT_ASYNC_HTTP_REQUEST_TIMEOUT)
     # 是否需要验证登陆
-    require_login = models.BooleanField(default=True)
+    require_login = models.BooleanField(default=False)
 
     # 备注
     memo = models.CharField(blank=True, max_length=512)
@@ -158,6 +159,7 @@ class Endpoint(models.Model):
             'netloc': netloc,
             'version': self.version,
             'enable_acl': self.enable_acl,
+            'enable_hmac': self.enable_hmac,
             'require_login': self.require_login,
             'async_http_connect_timeout': self.async_http_connect_timeout,
             'async_http_request_timeout': self.async_http_request_timeout,
@@ -241,7 +243,7 @@ class ClientEndpoint(models.Model):
     def to_json_dict(self, skip_id=False):
         d = {
             'endpoint': self.endpoint.to_json_dict(),
-            'enable': self.enable,
+            'enable': self.enable
         }
 
         # 是否要过滤id
@@ -427,7 +429,7 @@ class AccessLog(DynamicDocument):
             'selected_endpoints': 'endpoint__id__in',
             'selected_results': 'result_code__in',
         }
-        for k, v in map_dict.iteritems():
+        for k, v in map_dict.items():
             field = kwargs.get(k)
             if isinstance(field, list) and len(field) == 0:
                 continue
@@ -655,7 +657,7 @@ def _render_time_frame_data(unit, time_frame, name_map, data, data_type, count_l
             else:
                 count_list_dict[k] = {dk: t['count']}
 
-        for k, v in count_list_dict.iteritems():
+        for k, v in count_list_dict.items():
             temp_data = []
             for t in time_frame:
                 temp_data.append(v.get(t, 0))
@@ -672,7 +674,7 @@ def _render_time_frame_data(unit, time_frame, name_map, data, data_type, count_l
             else:
                 count_list_dict[k] = {dk: t['count']}
 
-        for k, v in count_list_dict.iteritems():
+        for k, v in count_list_dict.items():
             temp_data = []
             for t in time_frame:
                 temp_data.append(v.get(t, 0))
@@ -689,7 +691,7 @@ def _render_time_frame_data(unit, time_frame, name_map, data, data_type, count_l
             else:
                 count_list_dict[k] = {dk: t['count']}
 
-        for k, v in count_list_dict.iteritems():
+        for k, v in count_list_dict.items():
             temp_data = []
             for t in time_frame:
                 temp_data.append(v.get(t, 0))

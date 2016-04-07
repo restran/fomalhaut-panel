@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 # created by restran on 2016/1/2
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
-from models import SiteUser
+from .models import SiteUser
 
 
 class EmailAuthBackend(object):

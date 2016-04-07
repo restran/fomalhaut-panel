@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 # created by restran on 2016/1/2
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 import re
 
 import traceback
 from datetime import datetime
 
-from django.utils.encoding import smart_str, smart_unicode
+from django.utils.encoding import smart_str
 from django.utils.http import urlquote
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
@@ -16,9 +16,11 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from django.template import RequestContext
 
-from forms import *
+from .forms import *
+from .models import Client, get_export_config_json
 from accounts.decorators import login_required
 from common.utils import error_404, json_dumps
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ def help_page(request, page_name):
         return render_to_response("dashboard/help/" + page_name.replace('-', '_').lower() + ".html",
                                   {'request': request})
     except Exception as e:
-        logger.error(e.message)
+        logger.error(e)
         return error_404(request)
 
 

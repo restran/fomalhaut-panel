@@ -75,15 +75,13 @@
 
         <div class="modal fade" id="edit-modal" role="dialog"
              data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog">
-                {% if config_info.data_type == 'client' %}
-                    {% include 'dashboard/partials/modal_client.html' %}
-                {% elif config_info.data_type == 'endpoint' %}
-                    {% include 'dashboard/partials/modal_endpoint.html' %}
-                {% elif config_info.data_type == 'client_endpoint' %}
-                    {% include 'dashboard/partials/modal_client_endpoint.html' %}
-                {% endif %}
-            </div>
+            {% if config_info.data_type == 'client' %}
+                {% include 'dashboard/partials/modal_client.html' %}
+            {% elif config_info.data_type == 'endpoint' %}
+                {% include 'dashboard/partials/modal_endpoint.html' %}
+            {% elif config_info.data_type == 'client_endpoint' %}
+                {% include 'dashboard/partials/modal_client_endpoint.html' %}
+            {% endif %}
         </div>
 
         <div class="modal fade" id="delete-modal" role="dialog" data-backdrop="static" data-keyboard="false">

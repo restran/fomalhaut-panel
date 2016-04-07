@@ -8,6 +8,7 @@ import logging
 import json
 
 from django.http import HttpResponse
+import six
 from six import binary_type, text_type
 import time
 
@@ -24,9 +25,26 @@ def utf8(value):
         return value
 
 
+def text_type_dict(dict_data):
+    if not isinstance(dict_data, dict):
+        raise TypeError
+
+    new_dict = {}
+    for k, v in dict_data.items():
+        if isinstance(k, binary_type):
+            k = k.decode('utf-8')
+        if isinstance(v, binary_type):
+            v = v.decode('utf-8')
+
+        new_dict[k] = v
+
+    return new_dict
+
+
 def datetime_to_str(dt, format_str='%Y-%m-%d %H:%M:%S'):
     """
     将datetime转换成字符串
+    :param format_str:
     :param dt:
     :return:
     """
@@ -53,24 +71,42 @@ def error_404(request):
 def http_response_json(dict_data, encoding='utf-8'):
     """
     返回json数据
+    :param encoding:
     :param dict_data:
     :return:
     """
 
     # ensure_ascii=False，用来处理中文
     try:
-        return HttpResponse(json.dumps(dict_data, encoding=encoding, ensure_ascii=False),
-                            content_type="application/json; charset=utf-8")
-    except Exception, e:
-        logger.error(e.message)
+        if six.PY3:
+            # if isinstance(dict_data, binary_type):
+            #     dict_data =
+            dict_data = text_type_dict(dict_data)
+            return HttpResponse(json.dumps(dict_data, ensure_ascii=False),
+                                content_type="application/json; charset=utf-8")
+        else:
+            return HttpResponse(json.dumps(dict_data, encoding=encoding, ensure_ascii=False),
+                                content_type="application/json; charset=utf-8")
+    except Exception as e:
+        logger.error(e)
         # 去掉 ensure_ascii 再试一下
         return HttpResponse(json.dumps(dict_data),
                             content_type="application/json; charset=utf-8")
 
 
+def json_loads(content, encoding=None):
+    if six.PY3:
+        return json.loads(s=content.decode('utf-8'), encoding=encoding)
+    else:
+        return json.loads(s=content, encoding=encoding)
+
+
 def json_dumps(dict_data, encoding='utf-8', indent=None, sort_keys=False):
     """
     返回json数据
+    :param sort_keys:
+    :param indent:
+    :param encoding:
     :param dict_data:
     :return:
     """
@@ -78,8 +114,8 @@ def json_dumps(dict_data, encoding='utf-8', indent=None, sort_keys=False):
     # ensure_ascii=False，用来处理中文
     try:
         return json.dumps(dict_data, encoding=encoding, ensure_ascii=False, indent=indent, sort_keys=sort_keys)
-    except Exception, e:
-        logger.error(e.message)
+    except Exception as e:
+        logger.error(e)
         # 去掉 ensure_ascii 再试一下
         return json.dumps(dict_data, indent=indent, sort_keys=sort_keys)
 

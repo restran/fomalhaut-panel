@@ -73,8 +73,8 @@ class UserInfoCreateForm(forms.ModelForm):
             try:
                 utils.send_user_creation_email(user)
                 pass
-            except Exception, e:
-                logger.error(e.message)
+            except Exception as e:
+                logger.error(e)
                 logger.error(traceback.format_exc())
                 return False, '创建用户出现异常', None
         return True, '', user

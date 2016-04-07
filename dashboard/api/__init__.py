@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # created by restran on 2016/03/06
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import json
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 import logging
-from common.utils import http_response_json
+from common.utils import http_response_json, json_loads
 from accounts.decorators import login_required
 
 from . import access_log
@@ -89,7 +89,7 @@ def get_endpoint_options(request):
     获取 Endpoint select 选项
     """
     success, msg, data = False, '', []
-    post_data = json.loads(request.body)
+    post_data = json_loads(request.body)
     clients = post_data.get('clients', [])
 
     if len(clients) == 0:

@@ -11,3 +11,5 @@ uwsgi
 MySQL-python
 ConcurrentLogHandler
 pymongo
+python-dateutil
+

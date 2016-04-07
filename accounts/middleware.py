@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 # created by restran on 2016/1/2
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import logging
 
 from .utils import get_user
-from settings import SITE_NAME
+from .settings import SITE_NAME
 
 logger = logging.getLogger(__file__)
 

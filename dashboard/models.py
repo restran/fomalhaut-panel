@@ -326,7 +326,9 @@ class AccessLogResponse(EmbeddedDocument, FileHandlerMixin):
             'body_id': text_type(self.body.grid_id)
         }
         content_type = text_type(self.content_type).lower()
-        if content_type.startswith('text') or content_type.startswith('application/json'):
+        if content_type.startswith('text') \
+                or content_type.startswith('application/json') \
+                or content_type.startswith('application/x-www-form-urlencoded'):
             j['text_type'] = True
         else:
             j['text_type'] = False

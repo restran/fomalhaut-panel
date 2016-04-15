@@ -9,6 +9,7 @@ from . import views, api
 model_name_regex = r'(?P<model_name>client|endpoint|client_endpoint)'
 
 urlpatterns = [
+    url(r'^test/$', views.test),
     url(r'^$', views.dashboard),
     url(r'^dashboard/$', views.dashboard),
     url(r'^dashboard/access_log/$', views.access_log),

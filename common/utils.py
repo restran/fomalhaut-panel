@@ -6,13 +6,29 @@ from __future__ import unicode_literals
 
 import logging
 import json
-
+import sys
 from django.http import HttpResponse
 import six
 from six import binary_type, text_type
 import time
 
 logger = logging.getLogger(__name__)
+
+# Useful for very coarse version differentiation.
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+PYPY = True if getattr(sys, 'pypy_version_info', None) else False
+
+if PY3:
+    from io import BytesIO
+
+    text_type = str
+    binary_type = bytes
+else:
+    from cStringIO import StringIO as BytesIO
+
+    text_type = unicode
+    binary_type = str
 
 
 def utf8(value):
@@ -365,3 +381,9 @@ def update_many(objects, fields=None, using="default"):
         c.executemany(
             "update %s set %s where %s=%%s" % (table, assignments, con.ops.quote_name(meta.pk.column)),
             parameters)
+
+
+__all__ = ['insert_many', 'update_many', 'bulk_update', 'grouper',
+           'json_dumps', 'json_loads', 'http_response_json', 'error_404',
+           'datetime_to_timestamp', 'datetime_to_str', 'text_type_dict',
+           'utf8', 'BytesIO', 'text_type', 'binary_type', 'PY2', 'PY3', 'PYPY']

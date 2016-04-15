@@ -12,4 +12,4 @@ MySQL-python
 ConcurrentLogHandler
 pymongo
 python-dateutil
-
+future

@@ -2,15 +2,18 @@
 # -*- coding: utf-8 -*-
 # created by restran on 2016/1/2
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import traceback
 
 from pymongo import UpdateOne
-
-from models import *
+from future.utils import iteritems
+from .models import *
 from api_dashboard import settings
 from api_dashboard.celery import app
+from .utils import RedisHelper
+import json
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +104,7 @@ def clear_old_access_logs():
 
 def bulk_dec_ref_counter(data_list, model):
     bulk_operations = []
-    for k, v in data_list.iteritems():
+    for k, v in iteritems(data_list):
         try:
             # 只有 $inc, 没有 $dec
             update_dict = {'$inc': {'count': -1 * v}}
@@ -265,6 +268,56 @@ def do_parse_access_logs(limit):
     AccessLog.objects(id__in=[t.id for t in logs]).update(flag=True)
 
     return len(logs)
+
+
+def do_transfer_access_logs(r):
+    log_item_str = r.lpop(settings.ANALYTICS_LOG_REDIS_LIST_KEY)
+    if log_item_str is None:
+        return False
+
+    log_item = json.loads(log_item_str)
+    access_log = AccessLog()
+    access_log.ip = log_item['ip']
+    access_log.client = AccessLogClient(**log_item['client'])
+    access_log.endpoint = AccessLogEndpoint(**log_item['endpoint'])
+    access_log.forward_url = log_item['forward_url']
+    access_log.elapsed = log_item['elapsed']
+    access_log.result_code = log_item['result_code']
+    access_log.result_msg = log_item['result_msg']
+    access_log.accessed_at = datetime.fromtimestamp(log_item['accessed_at'] / 1000.0)
+    access_log.request = AccessLogRequest()
+    access_log.request.content_type = log_item['request']['content_type']
+    access_log.request.method = log_item['request']['method']
+    access_log.request.uri = log_item['request']['uri']
+    access_log.request.save_files(log_item['request']['headers'],
+                                  log_item['request']['body'])
+
+    access_log.response = AccessLogResponse()
+    access_log.response.content_type = log_item['response']['content_type']
+    access_log.response.status = log_item['response']['status']
+    access_log.response.save_files(log_item['response']['headers'],
+                                   log_item['response']['body'])
+
+    access_log.save()
+
+    return True
+
+
+@app.task
+def transfer_access_logs():
+    logger.info('执行 transfer_access_logs')
+    r = RedisHelper.get_client()
+    count = 0
+    should_continue = True
+    while should_continue:
+        count += 1
+        try:
+            should_continue = do_transfer_access_logs(r)
+        except Exception as e:
+            logger.error(e)
+            logger.error(traceback.format_exc())
+
+    logger.info('执行 transfer_access_logs 完成, 共计%s项' % count)
 
 
 @app.task

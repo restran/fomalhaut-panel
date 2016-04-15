@@ -25,6 +25,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def test(request):
+    from .tasks import transfer_access_logs
+    transfer_access_logs()
+    return error_404(request)
+
+
 def index(request):
     return render_to_response(
         'dashboard.html', {'request': request},

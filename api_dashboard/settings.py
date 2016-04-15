@@ -240,10 +240,7 @@ ACCESS_LOG_DETAIL_MAX_BODY_LENGTH = 1024 * 5
 REDIS_HOST = '127.0.0.1'
 REDIS_PORT = 6379
 REDIS_DB = 0
-REDIS_PASSWORD = '5iveSec0nds'
-# 代理配置redis中key前缀
-PROXY_CONFIG_REDIS_PREFIX = 'config'
-
+REDIS_PASSWORD = 'secret'
 
 # MongoDB 配置
 MONGO_HOST = '127.0.0.1'
@@ -267,8 +264,8 @@ connect(
 #     MONGO_USERNAME, MONGO_PASSWORD, mechanism='SCRAM-SHA-1')
 # MONGO_DB = DB_CLIENT[MONGO_DBNAME]
 
-# 访问分析统计数据在redis中key前缀
-ANALYTICS_REDIS_PREFIX = 'a'
+# redis 中统计分析日志列表的 key
+ANALYTICS_LOG_REDIS_LIST_KEY = 'logs'
 
 # 访问日志，数据库保存天数
 ACCESS_LOG_KEEP_DAYS = 60
@@ -304,11 +301,17 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(days=1),
         # 'schedule': timedelta(seconds=10),
     },
-    # 从 redis 中读取和解析日志
+    # 从 mongodb 中读取和解析日志
     'parse_access_logs': {
         'task': 'dashboard.tasks.parse_access_logs',
-        # 每隔10分钟执行一次
-        'schedule': timedelta(minutes=10),
+        # 每隔几分钟执行一次
+        'schedule': timedelta(minutes=1),
+    },
+    # 从 redis 中读取日志存储到 mongodb 中
+    'transfer_access_logs': {
+        'task': 'dashboard.tasks.transfer_access_logs',
+        # 每隔几分钟执行一次
+        'schedule': timedelta(minutes=1),
     },
 }
 

@@ -5,13 +5,14 @@
 
 from __future__ import unicode_literals, absolute_import
 from datetime import datetime, timedelta
-# pycharm 无法识别, 会标记错误, 原因不明
-from six.moves.urllib.parse import urlparse
-from six import text_type
+from future.moves.urllib.parse import urlparse
+from common.utils import text_type, BytesIO, utf8
 from bson import ObjectId
+from base64 import b64decode
 from django.db import models
+import gridfs
 from django.core.validators import RegexValidator
-
+import hashlib
 from api_dashboard.settings import DEFAULT_ASYNC_HTTP_CONNECT_TIMEOUT, \
     DEFAULT_ASYNC_HTTP_REQUEST_TIMEOUT, DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS, \
     DEFAULT_REFRESH_TOKEN_EXPIRE_SECONDS
@@ -280,6 +281,44 @@ class FileHandlerMixin(object):
         chunks = collection.chunks
         files.delete_many({"_id": {'$in': file_id_list}})
         chunks.delete_many({"files_id": {'$in': file_id_list}})
+
+    def write_file(self, collection_name, data, content_type='', hash_id=False):
+        if data is None or len(data) <= 0:
+            return None
+
+        db = get_db()
+        fs = gridfs.GridFS(db, collection_name)
+        # redis 中的数据是先编码成 base64, 这里要重新转换回来
+        data = b64decode(data)
+        content = BytesIO(utf8(data))
+        if not hash_id:
+            _id = fs.put(content, content_type=content_type)
+            logger.debug(_id)
+        else:
+            md5 = hashlib.md5(content.getvalue()).hexdigest()
+            # TODO 并发情况下, 这里会出问题, 导致可能有相同md5的数据
+            grid_out = fs.find_one({'md5': md5})
+            if not grid_out:
+                _id = fs.put(content, content_type=content_type)
+            else:
+                _id = grid_out._id
+
+            # 直接让引用计数的 _id 等于 file 的 _id
+            logger.debug(_id)
+            logger.debug(collection_name)
+            db['ref_%s' % collection_name].update({'_id': _id}, {'$inc': {'count': 1}}, upsert=True)
+
+        return _id
+
+    def save_files(self, headers_content, body_content):
+        self.headers.grid_id = self.write_file(
+            self._headers_collection_name, headers_content, 'text/plain', True)
+        logger.info(self.headers.grid_id)
+
+        self.body.grid_id = self.write_file(
+            self._body_collection_name, body_content, self.content_type, True)
+
+        logger.info(self.body.grid_id)
 
 
 class AccessLogRequest(EmbeddedDocument, FileHandlerMixin):
@@ -953,3 +992,4 @@ def get_config_redis_json():
         t['endpoints'] = e_dict
 
     return json_data
+

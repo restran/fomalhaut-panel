@@ -564,7 +564,7 @@ def transfer_to_redis(request):
         end
         """
         pattern_delete = r.register_script(pattern_delete_lua)
-        pattern_delete(keys=[''], args=['%s:*' % settings.PROXY_CONFIG_REDIS_PREFIX], client=pipe)
+        pattern_delete(keys=[''], args=['%s:*' % settings.CLIENT_CONFIG_REDIS_PREFIX], client=pipe)
 
         for t in config_data:
             logger.debug(t)
@@ -573,7 +573,7 @@ def transfer_to_redis(request):
             # for k, v in t.iteritems():
             #     if k != 'endpoints':
             #         client[k] = v
-            pipe.set('%s:%s' % (settings.PROXY_CONFIG_REDIS_PREFIX, t['access_key']), json_dumps(t))
+            pipe.set('%s:%s' % (settings.CLIENT_CONFIG_REDIS_PREFIX, t['access_key']), json_dumps(t))
 
             # for s in t['endpoints']:
             #     pipe.set('%s:%s:%s:%s' % (settings.PROXY_CONFIG_REDIS_PREFIX, t['access_key'], s['name'], s['version']),

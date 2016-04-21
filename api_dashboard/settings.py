@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 # created by restran on 2016/1/2
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
+
+from datetime import timedelta
 
 """
 Django settings for test_project project.
@@ -22,7 +24,6 @@ from mongoengine import connect
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
@@ -263,6 +264,9 @@ connect(
 # DB_CLIENT[MONGO_DBNAME].authenticate(
 #     MONGO_USERNAME, MONGO_PASSWORD, mechanism='SCRAM-SHA-1')
 # MONGO_DB = DB_CLIENT[MONGO_DBNAME]
+# 
+# client 配置 redis 中 key 前缀
+CLIENT_CONFIG_REDIS_PREFIX = 'config'
 
 # redis 中统计分析日志列表的 key
 ANALYTICS_LOG_REDIS_LIST_KEY = 'logs'
@@ -291,33 +295,43 @@ CELERY_ENABLE_UTC = False
 # 以上为基本配置，以下为周期性任务定义，以 celerybeat_开头的
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 
-from datetime import timedelta
-
+# 可以配置的字段, 可以查看这里
+# http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html#available-fields
 # 添加定期任务
 CELERYBEAT_SCHEDULE = {
     # 定期清除旧的访问日志
     'clear_old_access_logs': {
         'task': 'dashboard.tasks.clear_old_access_logs',
         'schedule': timedelta(days=1),
-        # 'schedule': timedelta(seconds=10),
+        'options': {
+            # 任务的过期时间, 可以用 int (单位秒) 或者 datetime
+            # 该时间后的任务将不会执行
+            'expires': 3600 * 24 * 5
+        }
     },
     # 从 mongodb 中读取和解析日志
     'parse_access_logs': {
         'task': 'dashboard.tasks.parse_access_logs',
         # 每隔几分钟执行一次
-        'schedule': timedelta(minutes=1),
+        'schedule': timedelta(seconds=50),
+        'options': {
+            'expires': 600
+        }
     },
     # 从 redis 中读取日志存储到 mongodb 中
     'transfer_access_logs': {
         'task': 'dashboard.tasks.transfer_access_logs',
         # 每隔几分钟执行一次
-        'schedule': timedelta(minutes=1),
+        'schedule': timedelta(seconds=30),
+        'options': {
+            'expires': 600
+        }
     },
 }
 
 # 发送邮件的时候要使用该名称来拼验证URL地址
 SITE_DOMAIN = '127.0.0.1'  # 站点域名
-SITE_NAME = u'APIGateway'  # 站点名称
+SITE_NAME = 'APIGateway'  # 站点名称
 
 # Django upgrading to 1.9 error "AppRegistryNotReady: Apps aren't loaded yet."
 # 添加如下代码解决

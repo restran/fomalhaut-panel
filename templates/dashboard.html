@@ -13,6 +13,29 @@
             background-color: #fcfcfc;
         }
 
+        .db-details {
+            text-align: center;
+        }
+
+        .db-details .db-content-one {
+            float: left;
+            width: 50%;
+            height: 100%;
+            padding: 10px;
+        }
+
+        .db-details .db-content-two {
+            margin-left: 50%;
+            height: 100%;
+            padding: 10px;
+        }
+
+        .echarts-ratio-plot {
+            height: 350px;
+            width: 100%;
+            margin-top: 20px;
+            padding: 0 30px;
+        }
     </style>
 {% endblock %}
 
@@ -29,10 +52,31 @@
                             </div>
                         </div>
                         <div class="panel-body">
-                            <div style="font-size: 35px; line-height: 120px; height:120px;text-align: center;color: #51d466">
+                            <div style="font-size: 35px; margin: 20px 0 5px 0; text-align: center;color: #51d466">
                             <span id="count2-total-count" class="number-count" data-from="0"
-                                  :data-to="totalCount" data-speed="1000"
+                                  :data-to="totalCount.totalCount" data-speed="1000"
                                   data-refresh-interval="100">0</span>
+                            </div>
+
+                            <div class="db-details">
+                                <div class="db-content-one">
+                                    <h3 style="color: #666;font-size:26px">
+                                   <span id="count2-yesterday-count" class="number-count" data-from="0"
+                                         :data-to="totalCount.yesterdayCount"
+                                         data-speed="1000"
+                                         data-refresh-interval="100">0</span>
+                                    </h3>
+                                    <span>昨天</span>
+                                </div>
+                                <div class="db-content-two">
+                                    <h3 style="color: #666;font-size:26px">
+                                   <span id="count2-today-count" class="number-count" data-from="0"
+                                         :data-to="totalCount.todayCount"
+                                         data-speed="1000"
+                                         data-refresh-interval="100">0</span>
+                                    </h3>
+                                    <span>今天</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -183,7 +227,7 @@
                                             <option value="401">401 登录验证失败</option>
                                             <option value="403">403 HMAC 鉴权失败</option>
                                             <option value="500">500 服务端错误</option>
-                                            <option value="503">504 Endpoint 服务不可用</option>
+                                            <option value="503">503 Endpoint 服务不可用</option>
                                             <option value="510">510 Client 配置有误</option>
                                         </select>
                                     </div>
@@ -294,12 +338,11 @@
                 </div>
                 <div class="panel-body">
                     <div class="row">
-                        <div class="col-sm-6 col-md-6">
-                            <div id="echarts-client-ratio" style="height:280px;width: 100%;margin-top:20px"></div>
-                        </div>
-                        <div class="col-sm-6 col-md-6">
-                            <div id="echarts-endpoint-ratio" style="height:280px;width: 100%;margin-top:20px"></div>
-                        </div>
+                        <div id="echarts-client-ratio" class="echarts-ratio-plot"></div>
+                    </div>
+
+                    <div class="row">
+                        <div id="echarts-endpoint-ratio" class="echarts-ratio-plot"></div>
                     </div>
                 </div>
             </div>

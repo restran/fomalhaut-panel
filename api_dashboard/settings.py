@@ -231,10 +231,13 @@ DEFAULT_REFRESH_TOKEN_EXPIRE_SECONDS = 20 * 3600 * 24
 # 访问日志默认分页大小
 DEFAULT_ACCESS_LOG_PAGE_SIZE = 200
 
+# 在 echarts 饼图中，最大显示的项
+ECHARTS_PIPE_PLOT_MAX_NUM = 20
+
 # 因为 body 太长, 在 Chrome 中, 如果是字节文件, 由于编码问题会导致浏览器卡住
 # 但是 Sarafi 不会
 # 访问日志详情 body 最大长度
-ACCESS_LOG_DETAIL_MAX_BODY_LENGTH = 1024 * 5
+ACCESS_LOG_DETAIL_MAX_BODY_LENGTH = 1024 * 50
 
 # 使用 Redis 存储 Session 数据
 # 注意，密码要替换成服务器上的

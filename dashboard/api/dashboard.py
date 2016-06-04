@@ -12,6 +12,7 @@ from ..models import AccessHourCounter, AccessTotalDayCounter, \
     query_access_count, AccessDayCounter, Client, Endpoint
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from api_dashboard.settings import ECHARTS_PIPE_PLOT_MAX_NUM
 
 logger = logging.getLogger(__name__)
 
@@ -105,8 +106,18 @@ def get_total_count(request):
     """
     success, msg, data = False, '', []
     # post_data = json_loads(request.body)
+    today = datetime.today()
+    yesterday = datetime.today() - timedelta(days=1)
+    yesterday_2 = datetime.today() - timedelta(days=2)
     total_count = AccessTotalDayCounter.objects().aggregate_sum('count')
-    data = {'total_count': total_count}
+    today_count = AccessTotalDayCounter.objects(date__lte=today, date__gt=yesterday).aggregate_sum('count')
+    yesterday_count = AccessTotalDayCounter.objects(date__lte=yesterday, date__gt=yesterday_2).aggregate_sum('count')
+
+    data = {
+        'total_count': total_count,
+        'today_count': today_count,
+        'yesterday_count': yesterday_count
+    }
     return http_response_json({'success': True, 'msg': msg, 'data': data})
 
 
@@ -206,6 +217,16 @@ def get_client_ratio(request):
 
     legend = []
     y_data = []
+
+    # 因为数据导入导出的原因，有可能导致出现 id 不匹配的问题
+    new_count_list = []
+    for t in count_list:
+        if t['_id'] in client_dict:
+            new_count_list.append(t)
+    count_list = new_count_list
+
+    count_list = sorted(count_list, key=lambda x: x['count'], reverse=True)
+    count_list = count_list[:ECHARTS_PIPE_PLOT_MAX_NUM]
     for t in count_list:
         name = client_dict.get(t['_id'])
         if name:
@@ -248,14 +269,24 @@ def get_endpoint_ratio(request):
     count_list = list(count_list)
     endpoint_id_list = [t['_id'] for t in count_list]
     endpoints = Endpoint.objects.filter(id__in=endpoint_id_list).values('unique_name', 'id')
-    client_dict = {}
+    endpoint_dict = {}
     for t in endpoints:
-        client_dict[t['id']] = t['unique_name']
+        endpoint_dict[t['id']] = t['unique_name']
 
     legend = []
     y_data = []
+    # 因为数据导入导出的原因，有可能导致出现 id 不匹配的问题
+    new_count_list = []
     for t in count_list:
-        name = client_dict.get(t['_id'])
+        if t['_id'] in endpoint_dict:
+            new_count_list.append(t)
+    count_list = new_count_list
+
+    # 因为饼图显示的问题，只显示前几项
+    count_list = sorted(count_list, key=lambda x: x['count'], reverse=True)
+    count_list = count_list[:ECHARTS_PIPE_PLOT_MAX_NUM]
+    for t in count_list:
+        name = endpoint_dict.get(t['_id'])
         if name:
             legend.append(name)
             y_data.append({'value': t['count'], 'name': name})

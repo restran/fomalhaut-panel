@@ -2,6 +2,7 @@
 # created by restran on 2016/04/14
 from __future__ import unicode_literals, absolute_import
 import redis
+from common.utils import text_type
 from api_dashboard import settings
 
 
@@ -39,3 +40,18 @@ class RedisHelper(object):
         RedisHelper._client = redis.StrictRedis(
             host=settings.REDIS_HOST, port=settings.REDIS_PORT,
             db=settings.REDIS_DB, password=settings.REDIS_PASSWORD)
+
+def check_text_content_type(content_type):
+    """
+    检查content_type 是否是文本类型
+    :param content_type:
+    :return:
+    """
+    content_type = text_type(content_type).lower()
+    text_content_type = [
+        'text',
+        'application/json',
+        'application/x-javascript',
+        'application/x-www-form-urlencoded'
+    ]
+    return any(map(content_type.startswith, text_content_type))

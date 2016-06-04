@@ -21,6 +21,7 @@ from api_dashboard.settings import DEFAULT_ACCESS_LOG_PAGE_SIZE
 from mongoengine import *
 from mongoengine.connection import get_db
 import logging
+from .utils import check_text_content_type
 
 logger = logging.getLogger(__name__)
 
@@ -339,8 +340,7 @@ class AccessLogRequest(EmbeddedDocument, FileHandlerMixin):
             'headers_id': text_type(self.headers.grid_id),
             'body_id': text_type(self.body.grid_id)
         }
-        content_type = text_type(self.content_type).lower()
-        if content_type.startswith('text') or content_type.startswith('application/json'):
+        if check_text_content_type(self.content_type):
             j['text_type'] = True
         else:
             j['text_type'] = False
@@ -364,10 +364,7 @@ class AccessLogResponse(EmbeddedDocument, FileHandlerMixin):
             'headers_id': text_type(self.headers.grid_id),
             'body_id': text_type(self.body.grid_id)
         }
-        content_type = text_type(self.content_type).lower()
-        if content_type.startswith('text') \
-                or content_type.startswith('application/json') \
-                or content_type.startswith('application/x-www-form-urlencoded'):
+        if check_text_content_type(self.content_type):
             j['text_type'] = True
         else:
             j['text_type'] = False

@@ -126,7 +126,7 @@
                                     <option value="401">401 登录验证失败</option>
                                     <option value="403">403 HMAC 鉴权失败</option>
                                     <option value="500">500 服务端错误</option>
-                                    <option value="503">504 Endpoint 服务不可用</option>
+                                    <option value="503">503 Endpoint 服务不可用</option>
                                     <option value="510">510 Client 配置有误</option>
                                 </select>
                             </div>
@@ -227,17 +227,16 @@
                             {{ entry.elapsed + 'ms' }}
                         </span>
                     </td>
-                    <td>
+                    <td class="nowrap">
                         <span class="label"
                               :class="{
-                              'label-success': entry.response.status >= 200 && entry.response.status < 300,
+                              'label-success': entry.response.status >= 200 && entry.response.status < 400,
                               'label-warning': entry.response.status >= 400 && entry.response.status < 500,
-                              'label-info': (entry.response.status >= 300 && entry.response.status < 400) ||
-                              entry.response.status < 200,
-                              'label-danger': entry.response.status >= 500 }">
-                            {{ entry.response.status }}
+                              'label-info': entry.response.status < 200,
+                              'label-danger': entry.response.status >= 500 }"
+                              v-text="entry.response.status">
                         </span>
-                        <span style="margin-left: 5px;" v-show="entry.result_code != 200" class="label"
+                        <span style="margin-left: 5px;" class="label"
                               :class="{
                               'label-success': entry.result_code == 200,
                               'label-warning': entry.result_code == 503 || entry.result_code == 400,
@@ -259,19 +258,19 @@
                 <div style="display: inline-block;margin-left: -190px;">
                     <ul class="pagination">
                         <li v-if="hasPreviousPage">
-                            <a href="#" @click="getPage(pageInfo.currentPage - 1)">&laquo;上一页</a></li>
-                        <li v-else class="disabled"><a href="#">&laquo; 上一页</a></li>
-                        <li v-for="pi in pageList" track_by="$index"
+                            <a href="javascript:void 0;" @click="getPage(pageInfo.currentPage - 1)">&laquo;上一页</a></li>
+                        <li v-else class="disabled"><a href="javascript:void 0;">&laquo; 上一页</a></li>
+                        <li v-for="pi in pageList" track-by="$index"
                             :class="{'active': pageInfo.currentPage==pi}">
-                            <a href="#" v-if="pi!='...'" @click="getPage(pi)">
+                            <a href="javascript:void 0;" v-if="pi!='...'" @click="getPage(pi)">
                                 <span v-text="pi"></span>
                                 <span v-if="pageInfo.currentPage==pi" class="sr-only">(current)</span></a>
-                            <a href="#" v-else>
+                            <a href="javascript:void 0;" v-else>
                                 <span v-text="pi"></span>
                                 <span v-if="pageInfo.currentPage==pi" class="sr-only">(current)</span></a>
                         </li>
                         <li v-if="hasNextPage">
-                            <a href="#" @click="getPage(pageInfo.currentPage + 1)">下一页 &raquo;</a>
+                            <a href="javascript:void 0;" @click="getPage(pageInfo.currentPage + 1)">下一页 &raquo;</a>
                         </li>
                         <li v-else class="disabled"><a href="#">下一页 &raquo;</a></li>
                     </ul>

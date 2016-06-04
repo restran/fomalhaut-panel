@@ -27,7 +27,7 @@
                 '401': '401 登录验证失败',
                 '403': '403 HMAC 鉴权失败',
                 '500': '500 服务端错误',
-                '503': '504 Endpoint 服务不可用',
+                '503': '503 Endpoint 服务不可用',
                 '510': '510 Client 配置有误'
             }
         },
@@ -243,12 +243,16 @@
             },
             getTotalCount: function () {
                 var apiUrl = '/api/dashboard/get_total_count/';
+                var that = this;
                 $request.get(apiUrl, null, function (data) {
-
-                    app.totalCount = data['data']['total_count'];
+                    that.totalCount['totalCount'] = data['data']['total_count'];
+                    that.totalCount['yesterdayCount'] = data['data']['yesterday_count'];
+                    that.totalCount['todayCount'] = data['data']['today_count'];
                     Vue.nextTick(function () {
                         // DOM 更新了
-                        $('#count2-total-count').countTo({to: app.totalCount});
+                        $('#count2-total-count').countTo({to: that.totalCount['totalCount']});
+                        $('#count2-yesterday-count').countTo({to: that.totalCount['yesterdayCount']});
+                        $('#count2-today-count').countTo({to: that.totalCount['todayCount']});
                     });
                     console.log(app.totalCount);
                 }, function (data, msg) {
@@ -380,7 +384,26 @@
                             {
                                 name: 'API 端点访问占比',
                                 type: 'pie',
-                                radius: ['40%', '55%'],
+                                radius: ['50%', '70%'],
+                                avoidLabelOverlap: false,
+                                label: {
+                                    normal: {
+                                        show: false,
+                                        position: 'center'
+                                    },
+                                    emphasis: {
+                                        show: true,
+                                        textStyle: {
+                                            fontSize: '20',
+                                            fontWeight: 'normal'
+                                        }
+                                    }
+                                },
+                                labelLine: {
+                                    normal: {
+                                        show: false
+                                    }
+                                },
                                 data: y_data
                             }
                         ]

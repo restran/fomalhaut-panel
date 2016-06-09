@@ -249,14 +249,14 @@
                 }).finally(function () {
                 });
             },
-            showEditDialog: function (mode, entry_index) {
+            showEditDialog: function (mode, entry) {
                 var i, item;
                 // 还原一下
                 $scope.config.formData = angular.copy($scope.config.formDataBak);
                 if (mode == 'update') {
                     // 将entry的数据填充到form_data中
-                    $scope.config.updateEntry = $scope.config.entries[entry_index];
-                    $scope.config.updateEntryIndex = entry_index;
+                    $scope.config.updateEntry = entry;
+                    $scope.config.updateEntryIndex = $scope.config.entries.indexOf(entry);
                     $scope.config.editDialogMode = 'update';
                     if ($scope.data_type == 'client_endpoint') {
                         for (i = 0; i < this.endpoints.length; i++) {
@@ -318,8 +318,8 @@
 
                 editDialog.modal('show');
             },
-            updateEnableState: function (entry_index) {
-                var entry = $scope.config.entries[entry_index];
+            updateEnableState: function (entry) {
+                // var entry = $scope.config.entries[entry_index];
                 var post_url = basePostUrl + entry.id + '/update_enable_state/';
 
                 var post_data = {'enable': entry.enable};
@@ -338,11 +338,11 @@
 
                 });
             },
-            deleteEntry: function (entry_index) {
-                var entry = $scope.config.entries[entry_index];
+            deleteEntry: function (entry) {
+                // var entry = $scope.config.entries[entry_index];
                 $('#delete-modal-title').text(entry.name);
                 $scope.config.delEntryId = entry.id;
-                $scope.config.delEntryIndex = entry_index;
+                $scope.config.delEntryIndex = $scope.config.entries.indexOf(entry);
                 $('#delete-modal').modal('show');
             },
             doDeleteEntry: function ($event) {

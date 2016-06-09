@@ -19,13 +19,13 @@
     <td>
         <div class="ui toggle checkbox">
             <input type="checkbox" id="entry-{{$index}}-cb" ng-model="entry.enable"
-                   ng-click="config.updateEnableState($index)">
+                   ng-click="config.updateEnableState(entry)">
             <label for="entry-{{$index}}-cb"></label>
         </div>
     </td>
     <td class="nowrap">
-        <a href="javascript:void 0;" ng-click="config.showEditDialog('update', $index)">编辑</a>&nbsp;
-        <a href="javascript:void 0;" style="color: #d9534f" ng-click="config.deleteEntry($index)">删除</a>
+        <a href="javascript:void 0;" ng-click="config.showEditDialog('update', entry)">编辑</a>&nbsp;
+        <a href="javascript:void 0;" style="color: #d9534f" ng-click="config.deleteEntry(entry)">删除</a>
     </td>
 </script>
 

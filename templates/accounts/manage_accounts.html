@@ -1,13 +1,11 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 {% block title %}{{ request.page_title }}{% endblock %}
-{% block ng_app_config %}ng-app="app"{% endblock %}
-{% block ng_app_body_scope %}ng-controller="appCtrl"{% endblock %}
 {% block style_block %}{% endblock %}
 {% block head_script %}{% endblock %}
 
 {% block main_content %}
-    <div class="main-content">
+    <div class="main-content" id="app">
         <div class="page-header clearfix">
             <div class="float-left">
                 <h1>{{ request.page_title }}</h1>
@@ -15,11 +13,11 @@
 
             <div class="float-right">
                 <div class="icon-addon addon-md right-search-box">
-                    <input type="text" placeholder="搜索过滤" class="form-control" ng-model="query">
+                    <input type="text" placeholder="搜索过滤" class="form-control" v-model="query">
                     <label class="glyphicon glyphicon-search"></label>
                 </div>
 
-                <span class="btn btn-default" id="btn-upload" ng-click="showEditDialog('create', null)">
+                <span class="btn btn-default" id="btn-upload" @click="showEditDialog('create', null)">
                     <span class="glyphicon glyphicon-plus"></span> 添加用户
                 </span>
             </div>
@@ -43,19 +41,21 @@
 
                 {% verbatim %}
                 <script type="text/ng-template" id="entry_renderer.html">
-                    <td ng-bind="$index+1"></td>
-                    <td ng-bind="entry.email"></td>
-                    <td ng-bind="entry.name"></td>
-                    <td ng-bind="entry.date_joined"></td>
-                    <td ng-bind="entry.last_login"></td>
-                    <td ng-bind="entry.is_active ? '是': '否'"></td>
-                    <td><span class="label label-info" ng-bind="entry.is_admin ? '超级管理员': ''"></span></td>
-                    <td class="nowrap"><a href="javascript: void 0;" ng-click="showEditDialog('update', $index)">编辑</a>&nbsp;&nbsp;
-                        <a href="javascript: void 0;" style="color: #d9534f" ng-click="deleteEntry($index)">删除</a>
-                    </td>
+
                 </script>
 
-                <tr ng-repeat="entry in entries | filter:query" ng-include="'entry_renderer.html'"></tr>
+                <tr v-for="entry in entries | filterBy query" track-by="$index">
+                    <td v-text="$index+1"></td>
+                    <td v-text="entry.email"></td>
+                    <td v-text="entry.name"></td>
+                    <td v-text="entry.date_joined"></td>
+                    <td v-text="entry.last_login"></td>
+                    <td v-text="entry.is_active ? '是': '否'"></td>
+                    <td><span class="label label-info" v-text="entry.is_admin ? '超级管理员': ''"></span></td>
+                    <td class="nowrap"><a href="javascript: void 0;" @click="showEditDialog('update', entry)">编辑</a>&nbsp;&nbsp;
+                        <a href="javascript: void 0;" class="color-danger" @click="deleteEntry(entry)">删除</a>
+                    </td>
+                </tr>
                 {% endverbatim %}
                 </tbody>
             </table>
@@ -64,53 +64,58 @@
         <div class="modal fade" id="edit-modal" role="dialog">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <form role="form" method="post" data-toggle="validator" id="edit-form">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal"><span
-                                    aria-hidden="true">&times;</span><span
-                                    class="sr-only">Close</span></button>
-                            <h4 id="edit-modal-title" class="modal-title">
-                                {{ editDialogMode == 'create' ? '添加用户': '编辑用户' }}</h4>
-                        </div>
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <label class="control-label">邮箱</label>
-                                <span class="help-block with-errors inline-block"></span>
-                                <input id="modal-form-email" name="email"
-                                       type="email"
-                                       ng-model="formData.email"
-                                       data-error="请输入正确的邮箱" required
-                                       placeholder="请输入有效的邮箱"
-                                       class="form-control">
+                    <validator name="validation">
+                        <form role="form" novalidate onsubmit="return false">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"><span
+                                        aria-hidden="true">&times;</span><span
+                                        class="sr-only">Close</span></button>
+                                <h4 id="edit-modal-title" class="modal-title"
+                                    v-text="editDialogMode == 'create' ? '添加用户': '编辑用户'"></h4>
                             </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label class="control-label">邮箱</label>
+                                    <span class="help-block with-errors inline-block">
+                                        <span v-if="$validation.email.email" v-text="'请输入正确的邮箱'"></span>
+                                    </span>
+                                    <input id="modal-form-email" name="email"
+                                           type="email"
+                                           v-model="formData.email"
+                                           initial="off"
+                                           v-validate:email="{ email: true }"
+                                           placeholder="请输入有效的邮箱"
+                                           class="form-control">
+                                </div>
 
-                            <div class="form-group">
-                                <label class="control-label">用户名</label>
-                                <span class="help-block with-errors inline-block"></span>
-                                <input id="modal-form-name" name="name"
-                                       type="text"
-                                       required
-                                       ng-model="formData.name"
-                                       maxlength="14"
-                                       data-minlength="3"
-                                       data-maxlength="14"
-                                       data-error="请输入3~14个字符"
-                                       class="form-control" placeholder="请输入3~14个字符">
+                                <div class="form-group">
+                                    <label class="control-label">用户名</label>
+                                    <span class="help-block with-errors inline-block">
+                                        <span v-if="$validation.name.minlength" v-text="'请输入3~14个字符'"></span>
+                                        <span v-if="$validation.name.maxlength" v-text="'请输入3~14个字符'"></span>
+                                    </span>
+                                    <input id="modal-form-name" name="name"
+                                           type="text"
+                                           initial="off"
+                                           v-validate:name="{ maxlength: 14, minlength: 3 }"
+                                           v-model="formData.name"
+                                           class="form-control" placeholder="请输入3~14个字符">
+                                </div>
+
                             </div>
-
-                        </div>
-                        <div class="modal-footer">
-                            <button type="submit"
-                                    class="btn btn-primary"
-                                    id="btn-save"
-                                    data-loading-text="保存中...">保存
-                            </button>
-                            <button class="btn btn-default" data-dismiss="modal">取消</button>
-                        </div>
-                    </form>
+                            <div class="modal-footer">
+                                <button type="submit"
+                                        @click="save($event)"
+                                        :disabled="!$validation.valid"
+                                        class="btn btn-primary"
+                                        data-loading-text="保存中...">保存
+                                </button>
+                                <button class="btn btn-default" data-dismiss="modal">取消</button>
+                            </div>
+                        </form>
+                    </validator>
                 </div>
             </div>
-
         </div>
         {% endverbatim %}
 
@@ -118,13 +123,13 @@
             <div class="modal-dialog modal-sm">
                 <div class="modal-content">
                     <div class="modal-body">
-                        <h4 class="modal-title">确定删除用户<strong> <code ng-bind="delEntry.name"></code> </strong>?</h4>
+                        <h4 class="modal-title">确定删除用户<strong> <code v-text="delEntry.name"></code> </strong>?</h4>
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-danger"
                                 id="btn-delete"
                                 data-loading-text="删除中..."
-                                ng-click="doDeleteEntry()">删除
+                                @click="doDeleteEntry()">删除
                         </button>
                         <button class="btn btn-default" data-dismiss="modal">取消</button>
                     </div>
@@ -135,6 +140,6 @@
 {% endblock %}
 
 {% block tail_script %}
-    <script src="/static/vendors/validator.min.js"></script>
+    <script src="/static/js/accounts/common.js"></script>
     <script src="/static/js/accounts/manage_accounts.js"></script>
 {% endblock %}

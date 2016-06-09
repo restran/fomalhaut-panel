@@ -1,8 +1,6 @@
 {% extends "accounts/login_base.html" %}
 {% load staticfiles %}
 {% block title %}{{ request.page_title }}{% endblock %}
-{% block ng_app_config %}ng-app="app"{% endblock %}
-{% block ng_app_body_scope %}ng-controller="appCtrl"{% endblock %}
 {% block style_block %}
     <style>
         body {
@@ -24,25 +22,27 @@
 {% endblock %}
 
 {% block main_content %}
-    <div class="login-wrapper">
-
+    <div class="login-wrapper" id="app">
         <div style="margin-bottom: 20px; text-align: center">
-            <img src="/static/whale.png" alt="OxygenProxy" style="height: 65px">
-            <span class="logo-text">API Gateway</span>
+            <img src="/static/whale.png" alt="Beluga" style="height: 65px">
+            <span class="logo-text">{{ request.site_name }}</span>
         </div>
-
+        {% verbatim %}
         <div class="login-area">
-            <form method="post" id="form" role="form" data-toggle="validator">
+            <validator name="validation">
                 <div class="login-body">
-
                     <div class="form-group">
                         <label class="control-label" for="form-email">邮箱</label>
-                        <span class="help-block with-errors inline-block"></span>
+                            <span class="help-block with-errors inline-block">
+                                <!--<span v-if="$validation.email.required" v-text="'这是必填项'"></span>-->
+                                <span v-if="$validation.email.email" v-text="'请输入正确的邮箱'"></span>
+                            </span>
 
                         <div>
-                            <input id="form-email" name="email" type="email"
-                                   data-error="请输入正确的邮箱" required
-                                   ng-model="model.email"
+                            <input id="form-email" type="email"
+                                   v-model="formData.email"
+                                   initial="off"
+                                   v-validate:email="{ email: true }"
                                    placeholder=""
                                    class="form-control">
                         </div>
@@ -50,18 +50,21 @@
 
                     <div class="form-group">
                         <label class="control-label" for="form-password">密码</label>
-                        <span class="help-block with-errors inline-block"></span>
+                            <span class="help-block with-errors inline-block">
+                                <span v-if="$validation.password.required" v-text="'这是必填项'"></span>
+                            </span>
 
-                        <input id="form-password" name="password" type="password"
-                               ng-model="model.password"
-                               data-error="这是必填项" required
+                        <input id="form-password" type="password"
+                               v-model="formData.password"
+                               initial="off"
+                               v-validate:password="{ required: true }"
                                placeholder=""
                                class="form-control">
                     </div>
 
                     <div class="checkbox col-sm-7 login-left">
                         <label>
-                            <input name="remember_me" type="checkbox" ng-model="model.remember_me">
+                            <input name="remember_me" type="checkbox" v-model="formData.remember_me">
                             记住我
                         </label>
                     </div>
@@ -70,23 +73,25 @@
                         <a href="/accounts/password/reset_request/">忘记密码</a>
                     </div>
 
-                </div>
-
-                <div class="login-footer">
-                    <div class="form-group">
-                        <button id="btn-submit" class="btn btn-primary form-control"
-                                data-loading-text="登录中..." autocomplete="off">登录
-                        </button>
+                    <div class="login-footer">
+                        <div class="form-group">
+                            <button class="btn btn-primary form-control"
+                                    @click="doSubmit($event)"
+                                    :disabled="!$validation.valid"
+                                    data-loading-text="登录中..." autocomplete="off">登录
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </form>
+            </validator>
         </div>
+        {% endverbatim %}
     </div>
 {% endblock %}
 
 {% block tail_script %}
-    <script src="/static/vendors/validator.min.js"></script>
     <script src="/static/vendors/sha.min.js"></script>
     <script src="/static/js/common.js"></script>
+    <script src="/static/js/accounts/common.js"></script>
     <script src="/static/js/accounts/login.js"></script>
 {% endblock %}

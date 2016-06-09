@@ -21,24 +21,13 @@ class UserInfoEditForm(forms.ModelForm):
     用户修改个人信息的表单
     """
 
-    def __init__(self, user_id, *args, **kwargs):
+    def __init__(self,  *args, **kwargs):
         super(UserInfoEditForm, self).__init__(*args, **kwargs)
-        self.user_id = user_id
         self.error_msg = []
 
     class Meta:
         model = SiteUser
         fields = ("name", "email",)
-
-    def clean_email(self):
-        logger.debug('UserInfoEditForm clean_email')
-        email = self.cleaned_data["email"]
-        cnt = SiteUser.objects.filter(email=email).exclude(id=self.user_id).count()
-        if cnt <= 0:
-            return email
-        else:
-            self.error_msg.append('该邮箱已存在')
-            raise forms.ValidationError(_("该邮箱已存在"))
 
 
 class UserInfoCreateForm(forms.ModelForm):

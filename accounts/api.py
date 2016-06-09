@@ -6,13 +6,13 @@ from __future__ import unicode_literals
 
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
+
 from common.utils import error_404, http_response_json, json_loads
-from .decorators import login_required, admin_required
 from . import settings
-import json
+from .decorators import login_required, admin_required
 from .forms import *
-from .utils import login
 from .tokens import PasswordResetTokenGenerator
+from .utils import login
 
 
 @csrf_protect
@@ -68,14 +68,14 @@ def api_user_login(request):
         user = authenticate(email=email, password=password)
         logger.debug(user)
         if user is not None:
-            logger.info('认证通过')
+            logger.debug('认证通过')
             # 认证通过
             login(request, user, expiry)
             # 跳转到登陆成功的页面
-            logger.info('跳转到主页')
+            logger.debug('跳转到主页')
             return http_response_json({'success': True, 'msg': '', 'redirect_uri': '/'})
         else:
-            logger.info('认证失败')
+            logger.debug('认证失败')
             response = {'success': False, 'msg': '登录失败，邮箱或密码不正确'}
             return http_response_json(response)
 
@@ -137,9 +137,9 @@ def api_update_account(request, user_id):
     post_data = json_loads(request.body)
     user = SiteUser.get_user(user_id)
     if user is None:
-        return http_response_json({'success': success, 'msg': u'用户不存在'})
+        return http_response_json({'success': success, 'msg': '用户不存在'})
 
-    form = UserInfoEditForm(user_id, post_data)
+    form = UserInfoEditForm(post_data, instance=user)
     if form.is_valid():
         logger.debug('is_valid')
         user.name = form.cleaned_data["name"]

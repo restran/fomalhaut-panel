@@ -279,8 +279,8 @@ ACCESS_LOG_KEEP_DAYS = 60
 
 # 网站发送出去的邮箱账号设定
 EMAIL_SMTP_SERVER = 'localhost'
-EMAIL_NOTIFY_NAME = 'APIGateway <no-reply@api_gateway.com>'
-DEFAULT_EMAIL_NOTIFY_SUBJECT = '来自 APIGateway 的邮件通知'
+EMAIL_NOTIFY_NAME = 'Beluga <no-reply@beluga.com>'
+DEFAULT_EMAIL_NOTIFY_SUBJECT = '来自 Beluga 的邮件通知'
 
 # 配置djcelery相关参数，ResultStore默认存储在数据库可不必重写
 import djcelery
@@ -334,7 +334,7 @@ CELERYBEAT_SCHEDULE = {
 
 # 发送邮件的时候要使用该名称来拼验证URL地址
 SITE_DOMAIN = '127.0.0.1'  # 站点域名
-SITE_NAME = 'APIGateway'  # 站点名称
+SITE_NAME = 'Beluga'  # 站点名称
 
 # Django upgrading to 1.9 error "AppRegistryNotReady: Apps aren't loaded yet."
 # 添加如下代码解决

@@ -1,8 +1,6 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 {% block title %}{{ request.page_title }}{% endblock %}
-{% block ng_app_config %}ng-app="app"{% endblock %}
-{% block ng_app_body_scope %}ng-controller="appCtrl"{% endblock %}
 {% block style_block %}
 
 {% endblock %}
@@ -11,97 +9,101 @@
 {% endblock %}
 
 {% block main_content %}
-    <div class="main-content">
+    <div class="main-content" id="app">
         <div class="page-header">
             <h1>{{ request.page_title }}</h1>
         </div>
+        <validator name="validation">
+            <form class="form-horizontal"
+                  role="form" method="post"
+                  novalidate onsubmit="return false">
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">邮箱</label>
 
-        <form class="form-horizontal"
-              data-toggle="validator"
-              role="form" method="post">
-            <div class="form-group">
-                <label class="col-sm-2 control-label">邮箱</label>
-
-                <div class="col-sm-6 col-md-4">
-                    <p class="form-control-static">{{ user.email }}</p>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="col-sm-2 control-label">用户名</label>
-
-                <div class="col-sm-6 col-md-4">
-                    <p class="form-control-static">{{ user.name }}</p>
-                </div>
-            </div>
-            {% verbatim %}
-            <div class="form-group" ng-if="!updateSuccess">
-                <label class="col-sm-2 control-label">旧密码</label>
-
-                <div class="col-sm-6 col-md-4">
-                    <input name="old_password" type="password"
-                           placeholder="请输入旧密码"
-                           ng-model="model.old_password"
-                           required
-                           class="form-control">
-                </div>
-                <span class="col-sm-3 help-block with-errors"></span>
-            </div>
-
-            <div class="form-group" ng-if="!updateSuccess">
-                <label class="col-sm-2 control-label">新密码</label>
-
-                <div class="col-sm-6 col-md-4">
-                    <input name="new_password1" type="password"
-                           id="new_password1"
-                           maxlength="18"
-                           data-minlength="6"
-                           data-maxlength="18"
-                           required
-                           ng-model="model.new_password"
-                           data-error="请输入6~18位密码"
-                           class="form-control" placeholder="请输入6~18位密码">
-                </div>
-                <span class="col-sm-3 help-block with-errors"></span>
-            </div>
-
-            <div class="form-group" ng-if="!updateSuccess">
-                <label class="col-sm-2 control-label">确认密码</label>
-
-                <div class="col-sm-6 col-md-4">
-                    <input name="new_password2" type="password"
-                           required
-                           data-match="#new_password1"
-                           data-match-error="密码不匹配"
-                           placeholder="请再次输入新密码"
-                           class="form-control">
+                    <div class="col-sm-6 col-md-4">
+                        <p class="form-control-static">{{ user.email }}</p>
+                    </div>
                 </div>
 
-                <span class="col-sm-3 help-block with-errors"></span>
-            </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">用户名</label>
 
-            <div class="form-group">
-                <div class="col-sm-offset-2 col-sm-6 col-md-4">
-                    <script type="text/ng-template" id="success_tip.html">
-                        <div ng-show="updateSuccess" class="alert alert-success" role="alert">
+                    <div class="col-sm-6 col-md-4">
+                        <p class="form-control-static">{{ user.name }}</p>
+                    </div>
+                </div>
+                {% verbatim %}
+                <div class="form-group" style="display: none" v-show="!updateSuccess">
+                    <label class="col-sm-2 control-label">旧密码</label>
+
+                    <div class="col-sm-6 col-md-4">
+                        <input name="old_password" type="password"
+                               placeholder="请输入旧密码"
+                               initial="off"
+                               v-model="formData.old_password"
+                               v-validate:old_password="{ required: true }"
+                               class="form-control">
+                    </div>
+                <span class="col-sm-3 help-block with-errors">
+                    <span v-if="$validation.old_password.required" v-text="'这是必填项'"></span>
+                </span>
+                </div>
+
+                <div class="form-group" style="display: none" v-show="!updateSuccess">
+                    <label class="col-sm-2 control-label">新密码</label>
+
+                    <div class="col-sm-6 col-md-4">
+                        <input name="new_password" type="password"
+                               id="new_password"
+                               initial="off"
+                               v-validate:new_password="{ maxlength: 18, minlength: 6 }"
+                               v-model="formData.new_password"
+                               class="form-control" placeholder="请输入6~18位密码">
+                    </div>
+                <span class="col-sm-3 help-block with-errors">
+                    <span v-if="$validation.new_password.minlength" v-text="'请输入6~18位密码'"></span>
+                    <span v-if="$validation.new_password.maxlength" v-text="'请输入6~18位密码'"></span>
+                </span>
+                </div>
+
+                <div class="form-group" style="display: none" v-show="!updateSuccess">
+                    <label class="col-sm-2 control-label">确认密码</label>
+
+                    <div class="col-sm-6 col-md-4">
+                        <input name="new_password2" type="password"
+                               initial="off"
+                               v-validate:new_password2="{ confirm: formData.new_password }"
+                               class="form-control" placeholder="">
+                    </div>
+
+                <span class="col-sm-3 help-block with-errors">
+                    <span v-if="$validation.new_password2.confirm" v-text="'密码不匹配'"></span>
+                </span>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-6 col-md-4">
+                        <div style="display: none" v-show="updateSuccess" class="alert alert-success" role="alert">
                             <p>密码修改成功，请牢记密码，并<a href="/accounts/logout/">重新登录</a></p>
                         </div>
-                    </script>
-                    <div ng-include="'success_tip.html'"></div>
 
-                    <button ng-if="!updateSuccess" type="submit" id="btn-submit" data-loading-text="修改中..."
-                            class="btn btn-primary">修改密码
-                    </button>
+                        <button style="display: none" v-show="!updateSuccess" type="submit"
+                                @click="doSubmit($event)"
+                                :disabled="!$validation.valid"
+                                id="btn-submit" data-loading-text="修改中..."
+                                class="btn btn-primary">修改密码
+                        </button>
+                    </div>
                 </div>
-            </div>
-            {% endverbatim %}
-        </form>
+                {% endverbatim %}
+            </form>
+        </validator>
     </div>
 
 {% endblock %}
 
 {% block tail_script %}
-    <script src="/static/vendors/validator.min.js"></script>
     <script src="/static/vendors/sha.min.js"></script>
+    <script src="/static/js/accounts/common.js"></script>
     <script src="/static/js/accounts/profile.js"></script>
 {% endblock %}

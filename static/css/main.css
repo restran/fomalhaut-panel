@@ -312,6 +312,7 @@ table thead th {
 .form-group .help-block.with-errors {
     margin-bottom: 0;
     margin-top: 0;
+    color: #d9534f;
 }
 
 .help-block.with-errors ul {
@@ -322,13 +323,6 @@ table thead th {
 .form-horizontal .help-block.with-errors {
     padding-top: 7px;
 }
-
-/*----------------------*/
-/*angular auto validate 错误显示*/
-/*.help-block.has-error.error-msg {*/
-/*margin-bottom: 0;*/
-/*/!*margin-top: 0;*!/*/
-/*}*/
 
 /*------------------*/
 .table > tbody > tr > td {

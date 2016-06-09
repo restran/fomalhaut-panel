@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hans" {% block ng_app_config %}{% endblock %}>
+<html lang="zh-Hans">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -23,7 +23,7 @@
     {% block head_script %}{# defer-incapable JS block #}{% endblock %}
 
 </head>
-<body {% block ng_app_body_scope %}{% endblock %}>
+<body>
 <div class="navbar navbar-default navbar-fixed-top nav-header-bar" role="banner">
     <div class="container">
         <div class="navbar-header">
@@ -44,10 +44,9 @@
 
 <script src="/static/vendors/jquery-1.11.2.min.js"></script>
 <script src="/static/vendors/bootstrap/js/bootstrap.min.js"></script>
-<script src="/static/vendors/angularjs/angular.min.js"></script>
 <script src="/static/vendors/toastr/toastr.min.js"></script>
 <script src="/static/vendors/vuejs/vue.min.js"></script>
-
+<script src="/static/vendors/vuejs/vue-validator.min.js"></script>
 {% block tail_script %}{# defer-capable JS block #}{% endblock %}
 </body>
 </html>

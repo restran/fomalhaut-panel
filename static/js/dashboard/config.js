@@ -1,33 +1,14 @@
 /**
- * Created by restran on 2015/7/11.
+ * Created by restran on 2016/3/11.
  */
 (function () {
-    var app = angular.module('app', []);
-
-    app.controller('appCtrl', ['$scope', '$http', '$timeout', '$filter', function ($scope, $http, $timeout, $filter) {
-
-        // 由于django的csrftoken保护
-        $http.defaults.xsrfCookieName = 'csrftoken';
-        $http.defaults.xsrfHeaderName = 'X-CSRFToken';
-
-        $scope.client_id = ng_params.client_id;
-        $scope.endpoint_id = ng_params.endpoint_id;
-        $scope.data_type = ng_params.data_type;
-
-        var basePostUrl = '';
-        if ($scope.data_type == 'client') {
-            basePostUrl = '/api/dashboard/client/';
-        } else if ($scope.data_type == 'client_endpoint') {
-            basePostUrl = '/api/dashboard/client_endpoint/';
-        } else if ($scope.data_type == 'endpoint') {
-            basePostUrl = '/api/dashboard/endpoint/';
-        }
-
-        console.log(basePostUrl);
-
-        var editDialog = $('#edit-modal');
-
-        $scope.config = {
+    var app = new Vue({
+        el: '#config-app',
+        data: {
+            clientId: globalParams.client_id,
+            endpointId: globalParams.endpoint_id,
+            dataType: globalParams.data_type,
+            basePostUrl: '',
             entries: [],
             endpoints: [],
             endpointsDict: {},
@@ -41,6 +22,20 @@
             editDialogMode: null,
             delEntryId: null,
             delEntryIndex: null,
+            deleteModalTitle: ''
+            // editDialog: $('#edit-modal')
+        },
+        methods: {
+            init: function () {
+                if (this.dataType == 'client') {
+                    this.basePostUrl = '/api/dashboard/client/';
+                } else if (this.dataType == 'client_endpoint') {
+                    this.basePostUrl = '/api/dashboard/client_endpoint/';
+                } else if (this.dataType == 'endpoint') {
+                    this.basePostUrl = '/api/dashboard/endpoint/';
+                }
+                console.log(this.basePostUrl);
+            },
             selectEndpoint: function ($event, entry) {
                 console.log(entry.selected);
                 var endpointDict = {};
@@ -62,36 +57,43 @@
                 }
                 //$scope.config.selectedEndpoints.push()
             },
+            // 把 base64 字符串转换成 url 安全
+            toUrlSafeBase64: function (b64Str) {
+                return b64Str.replace(/[+\/]/g, function (m0) {
+                    return m0 == '+' ? '-' : '_';
+                }).replace(/=/g, '');
+            },
             loadData: function () {
                 var api_url;
-                if ($scope.data_type == 'client') {
+                if (this.dataType == 'client') {
                     api_url = '/api/dashboard/client/?get_default_form=true';
-                    if ($scope.client != 'None') {
-                        api_url += '&client=' + $scope.client;
+                    if (this.client != 'None') {
+                        api_url += '&client=' + this.client;
                     }
-                } else if ($scope.data_type == 'endpoint') {
+                } else if (this.dataType == 'endpoint') {
                     api_url = '/api/dashboard/endpoint/?get_default_form=true';
-                } else if ($scope.data_type == 'client_endpoint') {
+                } else if (this.dataType == 'client_endpoint') {
                     api_url = '/api/dashboard/client_endpoint/';
-                    if ($scope.client_id != 'None') {
-                        api_url += '?client_id=' + $scope.client_id;
+                    if (this.clientId != 'None') {
+                        api_url += '?client_id=' + this.clientId;
                     }
                 } else {
                     // 不需要获取数据
                     return;
                 }
 
-                $http.get(api_url).success(function (data) {
+                var that = this;
+                $request.get(api_url, null, function (data) {
                     if (data['success']) {
-                        $scope.config.entries = data['data'];
+                        that.entries = data['data'];
                         console.log(data);
                         // 编辑对话框的表单数据
-                        $scope.config.formData = data['default_form'];
-                        $scope.config.formDataBak = angular.copy($scope.config.formData);
+                        // that.formData = data['default_form'];
+                        that.formDataBak = JSON.parse(JSON.stringify(data['default_form']));
 
-                        if ($scope.data_type == 'endpoint') {
-                            $scope.config.aclRules = [];
-                            $timeout(function () {
+                        if (that.dataType == 'endpoint') {
+                            that.aclRules = [];
+                            Vue.nextTick(function () {
                                 // 如果是从 client_endpoint 那边跳转过来, 会带上需要滚动到的 id
                                 var go_to = getUrlParam('go_to', null);
                                 if (go_to != null) {
@@ -109,9 +111,6 @@
                                     }, 1000);
 
                                     ele.addClass('go-to-table-row focus');
-                                    //setTimeout(function () {
-                                    //
-                                    //}, 1000);
                                     setTimeout(function () {
                                         ele.removeClass('focus');
                                     }, 5000);
@@ -122,67 +121,68 @@
                         var msg = data['msg'] ? data['msg'] : '获取数据失败';
                         toastr["error"](msg);
                     }
-                }).error(function (data, status) {
-                    toastr['error']('获取数据失败');
-                }).finally(function () {
-
+                }, function (data, msg) {
+                    toastr['error'](msg);
                 });
 
-                if ($scope.data_type == 'client_endpoint') {
+
+                if (this.dataType == 'client_endpoint') {
                     console.log('loadEndpoints');
-                    $scope.config.loadEndpoints();
+                    this.loadEndpoints();
                 }
             },
             save: function ($event) {
                 var $btn = $($event.currentTarget).button('loading');
-                $scope.config.saveAjaxPost(function (result) {
+                var that = this;
+                this.saveAjaxPost(function (result) {
                     $btn.button('reset');
                     if (result['success'] != true) {
                         if (result.msg != '服务器响应失败' && result['data'] != null
                             && result['data'] != undefined) {
-                            $scope.config.formData = result['data'];
+                            that.formData = result['data'];
                         }
 
                         var msg = result.msg ? result.msg : '保存失败';
                         toastr["error"](msg);
                     } else {
-                        if ($scope.data_type == 'client_endpoint') {
-                            $scope.config.entries = result['data'];
+                        if (that.dataType == 'client_endpoint') {
+                            that.entries = result['data'];
                         } else {
-                            if ($scope.config.editDialogMode == 'create') {
-                                $scope.config.entries.push(result['data']);
+                            if (that.editDialogMode == 'create') {
+                                that.entries.push(result['data']);
                             } else {
-                                $scope.config.entries[$scope.config.updateEntryIndex] = result['data'];
+                                that.entries[that.updateEntryIndex] = result['data'];
                             }
                         }
 
                         toastr["success"]("保存成功");
                         //alert('保存成功');
-                        editDialog.modal('hide');
+                        $('#edit-modal').modal('hide');
                     }
                 });
             },
             saveContinue: function ($event) {
                 var $btn = $($event.currentTarget).button('loading');
-                $scope.config.saveAjaxPost(function (result) {
+                var that = this;
+                this.saveAjaxPost(function (result) {
                     $btn.button('reset');
                     if (result['success'] != true) {
                         if (result.msg != '服务器响应失败' && result['data'] != null
                             && result['data'] != undefined) {
-                            $scope.config.formData = result['data'];
+                            that.formData = result['data'];
                         }
 
                         var msg = result.msg ? result.msg : '保存失败';
                         toastr["error"](msg);
                     } else {
-                        if ($scope.config.editDialogMode == 'create') {
-                            $scope.config.entries.push(result['data']);
+                        if (that.editDialogMode == 'create') {
+                            that.entries.push(result['data']);
                         }
 
-                        $scope.config.formData = angular.copy($scope.config.formDataBak);
-                        if ($scope.data_type == 'client') {
-                        } else if ($scope.data_type == 'endpoint') {
-                            $scope.config.aclRules = [];
+                        that.formData = JSON.parse(JSON.stringify(that.formDataBak));
+                        if (that.dataType == 'client') {
+                        } else if (that.dataType == 'endpoint') {
+                            that.aclRules = [];
                         }
 
                         toastr["success"]("保存成功");
@@ -190,75 +190,67 @@
                 });
             },
             saveAjaxPost: function (callback) {
-                var post_url = basePostUrl;
+                var postUrl = this.basePostUrl;
 
-                if ($scope.config.editDialogMode == 'create') {
-                    post_url += 'create/';
+                if (this.editDialogMode == 'create') {
+                    postUrl += 'create/';
                 } else {
-                    post_url += $scope.config.updateEntry.id + '/update/';
+                    postUrl += this.updateEntry.id + '/update/';
                 }
 
-                var post_data = {};
-                if ($scope.data_type == 'client_endpoint') {
+                var postData = {};
+                if (this.dataType == 'client_endpoint') {
                     var endpoints = [];
-                    for (i = 0; i < $scope.config.endpoints.length; i++) {
-                        if ($scope.config.endpoints[i].selected == true) {
+                    for (i = 0; i < this.endpoints.length; i++) {
+                        if (this.endpoints[i].selected == true) {
                             var d = {
-                                'id': $scope.config.endpoints[i].id,
-                                'enable': $scope.config.endpoints[i].enable
+                                'id': this.endpoints[i].id,
+                                'enable': this.endpoints[i].enable
                             };
 
                             endpoints.push(d);
                         }
                     }
                     // 需要添加额外的参数
-                    post_data['client_id'] = $scope.client_id;
-                    post_data['endpoints'] = endpoints;
+                    postData['client_id'] = this.clientId;
+                    postData['endpoints'] = endpoints;
                 } else {
-                    post_data = {'data': formDataToJson($scope.config.formData)};
-                    if ($scope.data_type == 'endpoint') {
+                    postData = {'data': this.formDataToJson(this.formData)};
+                    if (this.dataType == 'endpoint') {
 
                         // 需要添加额外的参数
-                        post_data['client_id'] = $scope.client_id;
+                        postData['client_id'] = this.clientId;
                         var i;
-                        var aclRules = angular.copy($scope.config.aclRules);
+                        var aclRules = JSON.parse(JSON.stringify(this.aclRules));
                         //var new_aclRules = [];
                         // 把1，0转换成true, false
                         for (i = 0; i < aclRules.length; i++) {
                             aclRules[i]['is_permit'] = aclRules[i]['is_permit'] == 'true';
                         }
 
-                        post_data['acl_rules'] = aclRules;
-                        console.log($scope.config.aclRules);
-                        console.log(post_data);
+                        postData['acl_rules'] = aclRules;
+                        console.log(this.aclRules);
+                        console.log(postData);
                     }
                 }
 
-                $http({
-                    url: post_url,
-                    method: 'POST',
-                    async: true,
-                    cache: false,
-                    data: post_data,
-                    headers: {'Content-Type': 'application/json; charset=utf-8'}
-                }).success(function (data, status, headers, config) {
+                $request.post(postUrl, postData, function (data) {
                     console.log(data);
                     callback(data);
-                }).error(function (data, status, headers, config) {
+                }, function (data, msg) {
                     callback({'success': false, 'msg': '服务器响应失败'});
-                }).finally(function () {
                 });
             },
             showEditDialog: function (mode, entry) {
                 var i, item;
                 // 还原一下
-                $scope.config.formData = angular.copy($scope.config.formDataBak);
+                this.formData = JSON.parse(JSON.stringify(this.formDataBak));
                 if (mode == 'update') {
                     // 将entry的数据填充到form_data中
-                    $scope.config.updateEntry = entry;
-                    $scope.config.updateEntryIndex = $scope.config.entries.indexOf(entry);
-                    $scope.config.editDialogMode = 'update';
-                    if ($scope.data_type == 'client_endpoint') {
+                    this.updateEntry = entry;
+                    this.updateEntryIndex = this.entries.indexOf(entry);
+                    this.editDialogMode = 'update';
+                    if (this.dataType == 'client_endpoint') {
                         for (i = 0; i < this.endpoints.length; i++) {
                             this.endpoints[i].selected = false;
                             this.endpoints[i].enable = false;
@@ -272,37 +264,37 @@
                             this.endpointsDict[item['endpoint'].id].enable = item['enable'];
                         }
                     } else {
-                        entryToFormData($scope.config.updateEntry, $scope.config.formData);
-                        if ($scope.data_type == 'client') {
+                        this.entryToFormData(this.updateEntry, this.formData);
+                        if (this.dataType == 'client') {
 
-                        } else if ($scope.data_type == 'endpoint') {
-                            if ($scope.config.updateEntry['acl_rules'] == undefined) {
-                                $scope.config.aclRules = [];
+                        } else if (this.dataType == 'endpoint') {
+                            if (this.updateEntry['acl_rules'] == undefined) {
+                                this.aclRules = [];
                             } else {
-                                $scope.config.aclRules = angular.copy($scope.config.updateEntry['acl_rules']);
+                                this.aclRules = JSON.parse(JSON.stringify(this.updateEntry['acl_rules']));
 
                                 // 转换一下
-                                for (i = 0; i < $scope.config.aclRules.length; i++) {
-                                    $scope.config.aclRules[i].is_permit =
-                                        $scope.config.aclRules[i].is_permit ? 'true' : 'false';
+                                for (i = 0; i < this.aclRules.length; i++) {
+                                    this.aclRules[i].is_permit =
+                                        this.aclRules[i].is_permit ? 'true' : 'false';
                                 }
                             }
 
-                            console.log($scope.config.aclRules);
+                            console.log(this.aclRules);
                         }
 
-                        console.log($scope.config.updateEntry);
+                        console.log(this.updateEntry);
                     }
                 } else {
                     // 恢复为不选择任何项
                     //$('.selectpicker').selectpicker('val', []);
 
                     // 有些有默认值的，选择相应项
-                    $scope.config.editDialogMode = 'create';
-                    if ($scope.data_type == 'client') {
-                    } else if ($scope.data_type == 'endpoint') {
-                        $scope.config.aclRules = [];
-                    } else if ($scope.data_type == 'client_endpoint') {
+                    this.editDialogMode = 'create';
+                    if (this.dataType == 'client') {
+                    } else if (this.dataType == 'endpoint') {
+                        this.aclRules = [];
+                    } else if (this.dataType == 'client_endpoint') {
                         for (i = 0; i < this.endpoints.length; i++) {
                             this.endpoints[i].selected = false;
                             this.endpoints[i].enable = false;
@@ -316,59 +308,48 @@
                     }
                 }
 
-                editDialog.modal('show');
+                $('#edit-modal').modal('show');
             },
             updateEnableState: function (entry) {
-                // var entry = $scope.config.entries[entry_index];
-                var post_url = basePostUrl + entry.id + '/update_enable_state/';
-
-                var post_data = {'enable': entry.enable};
-                var headers = {headers: {'Content-Type': 'application/json; charset=utf-8'}};
-                $http.post(post_url, post_data, headers).success(function (data, status, headers, config) {
+                var postUrl = this.basePostUrl + entry.id + '/update_enable_state/';
+                var postData = {'enable': entry.enable};
+                $request.post(postUrl, postData, function (data) {
                     if (data['success'] != true) {
                         // 恢复
                         entry.enable = entry.enable ? false : true;
                         toastr["error"]('更新启用状态失败');
                     }
-                }).error(function (data, status, headers, config) {
+                }, function (data, msg) {
                     toastr["error"]('更新启用状态失败');
                     // 恢复
                     entry.enable = entry.enable ? false : true;
-                }).finally(function () {
-
                 });
             },
             deleteEntry: function (entry) {
                 // var entry = $scope.config.entries[entry_index];
-                $('#delete-modal-title').text(entry.name);
-                $scope.config.delEntryId = entry.id;
-                $scope.config.delEntryIndex = $scope.config.entries.indexOf(entry);
+                this.deleteModalTitle = entry.name;
+                // $('#delete-modal-title').text(entry.name);
+                this.delEntryId = entry.id;
+                this.delEntryIndex = this.entries.indexOf(entry);
                 $('#delete-modal').modal('show');
             },
             doDeleteEntry: function ($event) {
                 var $btn = $($event.currentTarget).button('loading');
-                var post_url = basePostUrl + $scope.config.delEntryId + '/delete/';
-                var post_data = {};
-                $http({
-                    url: post_url,
-                    method: 'POST',
-                    async: true,
-                    cache: false,
-                    data: post_data,
-                    headers: {'Content-Type': 'application/json; charset=utf-8'}
-                }).success(function (data, status, headers, config) {
+                var postUrl = this.basePostUrl + this.delEntryId + '/delete/';
+                var postData = {};
+                $request.post(postUrl, postData, function (data) {
                     if (data['success'] != true) {
                         var msg = data.msg ? data.msg : '删除失败';
                         toastr["error"](msg);
                     } else {
                         // 删除 json 数组的元素
-                        $scope.config.entries.splice($scope.config.delEntryIndex, 1);
+                        this.entries.splice(this.delEntryIndex, 1);
                         toastr["success"]('删除成功');
                         $('#delete-modal').modal('hide');
                     }
-                }).error(function (data, status, headers, config) {
+                    $btn.button('reset');
+                }, function (data, msg) {
                     toastr["error"]('删除失败');
-                }).finally(function () {
                     $btn.button('reset');
                 });
             },
@@ -377,10 +358,10 @@
                     re_uri: '',
                     is_permit: 'true'
                 };
-                $scope.config.aclRules.push(inserted);
+                this.aclRules.push(inserted);
             },
             removeACLRule: function (index) {
-                $scope.config.aclRules.splice(index, 1);
+                this.aclRules.splice(index, 1);
             },
             randomKey: function (model, type) {
                 function randomStr() {
@@ -393,103 +374,106 @@
                     return text;
                 }
 
-                // var shaObj = new jsSHA(randomStr(), "TEXT");
+                var shaObj;
                 // var rawKey = shaObj.getHash("SHA-1", "HEX");
-                var rawKey = randomStr();
+                // var rawKey = randomStr();
                 //model.data = randomStr();
-                var key = [];
+                // var key = [];
                 if (type == 'access_key') {
-                    for (var i = 0; i < rawKey.length; i += 2) {
-                        key.push(rawKey[i]);
-                    }
-                    model.data = key.join('');
+                    // for (var i = 0; i < rawKey.length; i += 2) {
+                    //     key.push(rawKey[i]);
+                    // }
+                    shaObj = new jsSHA("SHA-1", "TEXT");
+                    shaObj.update(randomStr());
+                    console.log(shaObj.getHash("B64"));
+                    model.data = this.toUrlSafeBase64(shaObj.getHash("B64"));
                 } else {
-                    model.data = rawKey;
+                    shaObj = new jsSHA("SHA-256", "TEXT");
+                    shaObj.update(randomStr());
+                    model.data = this.toUrlSafeBase64(shaObj.getHash("B64"));
                 }
             },
             loadEndpoints: function () {
-                var api_url = '/api/dashboard/endpoint/';
-                $http.get(api_url).success(function (data) {
+                var apiUrl = '/api/dashboard/endpoint/';
+                var that = this;
+                $request.get(apiUrl, null, function (data) {
                     console.log(data);
                     if (data['success']) {
-                        $scope.config.endpoints = data['data'];
-                        for (var i = 0; i < $scope.config.endpoints.length; i++) {
-                            var item = $scope.config.endpoints[i];
-                            $scope.config.endpointsDict[item.id] = item;
+                        that.endpoints = data['data'];
+                        for (var i = 0; i < that.endpoints.length; i++) {
+                            var item = that.endpoints[i];
+                            that.endpointsDict[item.id] = item;
                         }
 
                     } else {
                         var msg = data['msg'] ? data['msg'] : '获取 Endpoint 数据失败';
                         toastr["error"](msg);
                     }
-                }).error(function (data, status) {
+                }, function (data, msg) {
                     toastr['error']('获取 Endpoint 数据失败');
-                }).finally(function () {
+                });
+            },
+            // 将entry的数据填充到form_data中
+            entryToFormData: function (entry, formData) {
+                for (var name in formData) {
+                    if (formData.hasOwnProperty(name)) {
+                        formData[name].data = entry[name];
+                    }
+                }
 
+                // $.each(form_data, function (name, value) {
+                //     form_data[name].data = entry[name];
+                // });
+            },
+            // 将form_data转换成只保留数据的json，不保留错误信息
+            formDataToJson: function (formData) {
+                var data = {};
+                for (var name in formData) {
+                    if (formData.hasOwnProperty(name)) {
+                        data[name] = formData[name].data;
+                    }
+                }
+
+                // $.each(form_data, function (name, value) {
+                //     data[name] = value.data;
+                // });
+                return data;
+            },
+            // 测试用例 json 数据 tab 切换
+            tabChange: function ($event, tab_id) {
+                $($event.currentTarget).siblings().removeClass("active");
+                $($event.currentTarget).addClass("active");
+                //$(tab_id).tab('show');
+            },
+            showTab: function ($event) {
+                $event.preventDefault();
+                $($event.currentTarget).tab('show');
+            },
+            // 同步配置数据到redis中
+            transferToRedis: function ($event) {
+                var $btn = $($event.currentTarget).button('loading');
+                var postUrl = '/api/dashboard/transfer-to-redis/';
+                var postData = {};
+                $request.post(postUrl, postData, function (data) {
+                    if (data['success'] != true) {
+                        var msg = data.msg ? data.msg : '同步失败';
+                        toastr["error"](msg);
+                    } else {
+                        toastr["success"]('同步成功');
+                    }
+                    $btn.button('reset');
+                }, function (data, msg) {
+                    toastr["error"]('同步失败');
+                    $btn.button('reset');
                 });
             }
-        };
+        },
+        computed: {},
+        watch: {}
+    });
 
-        // 载入当前页面的数据
-        $scope.config.loadData();
-
-        // 将entry的数据填充到form_data中
-        function entryToFormData(entry, form_data) {
-            $.each(form_data, function (name, value) {
-                form_data[name].data = entry[name];
-            });
-        }
-
-        // 将form_data转换成只保留数据的json，不保留错误信息
-        function formDataToJson(form_data) {
-            var data = {};
-            $.each(form_data, function (name, value) {
-                data[name] = value.data;
-            });
-            return data;
-        }
-
-
-        // 测试用例 json 数据 tab 切换
-        $scope.tabChange = function ($event, tab_id) {
-            $($event.currentTarget).siblings().removeClass("active");
-            $($event.currentTarget).addClass("active");
-            //$(tab_id).tab('show');
-        };
-
-        $scope.showTab = function ($event) {
-            //e.preventDefault();
-            $($event.currentTarget).tab('show');
-        };
-
-        // 同步配置数据到redis中
-        $scope.transferToRedis = function ($event) {
-            var $btn = $($event.currentTarget).button('loading');
-            var post_url = '/api/dashboard/transfer-to-redis/';
-            var post_data = {};
-            $http({
-                url: post_url,
-                method: 'POST',
-                async: true,
-                cache: false,
-                data: post_data,
-                headers: {'Content-Type': 'application/json; charset=utf-8'}
-            }).success(function (data, status, headers, config) {
-                if (data['success'] != true) {
-                    var msg = data.msg ? data.msg : '同步失败';
-                    toastr["error"](msg);
-                } else {
-                    toastr["success"]('同步成功');
-                }
-            }).error(function (data, status, headers, config) {
-                toastr["error"]('同步失败');
-            }).finally(function () {
-                $btn.button('reset');
-            });
-        };
-
-    }]);
-
+    app.init();
+    app.loadData();
 })();
 
 

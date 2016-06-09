@@ -1,7 +1,5 @@
 {% extends "base.html" %}
-{% block ng_app_config %}ng-app="app"{% endblock %}
 {% block title %}{{ request.page_title }}{% endblock %}
-{% block ng_app_body_scope %}ng-controller="appCtrl"{% endblock %}
 {% block style_block %}
     <link href="/static/vendors/segment-ui/css/segment.ui.checkbox.min.css" rel="stylesheet">
     <link href="/static/vendors/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
@@ -10,19 +8,19 @@
 {% block head_script %}
     <script type="text/javascript">
         // 使用全局变量给 angularjs 传参数
-        var ng_params = {
+        var globalParams = {
             "client_id": "{{ config_info.client_id }}",
             "client_name": "{{ config_info.client_name }}",
             "data_type": "{{ config_info.data_type }}",
             "display_breadcrumb": "{{ config_info.display_breadcrumb }}"
         };
 
-        console.log(ng_params);
+        console.log(globalParams);
     </script>
 {% endblock %}
 
 {% block main_content %}
-    <div class="main-content">
+    <div class="main-content" id="config-app">
         <div class="page-header clearfix">
             <div class="float-left">
                 <h1>{{ request.page_title }}</h1>
@@ -30,7 +28,7 @@
 
             <div class="float-right">
                 <div class="icon-addon addon-md right-search-box">
-                    <input type="text" placeholder="搜索过滤" class="form-control" ng-model="query">
+                    <input type="text" placeholder="搜索过滤" class="form-control" v-model="query">
                     <label class="glyphicon glyphicon-search"></label>
                 </div>
                 <button type="button" class="btn btn-default"
@@ -38,11 +36,11 @@
                         data-container="body" data-toggle="popover"
                         data-trigger="hover" data-placement="left"
                         data-content="配置修改后，需要同步到 Redis 中才能生效"
-                        ng-click="transferToRedis($event)">
+                        @click="transferToRedis($event)">
                     <span class="glyphicon glyphicon-refresh"></span> 同步到 Redis
                 </button>
                 <button type="button" class="btn btn-default"
-                        ng-click="config.showEditDialog('create', null)">
+                        @click="showEditDialog('create', null)">
                     <span class="glyphicon glyphicon-plus"></span> 添加
                 </button>
             </div>
@@ -88,13 +86,13 @@
             <div class="modal-dialog modal-sm">
                 <div class="modal-content">
                     <div class="modal-body">
-                        <h4 class="modal-title">删除操作不可恢复，是否确定删除<code> <span id="delete-modal-title"></span> </code>?
+                        <h4 class="modal-title">删除操作不可恢复，是否确定删除<code> <span v-text="deleteModalTitle"></span> </code>?
                         </h4>
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-danger"
                                 data-loading-text="删除中..." autocomplete="off"
-                                ng-click="config.doDeleteEntry($event)">删除
+                                @click="config.doDeleteEntry($event)">删除
                         </button>
                         <button class="btn btn-default" data-dismiss="modal">取消</button>
                     </div>
@@ -106,6 +104,6 @@
 
 {% block tail_script %}
     <script src="/static/vendors/segment-ui/js/segment.ui.checkbox.min.js"></script>
-    <script src="/static/vendors/sha1.min.js"></script>
+    <script src="/static/vendors/sha.min.js"></script>
     <script src="/static/js/dashboard/config.js"></script>
 {% endblock %}

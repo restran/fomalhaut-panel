@@ -5,120 +5,120 @@
             <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span>
                 <span class="sr-only">Close</span></button>
             <h4 class="modal-title">
-                <span ng-if="config.editDialogMode=='create'"><span class="glyphicon glyphicon-plus"></span> 添加应用</span>
-                <span ng-if="config.editDialogMode=='update'"><span class="glyphicon glyphicon-edit"></span> 编辑应用</span>
+                <span v-if="editDialogMode=='create'"><span class="glyphicon glyphicon-plus"></span> 添加应用</span>
+                <span v-else><span class="glyphicon glyphicon-edit"></span> 编辑应用</span>
             </h4>
         </div>
         <div class="modal-body">
             <form role="form" method="post" id="edit-form">
-                <div class="form-group {{ config.formData.name.has_error ? 'has-error' : '' }}">
+                <div class="form-group" :class="{'has-error': formData.name.has_error}">
                     <label class="control-label input-required" for="modal-form-name">名称</label>
-                    <label ng-show="config.formData.name.has_error" class="control-label"
-                           ng-bind="config.formData.name.errors"></label>
+                    <label v-show="formData.name.has_error" class="control-label"
+                           v-text="formData.name.errors"></label>
                     <input id="modal-form-name" type="text" class="form-control"
                            placeholder="应用名称，可以输入中文"
-                           ng-model="config.formData.name.data">
+                           v-model="formData.name.data">
                 </div>
 
-                <div class="form-group {{ config.formData.access_key.has_error ? 'has-error' : '' }}">
+                <div class="form-group" :class="{'has-error': formData.access_key.has_error}">
                     <label class="control-label input-required" for="modal-form-app-id">AccessKey</label>
-                    <label ng-show="config.formData.access_key.has_error" class="control-label"
-                           ng-bind="config.formData.access_key.errors"></label>
+                    <label v-show="formData.access_key.has_error" class="control-label"
+                           v-text="formData.access_key.errors"></label>
 
                     <div class="input-group">
                         <input id="modal-form-app-id" type="text" class="form-control"
                                placeholder=""
                                required
-                               ng-model="config.formData.access_key.data">
+                               v-model="formData.access_key.data">
 
                         <div class="input-group-btn">
                             <button type="button" class="btn btn-default"
-                                    ng-click="config.randomKey(config.formData.access_key, 'access_key')">随机生成
+                                    @click="randomKey(formData.access_key, 'access_key')">随机生成
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group {{ config.formData.secret_key.has_error ? 'has-error' : '' }}">
+                <div class="form-group" :class="{'has-error': formData.secret_key.has_error}">
                     <label class="control-label input-required" for="modal-form-secret-key">SecretKey</label>
-                    <label ng-show="config.formData.secret_key.has_error" class="control-label"
-                           ng-bind="config.formData.secret_key.errors"></label>
+                    <label v-show="formData.secret_key.has_error" class="control-label"
+                           v-text="formData.secret_key.errors"></label>
 
                     <div class="input-group">
                         <input id="modal-form-secret-key" type="text" class="form-control"
                                placeholder=""
                                required
-                               ng-model="config.formData.secret_key.data">
+                               v-model="formData.secret_key.data">
 
                         <div class="input-group-btn">
                             <button type="button" class="btn btn-default"
-                                    ng-click="config.randomKey(config.formData.secret_key)">随机生成
+                                    @click="randomKey(formData.secret_key)">随机生成
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group {{ config.formData.login_auth_url.has_error ? 'has-error' : '' }}">
+                <div class="form-group" :class="{'has-error': formData.login_auth_url.has_error}">
                     <label class="control-label" for="modal-form-login-auth-url">登录验证 URL</label>
-                    <label ng-show="config.formData.login_auth_url.has_error" class="control-label"
-                           ng-bind="config.formData.login_auth_url.errors"></label>
+                    <label v-show="formData.login_auth_url.has_error" class="control-label"
+                           v-text="formData.login_auth_url.errors"></label>
                     <input id="modal-form-login-auth-url" type="text" class="form-control"
                            placeholder="使用该 URL 验证用户名和密码"
-                           ng-model="config.formData.login_auth_url.data">
+                           v-model="formData.login_auth_url.data">
                 </div>
 
-                <div class="form-group {{ config.formData.access_token_ex.has_error ? 'has-error' : '' }}">
+                <div class="form-group" :class="{'has-error': formData.access_token_ex.has_error}">
                     <label class="control-label" for="modal-form-access-token-ex">Access Token 的过期时间</label>
-                    <label ng-show="config.formData.access_token_ex.has_error" class="control-label"
-                           ng-bind="config.formData.access_token_ex.errors"></label>
+                    <label v-show="formData.access_token_ex.has_error" class="control-label"
+                           v-text="formData.access_token_ex.errors"></label>
 
                     <div class="input-group">
                         <input id="modal-form-access-token-ex" type="text" class="form-control"
                                placeholder="Access Token 的过期时间"
-                               ng-model="config.formData.access_token_ex.data">
+                               v-model="formData.access_token_ex.data">
                         <span class="input-group-addon">秒</span>
                     </div>
                 </div>
 
-                <div class="form-group {{ config.formData.refresh_token_ex.has_error ? 'has-error' : '' }}">
+                <div class="form-group" :class="{'has-error': formData.refresh_token_ex.has_error}">
                     <label class="control-label" for="modal-form-refresh-token-ex">Refresh Token 的过期时间</label>
-                    <label ng-show="config.formData.refresh_token_ex.has_error" class="control-label"
-                           ng-bind="config.formData.refresh_token_ex.errors"></label>
+                    <label v-show="formData.refresh_token_ex.has_error" class="control-label"
+                           v-text="formData.refresh_token_ex.errors"></label>
 
                     <div class="input-group">
                         <input id="modal-form-refresh-token-ex" type="text" class="form-control"
                                placeholder="Refresh Token 的过期时间"
-                               ng-model="config.formData.refresh_token_ex.data">
+                               v-model="formData.refresh_token_ex.data">
                         <span class="input-group-addon">秒</span>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="ui toggle checkbox">
                         <input type="checkbox" id="modal-form-enable" name="enable"
-                               ng-model="config.formData.enable.data">
+                               v-model="formData.enable.data">
                         <label for="modal-form-enable">启用</label>
                     </div>
                 </div>
 
-                <div class="form-group {{ config.formData.memo.has_error ? 'has-error' : '' }}">
+                <div class="form-group" :class="{'has-error': formData.memo.has_error}">
                     <label class="control-label">备注</label>
-                    <label ng-show="config.formData.memo.has_error" class="control-label"
-                           ng-bind="config.formData.memo.errors"></label>
+                    <label v-show="formData.memo.has_error" class="control-label"
+                           v-text="formData.memo.errors"></label>
             <textarea class="form-control"
                       placeholder="备注信息，可以为空"
-                      ng-model="config.formData.memo.data"
+                      v-model="formData.memo.data"
                       rows="3"></textarea>
                 </div>
             </form>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-primary"
-                    ng-if="config.editDialogMode == 'create'"
-                    ng-click="config.saveContinue($event)"
+                    v-if="editDialogMode == 'create'"
+                    @click="saveContinue($event)"
                     data-loading-text="保存中..." autocomplete="off">保存并继续
             </button>
             <button type="button" class="btn btn-primary"
-                    ng-click="config.save($event)"
+                    @click="save($event)"
                     data-loading-text="保存中..." autocomplete="off">保存
             </button>
             <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>

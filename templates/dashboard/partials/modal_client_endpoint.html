@@ -5,15 +5,15 @@
             <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span>
                 <span class="sr-only">Close</span></button>
             <h4 class="modal-title">
-            <span ng-if="config.editDialogMode=='create'"><span
+            <span v-if="editDialogMode=='create'"><span
                     class="glyphicon glyphicon-plus"></span> 添加 Endpoint</span>
-            <span ng-if="config.editDialogMode=='update'"><span
+            <span v-else><span
                     class="glyphicon glyphicon-edit"></span> 编辑 Endpoint</span>
             </h4>
         </div>
         <div class="modal-body">
             <div class="icon-addon addon-md search-box clearfix" style="margin-bottom: 20px">
-                <input type="text" placeholder="搜索过滤" class="form-control" ng-model="endpoint_query">
+                <input type="text" placeholder="搜索过滤" class="form-control" v-model="endpoint_query">
                 <label class="glyphicon glyphicon-search"></label>
             </div>
 
@@ -33,28 +33,30 @@
                     </thead>
                     <tbody id="tbody-data">
                     <script type="text/ng-template" id="entry_selected_renderer">
+
+                    </script>
+
+                    <tr v-for="entry in endpoints" v-show="entry.selected">
                         <td>
                             <div class="checkbox">
                                 <label>
-                                    <input ng-model="entry.selected" type="checkbox"> {{ entry.unique_name }}
+                                    <input v-model="entry.selected" type="checkbox"> <span
+                                        v-text="entry.unique_name"></span>
                                 </label>
                             </div>
                         </td>
-                        <td ng-bind="entry.name + '/' + entry.version"></td>
-                        <td class="break-word" ng-bind="entry.url"></td>
-                        <td ng-bind="entry.endpoint.require_login ? '是' : '否'"></td>
-                        <td ng-bind="entry.enable_hmac ? '是' : '否'"></td>
+                        <td v-text="entry.name + '/' + entry.version"></td>
+                        <td class="break-word" v-text="entry.url"></td>
+                        <td v-text="entry.endpoint.require_login ? '是' : '否'"></td>
+                        <td v-text="entry.enable_hmac ? '是' : '否'"></td>
                         <td>
                             <div class="ui toggle checkbox">
                                 <input type="checkbox" id="enable-{{$index}}"
-                                       ng-model="entry.enable">
+                                       v-model="entry.enable">
                                 <label for="enable-{{$index}}"></label>
                             </div>
                         </td>
-                    </script>
-
-                    <tr ng-repeat="entry in config.endpoints" ng-show="entry.selected"
-                        ng-include="'entry_selected_renderer'"></tr>
+                    </tr>
                     </tbody>
                 </table>
             </div>
@@ -71,28 +73,27 @@
                         <th class="col-md-5 col-sm-5">URL</th>
                         <th class="col-md-1 col-sm-1">需要登录</th>
                         <th class="col-md-1 col-sm-1">HMAC 签名</th>
-                        <th class="col-md-1 col-sm-1"><div style="width: 5.7rem"></div></th>
+                        <th class="col-md-1 col-sm-1">
+                            <div style="width: 5.7rem"></div>
+                        </th>
                     </tr>
                     </thead>
                     <tbody id="tbody-data">
-                    <script type="text/ng-template" id="entry_unselected_renderer">
-                        <td>
-                            <div class="checkbox">
-                                <label>
-                                    <input ng-click="config.selectEndpoint($event, entry)" ng-model="entry.selected"
-                                           type="checkbox"> {{ entry.unique_name }}
-                                </label>
-                            </div>
-                        </td>
-                        <td ng-bind="entry.name + '/' + entry.version"></td>
-                        <td class="break-word" ng-bind="entry.url"></td>
-                        <td ng-bind="entry.endpoint.require_login ? '是' : '否'"></td>
-                        <td ng-bind="entry.enable_hmac ? '是' : '否'"></td>
-                        <td></td>
-                    </script>
-
-                    <tr ng-repeat="entry in config.endpoints | filter:endpoint_query"
-                        ng-include="'entry_unselected_renderer'"></tr>
+                        <tr v-for="entry in endpoints | filterBy endpoint_query">
+                            <td>
+                                <div class="checkbox">
+                                    <label>
+                                        <input @click="selectEndpoint($event, entry)" v-model="entry.selected"
+                                               type="checkbox"> <span v-text="entry.unique_name"></span>
+                                    </label>
+                                </div>
+                            </td>
+                            <td v-text="entry.name + '/' + entry.version"></td>
+                            <td class="break-word" v-text="entry.url"></td>
+                            <td v-text="entry.endpoint.require_login ? '是' : '否'"></td>
+                            <td v-text="entry.enable_hmac ? '是' : '否'"></td>
+                            <td></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -100,7 +101,7 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-primary"
-                    ng-click="config.save($event)"
+                    @click="save($event)"
                     data-loading-text="保存中..." autocomplete="off">保存
             </button>
             <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>

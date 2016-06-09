@@ -3,7 +3,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" v-on:click="closeImportModal()">
+                <button type="button" class="close" data-dismiss="modal" @click="closeImportModal()">
                     <span aria-hidden="true">&times;</span>
                     <span class="sr-only">Close</span></button>
                 <h4 class="modal-title">
@@ -32,7 +32,7 @@
                     <div class="progress-bar progress-bar-success progress-bar-striped active"
                          role="progressbar"
                          aria-valuenow="{{ processPercentage }}" aria-valuemin="0"
-                         aria-valuemax="100" v-bind:style="{'width': processPercentage + '%'}"
+                         aria-valuemax="100" :style="{'width': processPercentage + '%'}"
                          v-text="processMsg + processPercentage + '%'">
                     </div>
                 </div>
@@ -48,7 +48,7 @@
 
             </div>
             <div class="modal-footer">
-                <button class="btn btn-default" data-dismiss="modal" v-on:click="closeImportModal()">关闭</button>
+                <button class="btn btn-default" data-dismiss="modal" @click="closeImportModal()">关闭</button>
             </div>
         </div>
     </div>

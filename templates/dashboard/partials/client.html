@@ -11,24 +11,22 @@
 <tbody id="tbody-data">
 
 {% verbatim %}
-<script type="text/ng-template" id="entry_renderer">
-    <td ng-bind="$index+1"></td>
-    <td><a href="/dashboard/config/client_endpoint/?client_id={{ entry.id }}" ng-bind="entry.name"></a></td>
-    <td class="break-word" ng-bind="entry.access_key"></td>
-    <td class="break-word" ng-bind="entry.secret_key"></td>
+<tr v-for="entry in entries | filterBy query">
+    <td v-text="$index+1"></td>
+    <td><a href="/dashboard/config/client_endpoint/?client_id={{ entry.id }}" v-text="entry.name"></a></td>
+    <td class="break-word" v-text="entry.access_key"></td>
+    <td class="break-word" v-text="entry.secret_key"></td>
     <td>
         <div class="ui toggle checkbox">
-            <input type="checkbox" id="entry-{{$index}}-cb" ng-model="entry.enable"
-                   ng-click="config.updateEnableState(entry)">
+            <input type="checkbox" id="entry-{{$index}}-cb" v-model="entry.enable"
+                   @click="updateEnableState(entry)">
             <label for="entry-{{$index}}-cb"></label>
         </div>
     </td>
     <td class="nowrap">
-        <a href="javascript:void 0;" ng-click="config.showEditDialog('update', entry)">编辑</a>&nbsp;
-        <a href="javascript:void 0;" style="color: #d9534f" ng-click="config.deleteEntry(entry)">删除</a>
+        <a href="javascript:void 0;" @click="showEditDialog('update', entry)">编辑</a>&nbsp;
+        <a href="javascript:void 0;" class="color-danger" @click="deleteEntry(entry)">删除</a>
     </td>
-</script>
-
-<tr ng-repeat="entry in config.entries | filter:query" ng-include="'entry_renderer'"></tr>
+</tr>
 {% endverbatim %}
 </tbody>

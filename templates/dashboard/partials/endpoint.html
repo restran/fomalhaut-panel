@@ -12,24 +12,20 @@
 </tr>
 </thead>
 <tbody id="tbody-data">
-
 {% verbatim %}
-<script type="text/ng-template" id="entry_renderer">
-    <td ng-bind="$index+1"></td>
-    <td ng-bind="entry.unique_name"></td>
-    <td ng-bind="entry.name + '/' + entry.version"></td>
-    <td class="break-word" ng-bind="entry.url"></td>
-    <td ng-bind="entry.is_builtin ? '是' : '否'"></td>
-    <td ng-bind="entry.require_login ? '是' : '否'"></td>
-    <td ng-bind="entry.enable_hmac ? '是' : '否'"></td>
-    <td ng-bind="entry.enable_acl ? '是' : '否'"></td>
+<tr v-for="entry in entries | filterBy query" id="endpoint-row-{{ entry.id }}">
+    <td v-text="$index+1"></td>
+    <td v-text="entry.unique_name"></td>
+    <td v-text="entry.name + '/' + entry.version"></td>
+    <td class="break-word" v-text="entry.url"></td>
+    <td v-text="entry.is_builtin ? '是' : '否'"></td>
+    <td v-text="entry.require_login ? '是' : '否'"></td>
+    <td v-text="entry.enable_hmac ? '是' : '否'"></td>
+    <td v-text="entry.enable_acl ? '是' : '否'"></td>
     <td class="nowrap">
-        <a href="javascript:void 0;" ng-click="config.showEditDialog('update', entry)">编辑</a>&nbsp;
-        <a href="javascript:void 0;" style="color: #d9534f" ng-click="config.deleteEntry(entry)">删除</a>
+        <a href="javascript:void 0;" @click="showEditDialog('update', entry)">编辑</a>&nbsp;
+        <a href="javascript:void 0;" style="color: #d9534f" @click="deleteEntry(entry)">删除</a>
     </td>
-</script>
-
-<tr ng-repeat="entry in config.entries | filter:query" id="endpoint-row-{{ entry.id }}"
-    ng-include="'entry_renderer'"></tr>
+</tr>
 {% endverbatim %}
 </tbody>

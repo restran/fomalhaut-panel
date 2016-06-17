@@ -82,9 +82,9 @@ ACCESS_LOG_KEEP_DAYS = 60
 
 ```js
 db.request_body.files.createIndex( { md5: 1} );
-db.request_header.files.createIndex( { md5: 1} );
+db.request_headers.files.createIndex( { md5: 1} );
 db.response_body.files.createIndex( { md5: 1} );
-db.response_header.files.createIndex( { md5: 1} );
+db.response_headers.files.createIndex( { md5: 1} );
 ```
 
 ### 邮件通知

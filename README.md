@@ -76,6 +76,17 @@ MONGO_DBNAME = 'api_gateway'
 ACCESS_LOG_KEEP_DAYS = 60
 ```
 
+### 在 MongoDB 中创建索引
+
+大部分 Collection 的索引会由 MongoEngine 自动创建, 但是有几个 GridFS 的索引需要手动创建, 进入 MongoDB shell 后, 执行如下命令
+
+```js
+db.request_body.files.createIndex( { md5: 1} );
+db.request_header.files.createIndex( { md5: 1} );
+db.response_body.files.createIndex( { md5: 1} );
+db.response_header.files.createIndex( { md5: 1} );
+```
+
 ### 邮件通知
 
 账号系统实现了忘记密码邮件通知, 需要安装 Postfix, 可以参考 [Python 使用 Postfix 发送邮件](http://www.restran.net/2015/02/12/python-postfix-email/)

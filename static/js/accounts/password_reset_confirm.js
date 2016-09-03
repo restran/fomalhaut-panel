@@ -26,8 +26,10 @@
                 }
 
                 var btn = $($event.currentTarget).button('loading');
-                var apiUrl = '/api/accounts/password/update/';
+                var apiUrl = '/api/accounts/password/reset/';
                 var postData = JSON.parse(JSON.stringify(this.formData));
+                postData['user_id'] = user_id;
+                postData['token'] = token;
 
                 var shaObj = new jsSHA("SHA-1", "TEXT");
                 shaObj.update(postData['password']);

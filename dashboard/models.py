@@ -265,6 +265,26 @@ class FileHandlerMixin(object):
     _body_collection_name = None
 
     @classmethod
+    def delete_expired_headers_files(cls, expired_date):
+        cls._delete_expired_gridfs_files(
+            expired_date, cls._headers_collection_name)
+
+    @classmethod
+    def delete_expired_body_files(cls, expired_date):
+        cls._delete_expired_gridfs_files(
+            expired_date, cls._body_collection_name)
+
+    @classmethod
+    def _delete_expired_gridfs_files(cls, expired_date, collection_name):
+        database = get_db()
+        collection = database[collection_name]
+        files = collection.files
+        # chunks = collection.chunks
+        # 只要删除files就可以，chunks会自动处理
+        files.delete_many({"uploadDate": {'$lt': expired_date}})
+        # chunks.delete_many({"uploadDate": {'$lt': expired_date}})
+
+    @classmethod
     def delete_headers_files(cls, file_id_list):
         cls._delete_gridfs_files(file_id_list,
                                  cls._headers_collection_name)
@@ -298,16 +318,29 @@ class FileHandlerMixin(object):
         else:
             md5 = hashlib.md5(content.getvalue()).hexdigest()
             # TODO 并发情况下, 这里会出问题, 导致可能有相同md5的数据
-            grid_out = fs.find_one({'md5': md5})
-            if not grid_out:
-                _id = fs.put(content, content_type=content_type)
-            else:
+            # -1表示降序，找出时间最近的
+            grid_out_cursor = fs.find({'md5': md5}).sort("uploadDate", -1).limit(1)
+            # grid_out = fs.find_one({'md5': md5})
+            for grid_out in grid_out_cursor:
                 _id = grid_out._id
+                # 更新一下上传日期，使用的是utc时间
+                # 只要更新files就可以，chunks会自动处理
+                db[collection_name].files.update_one(
+                    {"_id": _id}, {"$set": {'uploadDate': datetime.utcnow()}}
+                )
+                # db[collection_name].chunks.update_one(
+                #     {"files_id": _id}, {"$set": {'uploadDate': datetime.utcnow()}}
+                # )
 
-            # 直接让引用计数的 _id 等于 file 的 _id
-            logger.debug(_id)
-            logger.debug(collection_name)
-            db['ref_%s' % collection_name].update({'_id': _id}, {'$inc': {'count': 1}}, upsert=True)
+                # logger.debug(_id)
+                # 直接让引用计数的 _id 等于 file 的 _id
+                # 不再使用引用计数，因为引用计数可能出现不一致的问题
+                # 也就是引用计数不为0，但是实际上已经没有access_log引用该文件
+                # logger.debug(collection_name)
+                # db['ref_%s' % collection_name].update({'_id': _id}, {'$inc': {'count': 1}}, upsert=True)
+                break
+            else:
+                _id = fs.put(content, content_type=content_type)
 
         return _id
 
@@ -621,46 +654,6 @@ class AccessResultHourCounter(DynamicDocument):
         'collection': 'counter_result_hour',
         'indexes': [
             ('-date', 'code'),
-        ]
-    }
-
-
-class RefRequestHeaders(DynamicDocument):
-    count = IntField()
-    meta = {
-        'collection': 'ref_request_headers',
-        'indexes': [
-            'count'
-        ]
-    }
-
-
-class RefRequestBody(DynamicDocument):
-    count = IntField()
-    meta = {
-        'collection': 'ref_request_body',
-        'indexes': [
-            'count'
-        ]
-    }
-
-
-class RefResponseHeaders(DynamicDocument):
-    count = IntField()
-    meta = {
-        'collection': 'ref_response_headers',
-        'indexes': [
-            'count'
-        ]
-    }
-
-
-class RefResponseBody(DynamicDocument):
-    count = IntField()
-    meta = {
-        'collection': 'ref_response_body',
-        'indexes': [
-            'count'
         ]
     }
 
@@ -989,4 +982,3 @@ def get_config_redis_json():
         t['endpoints'] = e_dict
 
     return json_data
-

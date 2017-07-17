@@ -32,10 +32,6 @@
                     </tr>
                     </thead>
                     <tbody id="tbody-data">
-                    <script type="text/ng-template" id="entry_selected_renderer">
-
-                    </script>
-
                     <tr v-for="entry in endpoints" v-show="entry.selected">
                         <td>
                             <div class="checkbox">
@@ -83,7 +79,7 @@
                             <td>
                                 <div class="checkbox">
                                     <label>
-                                        <input @click="selectEndpoint($event, entry)" v-model="entry.selected"
+                                        <input @change="selectEndpoint($event, entry)" v-model="entry.selected"
                                                type="checkbox"> <span v-text="entry.unique_name"></span>
                                     </label>
                                 </div>

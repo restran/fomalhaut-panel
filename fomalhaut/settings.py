@@ -65,7 +65,7 @@ MIDDLEWARE_CLASSES = (
     'accounts.middleware.AuthenticationMiddleware',
 )
 
-ROOT_URLCONF = 'api_dashboard.urls'
+ROOT_URLCONF = 'fomalhaut.urls'
 
 TEMPLATES = [
     {
@@ -84,7 +84,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'api_dashboard.wsgi.application'
+WSGI_APPLICATION = 'fomalhaut.wsgi.application'
 
 # Set this to True to wrap each HTTP request in a transaction on this database.
 ATOMIC_REQUESTS = True
@@ -209,7 +209,7 @@ LOGGING = {
             'handlers': LOGGING_HANDLERS,
             'level': LOGGING_LEVEL,
         },
-        'api_dashboard': {
+        'fomalhaut': {
             'handlers': LOGGING_HANDLERS,
             'level': LOGGING_LEVEL,
         },
@@ -224,7 +224,7 @@ DEFAULT_ASYNC_HTTP_CONNECT_TIMEOUT = 20
 # 整个请求的时间
 DEFAULT_ASYNC_HTTP_REQUEST_TIMEOUT = 20
 # ACCESS_TOKEN 的过期时间, 单位秒
-DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS = 10 * 3600 * 24
+DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS = 7 * 3600 * 24
 # REFRESH_TOKEN 的过期时间, 单位秒
 DEFAULT_REFRESH_TOKEN_EXPIRE_SECONDS = 20 * 3600 * 24
 
@@ -249,9 +249,9 @@ REDIS_PASSWORD = 'secret'
 # MongoDB 配置
 MONGO_HOST = '127.0.0.1'
 MONGO_PORT = 27017
-MONGO_USERNAME = 'api_gateway_user'
-MONGO_PASSWORD = 'api_gateway_password'
-MONGO_DBNAME = 'api_gateway'
+MONGO_USERNAME = 'fomalhaut_test'
+MONGO_PASSWORD = 'fomalhaut_test_P@ssw0rd'
+MONGO_DBNAME = 'fomalhaut_test'
 
 connect(
     db=MONGO_DBNAME,
@@ -276,11 +276,13 @@ ANALYTICS_LOG_REDIS_LIST_KEY = 'logs'
 
 # 访问日志，数据库保存天数
 ACCESS_LOG_KEEP_DAYS = 60
+# 从 redis 迁移数据时，批量处理的最大数量
+REDIS_ACCESS_LOG_TRANSFER_BATCH_COUNT = 100
 
 # 网站发送出去的邮箱账号设定
 EMAIL_SMTP_SERVER = 'localhost'
-EMAIL_NOTIFY_NAME = 'Beluga <no-reply@beluga.com>'
-DEFAULT_EMAIL_NOTIFY_SUBJECT = '来自 Beluga 的邮件通知'
+EMAIL_NOTIFY_NAME = 'Fomalhaut <no-reply@fomalhaut.com>'
+DEFAULT_EMAIL_NOTIFY_SUBJECT = '来自 Fomalhaut 的邮件通知'
 
 # 配置djcelery相关参数，ResultStore默认存储在数据库可不必重写
 import djcelery
@@ -334,8 +336,9 @@ CELERYBEAT_SCHEDULE = {
 
 # 发送邮件的时候要使用该名称来拼验证URL地址
 SITE_DOMAIN = '127.0.0.1'  # 站点域名
-SITE_NAME = 'Beluga'  # 站点名称
+SITE_NAME = 'Fomalhaut'  # 站点名称
 
 # Django upgrading to 1.9 error "AppRegistryNotReady: Apps aren't loaded yet."
 # 添加如下代码解决
-# django.setup()
+import django
+django.setup()

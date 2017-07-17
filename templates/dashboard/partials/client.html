@@ -2,7 +2,7 @@
 <tr>
     <th class="col-md-1">#</th>
     <th class="col-md-2">名称</th>
-    <th class="col-md-3">AccessKey</th>
+    <th class="col-md-3">AppId</th>
     <th class="col-md-3">SecretKey</th>
     <th class="col-md-1">启用</th>
     <th class="col-md-1">&nbsp</th>
@@ -14,12 +14,12 @@
 <tr v-for="entry in entries | filterBy query">
     <td v-text="$index+1"></td>
     <td><a href="/dashboard/config/client_endpoint/?client_id={{ entry.id }}" v-text="entry.name"></a></td>
-    <td class="break-word" v-text="entry.access_key"></td>
+    <td class="break-word" v-text="entry.app_id"></td>
     <td class="break-word" v-text="entry.secret_key"></td>
     <td>
         <div class="ui toggle checkbox">
             <input type="checkbox" id="entry-{{$index}}-cb" v-model="entry.enable"
-                   @click="updateEnableState(entry)">
+                   @change="updateEnableState(entry)">
             <label for="entry-{{$index}}-cb"></label>
         </div>
     </td>

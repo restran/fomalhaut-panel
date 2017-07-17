@@ -44,4 +44,5 @@ urlpatterns.extend([
     url(r'^api/dashboard/get_endpoint_options/$', api.get_endpoint_options),
     url(r'^api/dashboard/access_log/query/$', api.access_log.get_access_log),
     url(r'^api/dashboard/access_log/get_access_detail/$', api.access_log.get_access_detail),
+    url(r'^api/dashboard/access_log/refresh/$', api.access_log.api_refresh_access_log),
 ])

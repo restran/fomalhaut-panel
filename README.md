@@ -1,8 +1,8 @@
-# API Gateway Dashboard
+# fomalhaut-panel
 
-Web dashboard for [api-gateway](https://github.com/restran/api-gateway), still in development.
+Web Panel for [fomalhaut](https://github.com/restran/fomalhaut), still in development.
 
-这是 api-gateway 项目的 Web 控制台，目前仍然在开发中。
+这是 fomalhaut 项目的 Web 控制台，目前仍然在开发中。
 
 ## 页面效果
 
@@ -31,18 +31,6 @@ Web dashboard for [api-gateway](https://github.com/restran/api-gateway), still i
 redis
 mysql
 mongodb
-
-# python packages
-redis
-django>=1.8
-cerberus
-requests
-celery
-django-celery
-django-kombu
-uwsgi
-MySQL-python
-ConcurrentLogHandler
 ``` 
 
 ## 配置文件
@@ -51,7 +39,7 @@ ConcurrentLogHandler
 
 ## 部署
 
-Django 项目的部署可以参考我写的一篇博客，[CentOS 环境下基于 Nginx uwsgi 搭建 Django 站点](http://www.restran.net/2015/04/09/centos-uwsgi-nginx-django/)
+请使用 Supervisor + Gunicorn + Nginx 来部署 Django
 
 ### 配置
 

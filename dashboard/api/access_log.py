@@ -13,9 +13,10 @@ from common.utils import http_response_json, utf8, json_loads
 from accounts.decorators import login_required
 import logging
 from ..models import AccessLog
+from ..tasks import transfer_access_logs, parse_access_logs
 from datetime import datetime
 from base64 import b64encode
-from api_dashboard.settings import ACCESS_LOG_DETAIL_MAX_BODY_LENGTH
+from fomalhaut.settings import ACCESS_LOG_DETAIL_MAX_BODY_LENGTH
 
 logger = logging.getLogger(__name__)
 
@@ -64,3 +65,18 @@ def get_access_detail(request):
         if data and len(data) > ACCESS_LOG_DETAIL_MAX_BODY_LENGTH:
             data = data[:ACCESS_LOG_DETAIL_MAX_BODY_LENGTH]
         return HttpResponse(data)
+
+
+@login_required
+@csrf_protect
+@require_http_methods(["POST"])
+def api_refresh_access_log(request):
+    """
+    立即从redis中更新访问日志
+    :param request:
+    :return:
+    """
+    success, msg, data = False, '', []
+    transfer_access_logs.delay()
+    parse_access_logs.delay()
+    return http_response_json({'success': True, 'msg': msg})

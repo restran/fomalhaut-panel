@@ -12,7 +12,7 @@ from ..models import AccessHourCounter, AccessTotalDayCounter, \
     query_access_count, AccessDayCounter, Client, Endpoint
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from api_dashboard.settings import ECHARTS_PIPE_PLOT_MAX_NUM
+from fomalhaut.settings import ECHARTS_PIPE_PLOT_MAX_NUM
 
 logger = logging.getLogger(__name__)
 

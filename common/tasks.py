@@ -3,7 +3,7 @@
 # created by restran on 2016/1/2
 
 from __future__ import unicode_literals
-from api_dashboard.celery import app
+from fomalhaut.celery import app
 import logging
 
 import smtplib
@@ -11,7 +11,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import COMMASPACE, formatdate
 
-from api_dashboard.settings import EMAIL_SMTP_SERVER, EMAIL_NOTIFY_NAME, DEFAULT_EMAIL_NOTIFY_SUBJECT
+from fomalhaut.settings import EMAIL_SMTP_SERVER, EMAIL_NOTIFY_NAME, DEFAULT_EMAIL_NOTIFY_SUBJECT
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load staticfiles %}
 {% block title %}{{ request.page_title }}{% endblock %}
 
 {% block style_block %}
@@ -16,6 +15,13 @@
             <div class="clearfix">
                 <div class="float-left">
                     <h1 style="display: inline-block; margin-right: 10px">{{ request.page_title }}</h1>
+                    {% verbatim %}
+                    <button class="btn btn-default" style="margin-top: -6px;" @click="refreshLog($event)"
+                            data-toggle="tooltip" data-placement="top" title="立即更新访问日志">
+                        <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+                        刷新
+                    </button>
+                    {% endverbatim %}
                 </div>
                 {% verbatim %}
                 <div class="float-right">
@@ -125,9 +131,19 @@
                                     <option value="400">400 请求数据不完整</option>
                                     <option value="401">401 登录验证失败</option>
                                     <option value="403">403 HMAC 鉴权失败</option>
+                                    <option value="430">430 Signature 参数已过期</option>
+                                    <option value="431">431 Signature 参数不正确</option>
+                                    <option value="432">432 没有访问权限</option>
+                                    <option value="421">421 Client 已被禁用</option>
+                                    <option value="422">422 Endpoint 已被禁用</option>
+                                    <option value="423">423 AES 解密失败</option>
+                                    <option value="421">421 Client 已被禁用</option>
+                                    <option value="421">421 Client 已被禁用</option>
                                     <option value="500">500 服务端错误</option>
+                                    <option value="502">502 Endpoint 返回的数据格式不正确</option>
                                     <option value="503">503 Endpoint 服务不可用</option>
                                     <option value="510">510 Client 配置有误</option>
+                                    <option value="523">523 AES 加密失败</option>
                                 </select>
                             </div>
                         </div>
@@ -204,7 +220,8 @@
                 <tr>
                     <th class="">#</th>
                     <th class="col-md-1">应用</th>
-                    <th class="col-md-5">Request URI</th>
+                    <th class="col-md-1">Endpoint</th>
+                    <th class="col-md-4">Request URI</th>
                     <th class="col-md-1">IP</th>
                     <th class="col-md-2">时间</th>
                     <th class="col-md-1">耗时</th>
@@ -217,7 +234,8 @@
                     @dblclick="showDetail(entry)">
                     <td v-text="this.pageIndexOffset + $index + 1"></td>
                     <td class="break-word" v-text="entry.client.name"></td>
-                    <!--<td class="break-word" v-text="entry.endpoint.name + '/' + entry.endpoint.version"></td>-->
+                    <td class="break-word"
+                        v-text="entry.endpoint.name + (entry.endpoint.version != '' ? '/' + entry.endpoint.version : '')"></td>
                     <td class="break-word" v-text="entry.request.method + ' ' + entry.request.uri"></td>
                     <td class="break-word" v-text="entry.ip"></td>
                     <td class="break-word" v-text="entry.accessed_at"></td>
@@ -241,9 +259,8 @@
                         <span style="margin-left: 5px;" class="label"
                               :class="{
                               'label-success': entry.result_code == 200,
-                              'label-warning': entry.result_code == 503 || entry.result_code == 400,
-                              'label-info':  entry.result_code == 401 || entry.result_code == 510,
-                              'label-danger': entry.result_code == 403 || entry.result_code == 500 }">
+                              'label-info':  entry.result_code == 401,
+                              'label-danger': entry.result_code != 200 && entry.result_code != 401}">
                             {{ entry.result_code }}
                         </span>
                     </td>

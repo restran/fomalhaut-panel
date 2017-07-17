@@ -5,7 +5,7 @@
 from __future__ import unicode_literals, absolute_import
 
 # 从settings 中导入需要用到的设置
-from api_dashboard.settings import SITE_NAME, \
+from fomalhaut.settings import SITE_NAME, \
     SITE_DOMAIN, \
     EMAIL_NOTIFY_NAME, \
     EMAIL_SMTP_SERVER

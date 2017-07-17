@@ -13,7 +13,7 @@ from django.db import transaction
 from cerberus import Validator
 import redis
 
-from api_dashboard import settings
+from fomalhaut import settings
 from ..forms import *
 from common.utils import http_response_json, json_dumps, json_loads
 from accounts.decorators import login_required
@@ -306,7 +306,7 @@ def do_import_config(upload_file):
                         'type': 'string',
                         'required': True,
                     },
-                    'access_key': {
+                    'app_id': {
                         'type': 'string',
                         'required': True,
                     },
@@ -419,7 +419,7 @@ def do_import_config(upload_file):
         errors = []
         for (k, v) in validator.errors.items():
             errors.append('%s: %s' % (k, v))
-        return False, u'上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', errors
+        return False, '上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', errors
     else:
         success, msg, errors = False, '', []
         try:
@@ -431,7 +431,7 @@ def do_import_config(upload_file):
                 old_client_list = Client.objects.all()
                 old_client_dict = {}
                 for t in old_client_list:
-                    old_client_dict[t.access_key] = t
+                    old_client_dict[t.app_id] = t
 
                 old_endpoint_list = Endpoint.objects.all()
                 old_endpoint_dict = {}
@@ -441,11 +441,11 @@ def do_import_config(upload_file):
                 new_client_dict = {}
                 for t in json_data['clients']:
                     # del t['id']
-                    old_client = old_client_dict.get(t['access_key'])
+                    old_client = old_client_dict.get(t['app_id'])
                     # 如果已存在相同的，则更新
                     if old_client is not None:
                         form = ClientForm(t, instance=old_client)
-                        del old_client_dict[t['access_key']]
+                        del old_client_dict[t['app_id']]
                     else:
                         form = ClientForm(t)
                     if not form.is_valid():
@@ -454,7 +454,7 @@ def do_import_config(upload_file):
                         for (k, v) in form_errors.items():
                             if v['has_error']:
                                 errors.append('%s: %s' % (k, v['errors']))
-                        msg, errors = u'上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', errors
+                        msg, errors = '上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', errors
                         raise Exception('error')
 
                     client = form.save()
@@ -476,7 +476,7 @@ def do_import_config(upload_file):
                         for (k, v) in form_errors.items():
                             if v['has_error']:
                                 errors.append('%s: %s' % (k, v['errors']))
-                        msg, errors = u'上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', errors
+                        msg, errors = '上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', errors
                         raise Exception('error')
 
                     endpoint = form.save(commit=False)
@@ -488,8 +488,8 @@ def do_import_config(upload_file):
                         # del t['id']
                         tf = ACLRuleForm(y)
                         if not tf.is_valid():
-                            msg, errors = u'上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', \
-                                          [u'访问控制列表数据为空或不正确']
+                            msg, errors = '上传的 JSON 配置文件格式有误，请先导出 JSON 配置文件再修改', \
+                                          ['访问控制列表数据为空或不正确']
                             raise Exception('error')
 
                     acl_rules = [ACLRule(endpoint_id=endpoint.id,
@@ -573,7 +573,7 @@ def transfer_to_redis(request):
             # for k, v in t.iteritems():
             #     if k != 'endpoints':
             #         client[k] = v
-            pipe.set('%s:%s' % (settings.CLIENT_CONFIG_REDIS_PREFIX, t['access_key']), json_dumps(t))
+            pipe.set('%s:%s' % (settings.CLIENT_CONFIG_REDIS_PREFIX, t['app_id']), json_dumps(t))
 
             # for s in t['endpoints']:
             #     pipe.set('%s:%s:%s:%s' % (settings.PROXY_CONFIG_REDIS_PREFIX, t['access_key'], s['name'], s['version']),
@@ -585,7 +585,7 @@ def transfer_to_redis(request):
         pipe.execute()
         success = True
     except Exception as e:
-        msg = u'同步配置数据到 Redis 出现异常'
+        msg = '同步配置数据到 Redis 出现异常'
         logger.error(e.message)
         logger.error(traceback.format_exc())
 

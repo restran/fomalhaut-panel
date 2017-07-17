@@ -8,8 +8,8 @@ import traceback
 
 from pymongo import UpdateOne
 from .models import *
-from api_dashboard import settings
-from api_dashboard.celery import app
+from fomalhaut.celery import app
+from fomalhaut import settings
 from .utils import RedisHelper
 import json
 import logging
@@ -198,54 +198,61 @@ def do_parse_access_logs(limit):
     return len(logs)
 
 
-def do_transfer_access_logs(r):
-    log_item_str = r.lpop(settings.ANALYTICS_LOG_REDIS_LIST_KEY)
-    if log_item_str is None:
-        return False
+def do_transfer_access_logs():
+    entries = []
+    count = settings.REDIS_ACCESS_LOG_TRANSFER_BATCH_COUNT
+    while count > 0:
+        log_item_str = RedisHelper.get_next_log(settings.ANALYTICS_LOG_REDIS_LIST_KEY)
+        if log_item_str is None:
+            break
 
-    log_item = json.loads(log_item_str)
-    access_log = AccessLog()
-    access_log.ip = log_item['ip']
-    access_log.client = AccessLogClient(**log_item['client'])
-    access_log.endpoint = AccessLogEndpoint(**log_item['endpoint'])
-    access_log.forward_url = log_item['forward_url']
-    access_log.elapsed = log_item['elapsed']
-    access_log.result_code = log_item['result_code']
-    access_log.result_msg = log_item['result_msg']
-    access_log.accessed_at = datetime.fromtimestamp(log_item['accessed_at'] / 1000.0)
-    access_log.request = AccessLogRequest()
-    access_log.request.content_type = log_item['request']['content_type']
-    access_log.request.method = log_item['request']['method']
-    access_log.request.uri = log_item['request']['uri']
-    access_log.request.save_files(log_item['request']['headers'],
-                                  log_item['request']['body'])
+        log_item = json.loads(log_item_str)
+        access_log = AccessLog()
+        access_log.ip = log_item['ip']
+        access_log.client = AccessLogClient(**log_item['client'])
+        access_log.endpoint = AccessLogEndpoint(**log_item['endpoint'])
+        access_log.forward_url = log_item['forward_url']
+        access_log.elapsed = log_item['elapsed']
+        access_log.result_code = log_item['result_code']
+        access_log.result_msg = log_item['result_msg']
+        access_log.accessed_at = datetime.fromtimestamp(log_item['accessed_at'] / 1000.0)
+        access_log.request = AccessLogRequest()
+        access_log.request.content_type = log_item['request']['content_type']
+        access_log.request.method = log_item['request']['method']
+        access_log.request.uri = log_item['request']['uri']
+        access_log.request.save_files(log_item['request']['headers'],
+                                      log_item['request']['body'])
 
-    access_log.response = AccessLogResponse()
-    access_log.response.content_type = log_item['response']['content_type']
-    access_log.response.status = log_item['response']['status']
-    access_log.response.save_files(log_item['response']['headers'],
-                                   log_item['response']['body'])
+        access_log.response = AccessLogResponse()
+        access_log.response.content_type = log_item['response']['content_type']
+        access_log.response.status = log_item['response']['status']
+        access_log.response.save_files(log_item['response']['headers'],
+                                       log_item['response']['body'])
 
-    access_log.save()
+        entries.append(access_log)
+        count += 1
+    item_count = len(entries)
+    if item_count > 0:
+        AccessLog.objects.insert(entries)
 
-    return True
+    return item_count > 0, item_count
 
 
 @app.task
 def transfer_access_logs():
     logger.info('执行 transfer_access_logs')
-    r = RedisHelper.get_client()
-    count = 0
+    total_count = 0
     should_continue = True
     while should_continue:
-        count += 1
         try:
-            should_continue = do_transfer_access_logs(r)
+            should_continue, count = do_transfer_access_logs()
+            total_count += count
         except Exception as e:
+            should_continue = False
             logger.error(e)
             logger.error(traceback.format_exc())
 
-    logger.info('执行 transfer_access_logs 完成, 共计%s项' % count)
+    logger.info('执行 transfer_access_logs 完成, 共计%s项' % total_count)
 
 
 @app.task

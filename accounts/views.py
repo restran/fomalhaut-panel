@@ -109,7 +109,7 @@ def account_profile(request):
                                'user': user})
 
 
-@csrf_protect
+@ensure_csrf_cookie
 def password_reset_request(request):
     """
     密码重置申请
@@ -117,20 +117,8 @@ def password_reset_request(request):
     :return:
     """
     request.page_title = '申请重置密码'
-    if request.method == 'POST':
-        form = PasswordResetForm(request.POST)
-        submit_result = False
-        if form.is_valid():
-            logger.debug('form is valid')
-            form.save()
-            submit_result = True
-
-        return render_to_response('accounts/password_reset_request.html',
-                                  {'request': request, 'form': form,
-                                   'submit_result': submit_result})
-    else:
-        return render_to_response('accounts/password_reset_request.html',
-                                  {'request': request})
+    return render_to_response('accounts/password_reset_request.html',
+                              {'request': request})
 
 
 @ensure_csrf_cookie

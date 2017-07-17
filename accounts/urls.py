@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from django.conf.urls import patterns, include, url
 from . import views, api
+
 # 元组是可累加的，但累加后是生成新的元组，而非在原来的基础上修改
 urlpatterns = [
     url(r'^accounts/login/$', views.user_login),
@@ -26,4 +27,5 @@ urlpatterns.extend([
     url(r'^api/accounts/create/$', api.api_create_account),
     url(r'^api/accounts/password/update/$', api.api_update_password),
     url(r'^api/accounts/password/reset/$', api.api_reset_password),
+    url(r'^api/accounts/password/reset_request/$', api.reset_password_request),
 ])

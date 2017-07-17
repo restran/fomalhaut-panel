@@ -7,7 +7,7 @@
         data: {
             disableTimeFrame: false,
             sum7d: '',
-            totalCount: 0,
+            totalCount: {},
             beginTime: '',
             endTime: '',
             selectedTimeFrame: '24h',

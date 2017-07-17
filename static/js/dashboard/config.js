@@ -89,7 +89,13 @@
                         console.log(data);
                         // 编辑对话框的表单数据
                         // that.formData = data['default_form'];
-                        that.formDataBak = JSON.parse(JSON.stringify(data['default_form']));
+                        try {
+                            if (that.dataType != 'client_endpoint') {
+                                that.formDataBak = JSON.parse(JSON.stringify(data['default_form']));
+                            }
+                        } catch (e) {
+
+                        }
 
                         if (that.dataType == 'endpoint') {
                             that.aclRules = [];
@@ -137,6 +143,7 @@
                 this.saveAjaxPost(function (result) {
                     $btn.button('reset');
                     if (result['success'] != true) {
+                        console.log(result.msg);
                         if (result.msg != '服务器响应失败' && result['data'] != null
                             && result['data'] != undefined) {
                             that.formData = result['data'];
@@ -151,7 +158,15 @@
                             if (that.editDialogMode == 'create') {
                                 that.entries.push(result['data']);
                             } else {
-                                that.entries[that.updateEntryIndex] = result['data'];
+                                var item = that.entries[that.updateEntryIndex];
+                                for (var name in result['data']) {
+                                    if (result['data'].hasOwnProperty(name)) {
+                                        Vue.set(item, name, result['data'][name]);
+                                    }
+                                }
+                                // 直接用这两种方式都不行，必须要上面这样一个个 set
+                                // Vue.set(that.entries, that.updateEntryIndex, result['data']);
+                                // that.entries[that.updateEntryIndex] = result['data'];
                             }
                         }
 
@@ -178,6 +193,7 @@
                         if (that.editDialogMode == 'create') {
                             that.entries.push(result['data']);
                         }
+                        // saveContinue 没有编辑，只有添加
 
                         that.formData = JSON.parse(JSON.stringify(that.formDataBak));
                         if (that.dataType == 'client') {
@@ -192,17 +208,17 @@
             saveAjaxPost: function (callback) {
                 var postUrl = this.basePostUrl;
 
-                if (this.editDialogMode == 'create') {
+                if (this.editDialogMode === 'create') {
                     postUrl += 'create/';
                 } else {
                     postUrl += this.updateEntry.id + '/update/';
                 }
 
                 var postData = {};
-                if (this.dataType == 'client_endpoint') {
+                if (this.dataType === 'client_endpoint') {
                     var endpoints = [];
                     for (i = 0; i < this.endpoints.length; i++) {
-                        if (this.endpoints[i].selected == true) {
+                        if (this.endpoints[i].selected === true) {
                             var d = {
                                 'id': this.endpoints[i].id,
                                 'enable': this.endpoints[i].enable
@@ -216,7 +232,7 @@
                     postData['endpoints'] = endpoints;
                 } else {
                     postData = {'data': this.formDataToJson(this.formData)};
-                    if (this.dataType == 'endpoint') {
+                    if (this.dataType === 'endpoint') {
 
                         // 需要添加额外的参数
                         postData['client_id'] = this.clientId;
@@ -225,7 +241,7 @@
                         //var new_aclRules = [];
                         // 把1，0转换成true, false
                         for (i = 0; i < aclRules.length; i++) {
-                            aclRules[i]['is_permit'] = aclRules[i]['is_permit'] == 'true';
+                            aclRules[i]['is_permit'] = aclRules[i]['is_permit'] === 'true';
                         }
 
                         postData['acl_rules'] = aclRules;
@@ -243,19 +259,22 @@
             },
             showEditDialog: function (mode, entry) {
                 var i, item;
+                if (this.dataType === 'client_endpoint') {
+                    for (i = 0; i < this.endpoints.length; i++) {
+                        // 要用 set，否则无法跟踪到数据变化
+                        Vue.set(this.endpoints[i], 'selected', false);
+                        Vue.set(this.endpoints[i], 'enable', false);
+                    }
+                }
+
                 // 还原一下
                 this.formData = JSON.parse(JSON.stringify(this.formDataBak));
-                if (mode == 'update') {
+                if (mode === 'update') {
                     // 将entry的数据填充到form_data中
                     this.updateEntry = entry;
                     this.updateEntryIndex = this.entries.indexOf(entry);
                     this.editDialogMode = 'update';
-                    if (this.dataType == 'client_endpoint') {
-                        for (i = 0; i < this.endpoints.length; i++) {
-                            this.endpoints[i].selected = false;
-                            this.endpoints[i].enable = false;
-                        }
-
+                    if (this.dataType === 'client_endpoint') {
                         for (i = 0; i < this.entries.length; i++) {
                             item = this.entries[i];
                             console.log(item);
@@ -265,10 +284,10 @@
                         }
                     } else {
                         this.entryToFormData(this.updateEntry, this.formData);
-                        if (this.dataType == 'client') {
+                        if (this.dataType === 'client') {
 
-                        } else if (this.dataType == 'endpoint') {
-                            if (this.updateEntry['acl_rules'] == undefined) {
+                        } else if (this.dataType === 'endpoint') {
+                            if (this.updateEntry['acl_rules'] === undefined) {
                                 this.aclRules = [];
                             } else {
                                 this.aclRules = JSON.parse(JSON.stringify(this.updateEntry['acl_rules']));
@@ -291,10 +310,10 @@
 
                     // 有些有默认值的，选择相应项
                     this.editDialogMode = 'create';
-                    if (this.dataType == 'client') {
-                    } else if (this.dataType == 'endpoint') {
+                    if (this.dataType === 'client') {
+                    } else if (this.dataType === 'endpoint') {
                         this.aclRules = [];
-                    } else if (this.dataType == 'client_endpoint') {
+                    } else if (this.dataType === 'client_endpoint') {
                         for (i = 0; i < this.endpoints.length; i++) {
                             this.endpoints[i].selected = false;
                             this.endpoints[i].enable = false;
@@ -311,18 +330,21 @@
                 $('#edit-modal').modal('show');
             },
             updateEnableState: function (entry) {
-                var postUrl = this.basePostUrl + entry.id + '/update_enable_state/';
-                var postData = {'enable': entry.enable};
-                $request.post(postUrl, postData, function (data) {
-                    if (data['success'] != true) {
-                        // 恢复
-                        entry.enable = entry.enable ? false : true;
+                var that = this;
+                Vue.nextTick(function () {
+                    var postUrl = that.basePostUrl + entry.id + '/update_enable_state/';
+                    var postData = {'enable': entry.enable};
+                    $request.post(postUrl, postData, function (data) {
+                        if (data['success'] != true) {
+                            // 恢复
+                            entry.enable = !entry.enable;
+                            toastr["error"]('更新启用状态失败');
+                        }
+                    }, function (data, msg) {
                         toastr["error"]('更新启用状态失败');
-                    }
-                }, function (data, msg) {
-                    toastr["error"]('更新启用状态失败');
-                    // 恢复
-                    entry.enable = entry.enable ? false : true;
+                        // 恢复
+                        entry.enable = !entry.enable;
+                    });
                 });
             },
             deleteEntry: function (entry) {
@@ -337,13 +359,14 @@
                 var $btn = $($event.currentTarget).button('loading');
                 var postUrl = this.basePostUrl + this.delEntryId + '/delete/';
                 var postData = {};
+                var self = this;
                 $request.post(postUrl, postData, function (data) {
-                    if (data['success'] != true) {
+                    if (data['success'] !== true) {
                         var msg = data.msg ? data.msg : '删除失败';
                         toastr["error"](msg);
                     } else {
                         // 删除 json 数组的元素
-                        this.entries.splice(this.delEntryIndex, 1);
+                        self.entries.splice(self.delEntryIndex, 1);
                         toastr["success"]('删除成功');
                         $('#delete-modal').modal('hide');
                     }
@@ -379,7 +402,7 @@
                 // var rawKey = randomStr();
                 //model.data = randomStr();
                 // var key = [];
-                if (type == 'access_key') {
+                if (type === 'app_id') {
                     // for (var i = 0; i < rawKey.length; i += 2) {
                     //     key.push(rawKey[i]);
                     // }

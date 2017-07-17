@@ -16,8 +16,9 @@ logger = logging.getLogger(__name__)
 class ClientForm(BaseModelForm):
     class Meta:
         model = Client
-        fields = ('name', 'memo', 'enable', 'access_key', 'secret_key',
-                  'login_auth_url', 'access_token_ex', 'refresh_token_ex')
+        fields = ('name', 'memo', 'enable', "app_id", 'secret_key',
+                  'login_auth_url', 'access_token_ex', 'refresh_token_ex',
+                  'sms_login_auth_url', 'change_password_url', 'sms_change_password_url')
 
     def clean_refresh_token_ex(self):
         access_token_ex = self.cleaned_data['access_token_ex']
@@ -29,9 +30,10 @@ class ClientForm(BaseModelForm):
 
 
 ClientForm.base_fields.keyOrder = [
-    'name', 'memo', 'url', 'enable', 'access_key',
+    'name', 'memo', 'url', 'enable', 'app_id',
     'secret_key', 'login_auth_url', 'access_token_ex',
-    'refresh_token_ex'
+    'refresh_token_ex', 'sms_login_auth_url', 'sms_change_password_url',
+    'change_password_url'
 ]
 
 

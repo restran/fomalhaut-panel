@@ -309,12 +309,12 @@ var $request = {
             success: function (data) {
                 console.log(data);
                 try {
-                    if (data['success'] == true) {
+                    // if (data['success'] == true) {
                         successCallback(data);
-                    } else {
-                        console.log('callErrorCallback');
-                        callErrorCallback(data, errorCallback);
-                    }
+                    // } else {
+                    //     console.log('callErrorCallback');
+                    //     callErrorCallback(data, errorCallback);
+                    // }
                 } catch (e) {
                     console.log(e);
                     callErrorCallback(data, errorCallback);

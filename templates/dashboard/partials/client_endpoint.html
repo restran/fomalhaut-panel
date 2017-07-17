@@ -21,18 +21,18 @@
     </td>
     <td v-text="entry.endpoint.name + '/' + entry.endpoint.version"></td>
     <td class="break-word" v-text="entry.endpoint.url"></td>
-    <td v-text="entry.endpoint.enaable_hmac ? '是' : '否'"></td>
+    <td v-text="entry.endpoint.enable_hmac ? '是' : '否'"></td>
     <td v-text="entry.endpoint.require_login ? '是' : '否'"></td>
     <td>
         <div class="ui toggle checkbox">
             <input type="checkbox" id="entry-{{$index}}-cb" v-model="entry.enable"
-                   @click="updateEnableState(entry)">
+                   @change="updateEnableState(entry)">
             <label for="entry-{{$index}}-cb"></label>
         </div>
     </td>
     <td class="nowrap">
         <a href="javascript:void 0;" @click="showEditDialog('update', entry)">编辑</a>&nbsp;
-        <a href="javascript:void 0;" class="color-danger" @click="deleteEntry(entry)">删除</a>
+        <!--<a href="javascript:void 0;" class="color-danger" @click="deleteEntry(entry)">删除</a>-->
     </td>
 </tr>
 {% endverbatim %}

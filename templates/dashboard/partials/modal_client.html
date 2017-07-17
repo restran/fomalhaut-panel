@@ -20,21 +20,21 @@
                            v-model="formData.name.data">
                 </div>
 
-                <div class="form-group" :class="{'has-error': formData.access_key.has_error}">
-                    <label class="control-label input-required" for="modal-form-app-id">AccessKey</label>
-                    <label v-show="formData.access_key.has_error" class="control-label"
-                           v-text="formData.access_key.errors"></label>
+                <div class="form-group" :class="{'has-error': formData.app_id.has_error}">
+                    <label class="control-label input-required" for="modal-form-app-id">AppId</label>
+                    <label v-show="formData.app_id.has_error" class="control-label"
+                           v-text="formData.app_id.errors"></label>
 
                     <div class="input-group">
                         <input id="modal-form-app-id" type="text" class="form-control"
-                               placeholder=""
+                               placeholder="应用的唯一标识"
                                required
-                               v-model="formData.access_key.data">
+                               v-model="formData.app_id.data">
 
                         <div class="input-group-btn">
-                            <button type="button" class="btn btn-default"
-                                    @click="randomKey(formData.access_key, 'access_key')">随机生成
-                            </button>
+                            <span type="button" class="btn btn-default"
+                                    @click="randomKey(formData.app_id, 'app_id')">随机生成
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -51,9 +51,9 @@
                                v-model="formData.secret_key.data">
 
                         <div class="input-group-btn">
-                            <button type="button" class="btn btn-default"
+                            <span type="button" class="btn btn-default"
                                     @click="randomKey(formData.secret_key)">随机生成
-                            </button>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -67,6 +67,42 @@
                            v-model="formData.login_auth_url.data">
                 </div>
 
+                <div class="form-group" :class="{'has-error': formData.sms_login_auth_url.has_error}">
+                    <label class="control-label">短信登录验证 URL</label>
+                    <label v-show="formData.sms_login_auth_url.has_error" class="control-label"
+                           v-text="formData.sms_login_auth_url.errors"></label>
+                    <input type="text" class="form-control"
+                           placeholder="使用该 URL 验证短信登录"
+                           v-model="formData.sms_login_auth_url.data">
+                </div>
+
+                <div class="form-group" :class="{'has-error': formData.change_password_url.has_error}">
+                    <label class="control-label">修改密码 URL</label>
+                    <label v-show="formData.change_password_url.has_error" class="control-label"
+                           v-text="formData.change_password_url.errors"></label>
+                    <input type="text" class="form-control"
+                           placeholder="使用该 URL 修改密码"
+                           v-model="formData.change_password_url.data">
+                </div>
+
+                <div class="form-group" :class="{'has-error': formData.sms_change_password_url.has_error}">
+                    <label class="control-label">通过短信修改密码 URL</label>
+                    <label v-show="formData.sms_change_password_url.has_error" class="control-label"
+                           v-text="formData.sms_change_password_url.errors"></label>
+                    <input type="text" class="form-control"
+                           placeholder="使用该 URL 修改密码"
+                           v-model="formData.sms_change_password_url.data">
+                </div>
+<!--
+                <div class="form-group" :class="{'has-error': formData.set_password_url.has_error}">
+                    <label class="control-label">设置密码 URL</label>
+                    <label v-show="formData.set_password_url.has_error" class="control-label"
+                           v-text="formData.set_password_url.errors"></label>
+                    <input type="text" class="form-control"
+                           placeholder="注册后设置密码，或者重置密码"
+                           v-model="formData.set_password_url.data">
+                </div>
+-->
                 <div class="form-group" :class="{'has-error': formData.access_token_ex.has_error}">
                     <label class="control-label" for="modal-form-access-token-ex">Access Token 的过期时间</label>
                     <label v-show="formData.access_token_ex.has_error" class="control-label"
@@ -104,10 +140,10 @@
                     <label class="control-label">备注</label>
                     <label v-show="formData.memo.has_error" class="control-label"
                            v-text="formData.memo.errors"></label>
-            <textarea class="form-control"
-                      placeholder="备注信息，可以为空"
-                      v-model="formData.memo.data"
-                      rows="3"></textarea>
+                    <textarea class="form-control"
+                              placeholder="备注信息，可以为空"
+                              v-model="formData.memo.data"
+                              rows="3"></textarea>
                 </div>
             </form>
         </div>

@@ -7,7 +7,7 @@ from __future__ import unicode_literals, absolute_import
 from django.conf.urls import url
 from django.conf.urls.static import static
 
-from api_dashboard import settings
+from fomalhaut import settings
 from accounts.urls import urlpatterns as accounts_urls
 from dashboard.urls import urlpatterns as dashboard_urls
 from common.utils import error_404

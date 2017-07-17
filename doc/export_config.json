@@ -21,7 +21,7 @@
     ], 
     "clients": [
         {
-            "access_key": "abcd", 
+            "app_id": "abcd",
             "access_token_ex": 864000, 
             "enable": true, 
             "id": 3, 
@@ -32,7 +32,7 @@
             "secret_key": "1234"
         }, 
         {
-            "access_key": "a5d456590c5898086898", 
+            "app_id": "a5d456590c5898086898",
             "access_token_ex": 864000, 
             "enable": true, 
             "id": 4, 

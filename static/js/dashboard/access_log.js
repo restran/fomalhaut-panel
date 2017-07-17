@@ -297,6 +297,29 @@
                     });
                 })
             },
+            refreshLog: function ($event) {
+                Pace.restart();
+                console.log('refreshLog');
+                var obj = $($event.currentTarget).find('span');
+                if (obj.hasClass('rotate')) {
+                    return;
+                } else {
+                    obj.addClass('rotate');
+                }
+
+                var apiUrl = '/api/dashboard/access_log/refresh/';
+                $request.post(apiUrl, {}, function (data) {
+                    if (data['success']) {
+                        app.getPage(1, true);
+                    } else {
+                        toastr["error"]('刷新日志失败');
+                    }
+                    obj.removeClass('rotate');
+                }, function (data, msg) {
+                    toastr["error"]('刷新日志失败');
+                    obj.removeClass('rotate');
+                });
+            },
             checkDateTime: function () {
                 if (this.beginTime != null && this.beginTime != '' &&
                     this.endTime != null && this.endTime != '') {

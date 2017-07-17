@@ -1,5 +1,5 @@
 """
-WSGI config for api_dashboard project.
+WSGI config for fomalhaut project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -10,5 +10,5 @@ https://docs.djangoproject.com/en/1.7/howto/deployment/wsgi/
 import os
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "api_dashboard.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fomalhaut.settings")
 application = get_wsgi_application()

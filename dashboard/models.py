@@ -13,15 +13,14 @@ from django.db import models
 import gridfs
 from django.core.validators import RegexValidator
 import hashlib
-from api_dashboard.settings import DEFAULT_ASYNC_HTTP_CONNECT_TIMEOUT, \
+from fomalhaut.settings import DEFAULT_ASYNC_HTTP_CONNECT_TIMEOUT, \
     DEFAULT_ASYNC_HTTP_REQUEST_TIMEOUT, DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS, \
     DEFAULT_REFRESH_TOKEN_EXPIRE_SECONDS
-from common.utils import datetime_to_str, datetime_to_timestamp
-from api_dashboard.settings import DEFAULT_ACCESS_LOG_PAGE_SIZE
+from common.utils import datetime_to_str, datetime_to_timestamp, check_text_content_type
+from fomalhaut.settings import DEFAULT_ACCESS_LOG_PAGE_SIZE
 from mongoengine import *
 from mongoengine.connection import get_db
 import logging
-from .utils import check_text_content_type
 
 logger = logging.getLogger(__name__)
 
@@ -31,18 +30,22 @@ class Client(models.Model):
 
     # client 的名称
     name = models.CharField(unique=True, max_length=128)
-    # client 的标识，client 发起请求时，使用 access_key 来标识自己，而不是 name
-    access_key = models.CharField(unique=True, max_length=128,
-                                  validators=[RegexValidator(regex=r'^[_0-9a-zA-Z]+$',
-                                                             message='仅使用字母数字和下划线')])
+    # client 的标识，client 发起请求时，使用 app_id 来标识自己，而不是 name
+    app_id = models.CharField(unique=True, max_length=128)
     # 密钥
-    secret_key = models.CharField(max_length=128,
-                                  validators=[RegexValidator(regex=r'^[_0-9a-zA-Z]+$',
-                                                             message='仅使用字母数字和下划线')])
+    secret_key = models.CharField(max_length=128)
     # 是否启用
     enable = models.BooleanField(default=True)
     # 去哪里验证登陆信息
     login_auth_url = models.URLField(max_length=512, default='', blank=True)
+    # 去哪里验证登陆信息，短信登录验证
+    sms_login_auth_url = models.URLField(max_length=512, default='', blank=True)
+    # 修改密码，使用短信验证码
+    change_password_url = models.URLField(max_length=512, default='', blank=True)
+    # 修改密码
+    sms_change_password_url = models.URLField(max_length=512, default='', blank=True)
+    # 注册后设置密码，或者重置密码
+    # set_password_url = models.URLField(max_length=512, default='', blank=True)
     # access_token 在多少秒后过期
     access_token_ex = models.IntegerField(default=DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS)
     # refresh_token 在多少秒后过期
@@ -58,9 +61,13 @@ class Client(models.Model):
     def to_json_dict(self, skip_id=False):
         d = {
             'name': self.name,
-            'access_key': self.access_key,
+            'app_id': self.app_id,
             'secret_key': self.secret_key,
             'login_auth_url': self.login_auth_url,
+            'sms_login_auth_url': self.sms_login_auth_url,
+            'change_password_url': self.change_password_url,
+            'sms_change_password_url': self.sms_change_password_url,
+            # 'set_password_url': self.set_password_url,
             'access_token_ex': self.access_token_ex,
             'refresh_token_ex': self.refresh_token_ex,
             'enable': self.enable,

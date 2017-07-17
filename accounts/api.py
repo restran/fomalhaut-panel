@@ -232,3 +232,25 @@ def api_reset_password(request):
     success = True
 
     return http_response_json({'success': success, 'msg': msg})
+
+
+@csrf_protect
+@require_http_methods(["POST"])
+def reset_password_request(request):
+    """
+    通过邮箱申请重置密码
+    :param request:
+    :return:
+    """
+    msg, success = '', False
+    logger.debug('api_reset_password')
+    post_data = json_loads(request.body)
+    form = PasswordResetForm(post_data)
+    if form.is_valid():
+        logger.debug('form is valid')
+        form.save()
+        success = True
+    else:
+        errors = form.errors.values()
+        msg = [t2 for t1 in errors for t2 in t1]
+    return http_response_json({'success': success, 'msg': msg})
